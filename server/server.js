@@ -24,9 +24,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 //Root route
 app.get("/", (req, res) => {
-	res.send("Welcome to the Code Conquerors 😊");
+	res.send("Welcome to the Jobfit made by Code Conquerors😊");
 });
 
+app.get("/ping", (req, res) => {
+	res.send(Welcome to the Jobfit made by Code Conquerors😊");
+});
 //resume route
 
 // Global Error Handler	
