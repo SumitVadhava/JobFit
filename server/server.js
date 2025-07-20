@@ -3,7 +3,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const loginRouter = require("./routes/loginRouter");
 const authRouter = require("./routes/auth");
-const helmet = require("helmet");
+// const helmet = require("helmet");
 // const resumeroutes = require("./routes/resumeRouter");
 const resumeRoute = require("./ATS/resume");
 const path = require("path");
@@ -16,7 +16,7 @@ require("./config/connection")();
 const app = express();
 
 // Middlewares
-app.use(helmet());
+// app.use(helmet());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
