@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/ping", (req, res) => {
-	res.send(Welcome to the Jobfit made by Code Conquerors😊");
+	res.send("Welcome to the Jobfit made by Code Conquerors😊");
 });
 //resume route
 
