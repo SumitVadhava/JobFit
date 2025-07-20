@@ -290,13 +290,13 @@ const AuthForm = ({ role, setUserData }) => {
           .post("https://jobfit-s5v7.onrender.com/api/Google_login", userToSave)
           .then((response) => {
             console.log("User saved:", response.data);
-            login(response.data.user, response.data.token, response.data.user.role);
+            login(response.data.user, response.data.token, role);
             setUserData({
               userName: response.data.user.name,
               email: response.data.user.email,
               sub: response.data.user.google_id,
               picture: response.data.user.picture,
-              role: response.data.user.role,
+              role: role,
             });
 
 
