@@ -73,7 +73,7 @@ function App() {
       <Routes>
         <Route path='/' element={<HeroSection />} />
         <Route path='/auth' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
-        <Route path='https://jobfit-delta.vercel.app/user/dashboard' element={<UserAnalytics />} />
+        <Route path='/user/dashboard' element={<UserAnalytics />} />
         <Route path='/user/ats' element={<AtsScreenBrackDown atsData={atsData} />} />
         <Route path='/user/job-search' element={<JobSearch />} />
         <Route path='/user/resume' element={<Resumes atsData={atsData} setAtsData={setAtsData} />} />
