@@ -25,8 +25,8 @@ const Navbar = ({ userData }) => {
         candidate: [
             { label: "Dashboard", href: "/user/dashboard" },
             { label: "Resume Builder", href: "/user/resume" },
-            { label: "Jobs", href: "/user/job-search" },
             { label: "Best Resumes", href: "/user/best-resumes" },
+            { label: "Jobs", href: "/user/job-search" },
             { label: "Saved Jobs", href: "/user/saved-jobs" },
         ],
         user: [
