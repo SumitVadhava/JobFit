@@ -309,7 +309,7 @@ const KeyFeatures = () => {
               </p>
             </div>
 
-            <div className="relative overflow-hidden">
+            <div className="relative overflow-hidden" id="key-features">
               {" "}
               <div className="absolute left-0 top-0 z-10 h-full w-32 bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
               <div className="absolute right-0 top-0 z-10 h-full w-32 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
@@ -385,7 +385,7 @@ const KeyFeatures = () => {
                 Track ATS scores over time, view breakdowns (keywords, skills),
                 and get actionable feedback to improve resumes.
               </p>
-              <button className="bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium">
+              <button className="bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium" id="user-review">
                 Learn More
               </button>
             </div>
