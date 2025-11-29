@@ -251,15 +251,15 @@ const HeroSection = () => {
                 </>
             ) : (
                 <>
-                    <div id="key-features">
+                    <div>
                         <KeyFeatures />
                     </div>
 
-                    <div id="user-review">
+                    <div>
                         <UserReviewSection />
                     </div>
 
-                    <div id="faq-section">
+                    <div>
                         <FAQSection />
                     </div>
                     <div id="footer">

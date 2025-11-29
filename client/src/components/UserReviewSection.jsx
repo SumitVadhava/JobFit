@@ -77,7 +77,7 @@ const UserReviewSection = () => {
                 </p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-700 font-semibold">
+                    <p className="text-purple-700 font-semibold" id="faq-section">
                       {review.name}
                     </p>
                     <p className="text-gray-500 text-xs">{review.role}</p>
