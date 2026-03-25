@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import api from "../api/api";
 import { toast } from 'react-toastify';
 import { useAuth } from "../contexts/AuthContexts";
 import { useNavigate } from "react-router-dom";
@@ -155,7 +155,7 @@ const OTPDemo = ({
         setIsVerifying(true); // Start loading
         
         try {
-            const res = await axios.post("https://jobfit-s5v7.onrender.com/api/auth/verify-otp", {
+            const res = await api.post("/auth/verify-otp", {
                 email,
                 otp: enteredOtp,
             });
@@ -169,7 +169,7 @@ const OTPDemo = ({
                 });
                 
                 const status = "active"
-                const response = await axios.post("https://jobfit-s5v7.onrender.com/api/signup", {
+                const response = await api.post("/signup", {
                     userName, email, password, role, status, recruiterKey
                 });
 

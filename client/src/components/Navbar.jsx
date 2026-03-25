@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Bell, Menu, X } from "lucide-react"; // optional icons
 import logo from '../assets/logo.png';
-import { useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import Avatar from "./Avatar";
 import { useAuth } from "../contexts/AuthContexts";
 import { FiLogOut } from 'react-icons/fi';
 
 const Navbar = ({ userData }) => {
     const { user, role, token } = useAuth();
+    const location = useLocation();
 
     const navLinks = {
         default: [
@@ -65,13 +66,13 @@ const Navbar = ({ userData }) => {
         <div className="w-full sticky top-0 z-50 border-b border-gray-200 bg-white/30 backdrop-blur-md shadow-sm">
             <nav className="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto sticky top-0 bg-white/30 backdrop-blur-md px-4 md:px-6 lg:px-8 py-3 md:py-4 z-50 ">
                 <div className="flex items-center w-full md:w-auto justify-between">
-                    <a href="/">
+                    <Link to="/">
                         <img
                             src={logo}
                             alt="JobFit Logo"
                             className="h-8 md:h-10 w-auto object-contain"
                         />
-                    </a>
+                    </Link>
                     <button className="md:hidden ml-4 text-gray-700 focus:outline-none" onClick={toggleDrawer}>
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
@@ -82,12 +83,19 @@ const Navbar = ({ userData }) => {
                     <ul className="flex flex-col md:flex-row items-center text-gray-700 font-medium w-full md:w-auto">
                         {navLinks[userRole]?.map((link) => (
                             <li key={link.href} className="w-full md:w-auto">
-                                <a
-                                    href={link.href}
-                                    className="flex items-center justify-center hover:text-[#9b44fe] hover:bg-gray-100 px-2 md:px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full"
+                                <NavLink
+                                    to={link.href}
+                                    className={({ isActive }) => {
+                                        const isActuallyActive = userRole !== "default" && (isActive || location.hash === link.href);
+                                        return `flex items-center justify-center px-2 md:px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${
+                                            isActuallyActive 
+                                            ? "text-[#9b44fe] bg-gray-100 shadow-sm" 
+                                            : "text-gray-700 hover:text-[#9b44fe] hover:bg-gray-100"
+                                        }`;
+                                    }}
                                 >
                                     {link.label}
-                                </a>
+                                </NavLink>
                             </li>
                         ))}
                     </ul>
@@ -108,7 +116,7 @@ const Navbar = ({ userData }) => {
                                 </div>
                             </div>
                             :
-                            <button onClick={() => navigate('/auth')} className="relative z-10 w-full md:w-[6.5em] h-[2.3em] m-2 px-4 py-2 bg-black text-white border-none rounded-[0.625em] text-[16px] md:text-[20px] font-bold cursor-pointer overflow-hidden group transition-all duration-300 ease-in-out hover:bg-gray-900 hover:text-black">
+                            <button onClick={() => navigate('/login')} className="relative z-10 w-full md:w-[6.5em] h-[2.3em] m-2 px-4 py-2 bg-black text-white border-none rounded-[0.625em] text-[16px] md:text-[20px] font-bold cursor-pointer overflow-hidden group transition-all duration-300 ease-in-out hover:bg-gray-900 hover:text-black">
                                 Login
                                 <span className="absolute inset-0 -z-10 transition-transform duration-500 ease-out transform skew-x-[-45deg] scale-x-0 bg-white group-hover:scale-x-100"></span>
                             </button>
@@ -169,13 +177,13 @@ const Navbar = ({ userData }) => {
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center mb-6">
-                            <a href="/" className="block">
+                            <Link to="/" className="block" onClick={toggleDrawer}>
                                 <img
                                     src={logo}
                                     alt="JobFit Logo"
                                     className="h-10 w-auto object-contain"
                                 />
-                            </a>
+                            </Link>
                             <button
                                 onClick={toggleDrawer}
                                 className="text-gray-700 focus:outline-none hover:bg-gray-100 p-2 rounded-full"
@@ -190,13 +198,20 @@ const Navbar = ({ userData }) => {
                             <ul className="space-y-3">
                                 {navLinks[userRole]?.map((link) => (
                                     <li key={link.href}>
-                                        <a
-                                            href={link.href}
-                                            className="block px-4 py-3 text-lg font-medium text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                                        <NavLink
+                                            to={link.href}
+                                            className={({ isActive }) => {
+                                                const isActuallyActive = userRole !== "default" && (isActive || location.hash === link.href);
+                                                return `block px-4 py-3 text-lg font-medium rounded-lg transition-colors duration-200 ${
+                                                    isActuallyActive 
+                                                    ? "bg-gray-100 text-[#9b44fe]" 
+                                                    : "text-gray-800 hover:bg-gray-100"
+                                                }`;
+                                            }}
                                             onClick={toggleDrawer}
                                         >
                                             {link.label}
-                                        </a>
+                                        </NavLink>
                                     </li>
                                 ))}
                             </ul>
@@ -256,7 +271,7 @@ const Navbar = ({ userData }) => {
                                 <button
                                     className="relative z-10 w-full mt-6 px-6 py-3 bg-black text-white rounded-lg text-lg font-semibold cursor-pointer overflow-hidden group transition-all duration-300 ease-in-out hover:bg-gray-900"
                                     onClick={() => {
-                                        navigate('/auth');
+                                        navigate('/login');
                                         toggleDrawer();
                                     }}
                                 >
