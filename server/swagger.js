@@ -12,8 +12,8 @@ const options = {
       contact: {
         name: "Code Conquerors",
       },
-    },
-    servers: [
+        },
+        servers: [
       {
         url: "http://localhost:5000",
         description: "Local Server",

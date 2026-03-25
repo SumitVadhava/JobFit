@@ -1,4 +1,5 @@
 const UserDashboard = require("../models/userDashboard");
+const AppliedJob = require("../models/appliedJobs");
 
 exports.getUserDashboardData = async (req, res) => {
   try {
@@ -56,3 +57,57 @@ exports.getSavedJobsData = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.getAppliedCompaniesData = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const applications = await AppliedJob.find({ userId: req.user.id })
+      .populate({
+        path: "jobId",
+        select: "companyName jobTitle location department workPlaceType",
+      })
+      .sort({ appliedAt: -1 });
+
+    const formattedApplications = applications
+      .filter((application) => application.jobId)
+      .map((application) => ({
+        applicationId: application._id,
+        userId: application.userId,
+        jobId: application.jobId._id,
+        companyName: application.jobId.companyName,
+        jobTitle: application.jobId.jobTitle,
+        location: application.jobId.location,
+        department: application.jobId.department,
+        workPlaceType: application.jobId.workPlaceType,
+        status: application.status,
+        appliedAt: application.appliedAt,
+      }));
+
+    const uniqueCompanies = [
+      ...new Set(
+        formattedApplications.map((application) => application.companyName),
+      ),
+    ];
+
+    return res.status(200).json({
+      totalApplications: formattedApplications.length,
+      uniqueCompaniesCount: uniqueCompanies.length,
+      companies: uniqueCompanies,
+      applications: formattedApplications,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+// {
+//  "userId" : "687c2c6b44b46115ec5eb06d",
+//   "jobId": "687c5aac240f88425de5edad",
+//   "status":"applied",
+
+// }
