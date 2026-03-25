@@ -20,7 +20,7 @@ require("./config/connection")();
 const app = express();
 
 const allowedOrigins = (
-  process.env.CORS_ORIGIN || "http://localhost:5173,http://localhost:3000"
+ "https://jobfit-delta.vercel.app" || "http://localhost:5173" || "http://localhost:3000" || "https://jobfit-s5v7.onrender.com"
 )
   .split(",")
   .map((origin) => origin.trim())
