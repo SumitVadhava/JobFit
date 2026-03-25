@@ -26,13 +26,14 @@ exports.createProfile = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const { img, description, experience, education, skills } = req.body;
+    const { img, description, experience,atsScore, education, skills } = req.body;
 
     const profile = await Profile.create({
       user: userId,
       img: img || null,
       description: description || null,
       experience: experience || [],
+      atsScore: 0,
       education: education || [],
       skills: skills || [],
     });

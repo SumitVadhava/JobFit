@@ -1,12 +1,13 @@
 const Profile = require("../models/profiles");
 
 const validateUpdateProfile = (req, res, next) => {
-  const { img, description, experience, education, skills } = req.body;
+  const { img, description, experience, atsScore, education, skills } = req.body;
 
   const hasAtLeastOneField =
     img !== undefined ||
     description !== undefined ||
     experience !== undefined ||
+    atsScore !== undefined ||
     education !== undefined ||
     skills !== undefined;
 
