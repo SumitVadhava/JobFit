@@ -40,6 +40,7 @@ const Navbar = ({ userData }) => {
         recruiter: [
             { label: "Dashboard", href: "/recruiter/recruiter-analytics" },
             { label: "Post Job", href: "/recruiter/recruiter-postjob" },
+            { label: "Posted Jobs", href: "/recruiter/recruiter-postedjobs" },
             { label: "Candidates", href: "/recruiter/recruiter-candidates" },
         ],
     };
