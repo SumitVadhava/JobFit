@@ -1,5 +1,12 @@
 const Profile = require("../models/profiles");
+const handleError = (res, error, defaultMessage = "Server error") => {
+  if (error.name === "ValidationError") {
+    return res.status(400).json({ message: error.message, errors: error.errors });
+  }
+  res.status(500).json({ message: defaultMessage, error: error.message });
+};
 
+// GET /api/profile
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : null;
@@ -14,10 +21,11 @@ exports.getProfile = async (req, res) => {
     }
     res.status(200).json({ message: "Profile retrieved successfully", profile });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    handleError(res, error, "Error retrieving profile");
   }
 };
 
+// POST /api/profile
 exports.createProfile = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : null;
@@ -26,24 +34,25 @@ exports.createProfile = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const { img, description, experience,atsScore, education, skills } = req.body;
+    const { img, description, experience, atsScore, education, skills } = req.body;
 
     const profile = await Profile.create({
       user: userId,
       img: img || null,
       description: description || null,
       experience: experience || [],
-      atsScore: 0,
+      atsScore: atsScore || 0,
       education: education || [],
       skills: skills || [],
     });
 
     res.status(201).json({ message: "Profile created successfully", profile });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    handleError(res, error, "Error creating profile");
   }
 };
 
+// PUT /api/profile
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : null;
@@ -65,10 +74,11 @@ exports.updateProfile = async (req, res) => {
       profile: updatedProfile,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    handleError(res, error, "Error updating profile");
   }
 };
 
+// DELETE /api/profile
 exports.deleteProfile = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : null;
@@ -85,6 +95,6 @@ exports.deleteProfile = async (req, res) => {
 
     res.status(200).json({ message: "Profile deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    handleError(res, error, "Error deleting profile");
   }
 };
