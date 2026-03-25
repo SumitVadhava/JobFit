@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userDashboardController = require('../controllers/userDashboardController');
-const userDashboard = require('../middleware/userDashboard');
+const userDashboard = require('../middlewares/userDashboardMid');
 
 //navbar routes
 

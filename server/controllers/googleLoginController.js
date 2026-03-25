@@ -1,6 +1,6 @@
-const User = require('./../models/google_login');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const User = require("./../models/google_login");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 const googleAddLoginController = async (req, res) => {
   const { name, email, picture, google_id } = req.body;
@@ -13,12 +13,11 @@ const googleAddLoginController = async (req, res) => {
         userName: name,
         email: email,
         picture: picture,
-        google_id: google_id
+        google_id: google_id,
       });
 
       await newUser.save();
       userToUse = newUser;
-    
     } else {
       userToUse = existingUser;
     }
@@ -26,24 +25,34 @@ const googleAddLoginController = async (req, res) => {
     const token = jwt.sign(
       { id: userToUse._id, email: userToUse.email },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: process.env.JWT_EXPIRES_IN },
     );
 
-    if (!token) return res.status(500).json({ message: "Error generating token" });
+    if (!token)
+      return res.status(500).json({ message: "Error generating token" });
 
-    const message = existingUser ? 'User already exists' : 'User signup successfully';
+    const message = existingUser
+      ? "User already exists"
+      : "User signup successfully";
+
+    const safeUser = {
+      _id: userToUse._id,
+      userName: userToUse.userName,
+      email: userToUse.email,
+      picture: userToUse.picture,
+    };
 
     return res.status(200).json({
       message,
-      user: userToUse,
-      token
+      user: safeUser,
+      token,
     });
-
   } catch (error) {
-    console.error('Error saving user:', error);
-    return res.status(500).json({ message: 'Server error' , error: error.message });
+    console.error("Error saving user:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
-
-module.exports = {googleAddLoginController};
+module.exports = { googleAddLoginController };

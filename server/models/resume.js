@@ -1,15 +1,15 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const resumeSchema = new mongoose.Schema({
-//   userId: {
-//     type: mongoose.Schema.Types.ObjectId,
-//     // ref: 'User',
-//     required: true
-// },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "logins",
+    required: true,
+  },
   resumeName: {
     type: String,
     required: true,
-    default: 'Untitled Resume'
+    default: "Untitled Resume",
   },
   resumeDate: {
     type: String,
@@ -20,11 +20,11 @@ const resumeSchema = new mongoose.Schema({
       {
         filename: { type: String, required: true },
         filepath: { type: String, required: false },
-        filetype: { type: String, required: false, default: 'application/pdf' },
-      }
+        filetype: { type: String, required: false, default: "application/pdf" },
+      },
     ],
     required: true,
-    default: []
+    default: [],
   },
   atsScore: {
     type: Number,
@@ -34,8 +34,8 @@ const resumeSchema = new mongoose.Schema({
   analysis: {
     type: Object,
     required: false,
-    default: {}
-  }
+    default: {},
+  },
 });
 
 module.exports = mongoose.model("resume", resumeSchema);
