@@ -7,19 +7,28 @@ import { useAuth } from "../contexts/AuthContexts";
 import { FiLogOut } from 'react-icons/fi';
 
 /* ── Nav link with hover-reveal shortcut ── */
-const NavLink = ({ href, label, shortcut }) => {
+/* ── Nav link with hover-reveal shortcut ── */
+const NavShortcutItem = ({ to, label, shortcut, userRole, location, onClick }) => {
     const [hovered, setHovered] = useState(false);
     return (
-        <li style={{ position: 'relative', listStyle: 'none' }}
+        <li className="w-full md:w-auto"
+            style={{ position: 'relative', listStyle: 'none' }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
-            <a
-                href={href}
-                className="flex items-center justify-center hover:text-[#9b44fe] hover:bg-gray-100 px-2 md:px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full"
+            <NavLink
+                to={to}
+                onClick={onClick}
+                className={({ isActive }) => {
+                    const isActuallyActive = userRole !== "default" && (isActive || location.hash === to);
+                    return `flex items-center justify-center px-2 md:px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${isActuallyActive
+                        ? "text-[#9b44fe] bg-gray-100 shadow-sm"
+                        : "text-gray-700 hover:text-[#9b44fe] hover:bg-gray-100"
+                        }`;
+                }}
             >
                 {label}
-            </a>
+            </NavLink>
             {shortcut && hovered && (
                 <span style={{
                     position: 'absolute', top: '100%', left: '50%',
@@ -250,20 +259,14 @@ const Navbar = ({ userData }) => {
                 <div className="hidden md:flex md:flex-row items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
                     <ul className="flex flex-col md:flex-row items-center text-gray-700 font-medium w-full md:w-auto">
                         {navLinks[userRole]?.map((link) => (
-                            <li key={link.href} className="w-full md:w-auto">
-                                <NavLink
-                                    to={link.href}
-                                    className={({ isActive }) => {
-                                        const isActuallyActive = userRole !== "default" && (isActive || location.hash === link.href);
-                                        return `flex items-center justify-center px-2 md:px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${isActuallyActive
-                                            ? "text-[#9b44fe] bg-gray-100 shadow-sm"
-                                            : "text-gray-700 hover:text-[#9b44fe] hover:bg-gray-100"
-                                            }`;
-                                    }}
-                                >
-                                    {link.label}
-                                </NavLink>
-                            </li>
+                            <NavShortcutItem
+                                key={link.href}
+                                to={link.href}
+                                label={link.label}
+                                shortcut={link.shortcut}
+                                userRole={userRole}
+                                location={location}
+                            />
                         ))}
                     </ul>
                     {
@@ -364,21 +367,15 @@ const Navbar = ({ userData }) => {
                         <div className="mt-4">
                             <ul className="space-y-3">
                                 {navLinks[userRole]?.map((link) => (
-                                    <li key={link.href}>
-                                        <NavLink
-                                            to={link.href}
-                                            className={({ isActive }) => {
-                                                const isActuallyActive = userRole !== "default" && (isActive || location.hash === link.href);
-                                                return `block px-4 py-3 text-lg font-medium rounded-lg transition-colors duration-200 ${isActuallyActive
-                                                    ? "bg-gray-100 text-[#9b44fe]"
-                                                    : "text-gray-800 hover:bg-gray-100"
-                                                    }`;
-                                            }}
-                                            onClick={toggleDrawer}
-                                        >
-                                            {link.label}
-                                        </NavLink>
-                                    </li>
+                                    <NavShortcutItem
+                                        key={link.href}
+                                        to={link.href}
+                                        label={link.label}
+                                        shortcut={link.shortcut}
+                                        userRole={userRole}
+                                        location={location}
+                                        onClick={toggleDrawer}
+                                    />
                                 ))}
                             </ul>
                             {isLoggedIn ? (
