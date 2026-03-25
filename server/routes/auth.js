@@ -3,6 +3,46 @@ const router = express.Router();
 const User = require("../models/login");
 const { sendOtp, verifyOtp } = require("./../services/otp.service");
 
+/**
+ * @swagger
+ * tags:
+ *   name: OTP
+ *   description: Email-based OTP for signup verification
+ */
+
+/**
+ * @swagger
+ * /api/auth/send-otp:
+ *   post:
+ *     summary: Send OTP to an email address
+ *     tags: [OTP]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SendOtpRequest'
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully (or user already exists)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         description: Email is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Failed to send OTP
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post("/send-otp", async (req, res) => {
   const { email } = req.body;
 
@@ -27,6 +67,33 @@ router.post("/send-otp", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/verify-otp:
+ *   post:
+ *     summary: Verify OTP for an email address
+ *     tags: [OTP]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/VerifyOtpRequest'
+ *     responses:
+ *       200:
+ *         description: OTP verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         description: Invalid or expired OTP
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.post("/verify-otp", (req, res) => {
   const { email, otp } = req.body;
 
