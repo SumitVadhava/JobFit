@@ -15,7 +15,7 @@ const options = {
     },
     servers: [
       {     
-        url: process.env.SWAGGER_SERVER_URL || "http://localhost:5173/",
+        url: process.env.SWAGGER_SERVER_URL || "http://localhost:5173/" || "https://jobfit-delta.vercel.app",
         description: "Current Server",
       },
     ],
