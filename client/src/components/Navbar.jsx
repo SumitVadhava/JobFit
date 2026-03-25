@@ -6,9 +6,8 @@ import Avatar from "./Avatar";
 import { useAuth } from "../contexts/AuthContexts";
 import { FiLogOut } from 'react-icons/fi';
 
-/* ── Nav link with hover-reveal shortcut ── */
-/* ── Nav link with hover-reveal shortcut ── */
 const NavShortcutItem = ({ to, label, shortcut, userRole, location, onClick }) => {
+
     const [hovered, setHovered] = useState(false);
     return (
         <li className="w-full md:w-auto"
@@ -29,7 +28,7 @@ const NavShortcutItem = ({ to, label, shortcut, userRole, location, onClick }) =
             >
                 {label}
             </NavLink>
-            {shortcut && hovered && (
+                {shortcut && hovered && (
                 <span style={{
                     position: 'absolute', top: '100%', left: '50%',
                     transform: 'translateX(-50%)',
