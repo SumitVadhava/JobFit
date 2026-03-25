@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/api';
 
 const ErrorBoundary = ({ children }) => {
   const [hasError, setHasError] = useState(false);
@@ -447,7 +447,7 @@ const Resumes = ({ atsData, setAtsData }) => {
       formData.append('pdf', file);
       formData.append('jobDesc', description);
 
-      const response = await axios.post('https://jobfit-s5v7.onrender.com/api/resume/upload', formData, {
+      const response = await api.post('/resume/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -514,7 +514,7 @@ const Resumes = ({ atsData, setAtsData }) => {
 
       console.log("Sending request with:", { file, description }); // Debug log
 
-      const response = await axios.post('https://jobfit-s5v7.onrender.com/api/resume/upload', formData, {
+      const response = await api.post('/resume/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 

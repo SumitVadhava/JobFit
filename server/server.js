@@ -1,4 +1,5 @@
 const express = require("express");
+const { specs, swaggerUi } = require("./swagger");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const helmet = require("helmet");
@@ -18,11 +19,65 @@ require("./config/connection")();
 
 const app = express();
 
+const allowedOrigins = [
+  "https://jobfit-delta.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://jobfit-s5v7.onrender.com"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    customSiteTitle: "JobFit API Docs",
+    customCss: `
+      .topbar { background-color: #0f172a !important; }
+      .topbar-wrapper img { content: url(''); }
+      .topbar-wrapper::after {
+        content: '⚡ JobFit API';
+        color: #38bdf8;
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+      .swagger-ui .info .title { color: #38bdf8; }
+      body { background-color: #0f172a; }
+      .swagger-ui { color: #e2e8f0; }
+    `,
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      filter: true,
+    },
+  }),
+);
+
 // Middlewares
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow server-to-server calls and tools that do not send an Origin header.
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
