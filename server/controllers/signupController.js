@@ -1,6 +1,6 @@
-const User = require('../models/login');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const User = require("../models/login");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const addSingupController = async (req, res) => {
   const { userName, email, password, role, status, recruiterKey } = req.body;
@@ -9,13 +9,17 @@ const addSingupController = async (req, res) => {
     let existingUser = await User.findOne({ email: email });
 
     if (existingUser) {
-      return res.status(200).json({ message: 'User already exists', user: existingUser });
+      return res.status(409).json({
+        message: "User already exists",
+      });
     }
 
     if (!existingUser) {
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
-      const hashedRecruiterKey = recruiterKey ? await bcrypt.hash(recruiterKey, saltRounds) : null;
+      const hashedRecruiterKey = recruiterKey
+        ? await bcrypt.hash(recruiterKey, saltRounds)
+        : null;
 
       const newUser = new User({
         userName,
@@ -23,31 +27,42 @@ const addSingupController = async (req, res) => {
         password: hashedPassword,
         role,
         status,
-        recruiterKey: role === 'recruiter' ? hashedRecruiterKey : null
+        recruiterKey: role === "recruiter" ? hashedRecruiterKey : null,
       });
 
       const token = jwt.sign(
         { id: newUser._id, email: newUser.email },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN }
+        { expiresIn: process.env.JWT_EXPIRES_IN },
       );
 
-      if (!token) return res.status(500).json({ message: "Error generating token" });
+      if (!token)
+        return res.status(500).json({ message: "Error generating token" });
 
       await newUser.save();
-      return res.status(201).json({ message: 'User saved successfully', user: newUser, token: token });
+
+      const safeUser = {
+        _id: newUser._id,
+        userName: newUser.userName,
+        email: newUser.email,
+        role: newUser.role,
+        status: newUser.status,
+      };
+
+      return res.status(201).json({
+        message: "User saved successfully",
+        user: safeUser,
+        token: token,
+      });
+    } else {
+      return res.status(409).json({
+        message: "User already exists",
+      });
     }
-
-    else {
-      return res.status(200).json({ message: 'User already exists', user: existingUser });
-    }
-
+  } catch (error) {
+    console.error("Error saving user:", error);
+    return res.status(500).json({ message: "Server error" });
   }
-  catch (error) {
-    console.error('Error saving user:', error);
-    return res.status(500).json({ message: 'Server error' });
-  }
-
 };
 
 module.exports = { addSingupController };

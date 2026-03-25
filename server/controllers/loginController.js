@@ -1,34 +1,47 @@
-const User = require('../models/login');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt'); 
+const User = require("../models/login");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 const getLoginController = async (req, res) => {
-  const { email, password, role, recuriterKey} = req.body;
+  const { email, password, role, recruiterKey } = req.body;
 
   try {
-
     const user = await User.findOne({ email: email });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
 
-    if(user.role ==='recruiter' && recuriterKey !== user.recuriterKey) {
-      return res.status(400).json({ message: "Invalid recruiter key" });
+    if (user.role === "recruiter" && user.recruiterKey) {
+      const isRecruiterKeyValid = await bcrypt.compare(
+        recruiterKey,
+        user.recruiterKey,
+      );
+      if (!isRecruiterKeyValid) {
+        return res.status(400).json({ message: "Invalid recruiter key" });
+      }
     }
-    
+
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: process.env.JWT_EXPIRES_IN },
     );
 
-    if (!token) return res.status(500).json({ message: "Error generating token" });
+    if (!token)
+      return res.status(500).json({ message: "Error generating token" });
 
-    res.json({ message: "Login successful", token, user});
+    const safeUser = {
+      _id: user._id,
+      userName: user.userName,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+    };
 
-  } 
-  catch (err) {
+    res.json({ message: "Login successful", token, user: safeUser });
+  } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
