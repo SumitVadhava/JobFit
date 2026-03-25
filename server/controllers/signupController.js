@@ -31,7 +31,7 @@ const addSingupController = async (req, res) => {
       });
 
       const token = jwt.sign(
-        { id: newUser._id, email: newUser.email },
+        { id: newUser._id, email: newUser.email, role: newUser.role },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN },
       );
