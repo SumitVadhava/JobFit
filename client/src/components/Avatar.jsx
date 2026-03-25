@@ -1,228 +1,219 @@
-import React, { useState } from 'react';
-import { User, LogOut, Settings, Bell, ChevronRight, Mail, Shield, Heart, Star } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Settings, LogOut, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContexts';
-import { X, Zap } from 'lucide-react';
-import UserImage from '../assets/user.png'
+import UserImage from '../assets/user.png';
 
 const Avatar = ({ userData }) => {
-    const navigate = useNavigate();
+    const navigate   = useNavigate();
     const { logout } = useAuth();
+    const [open, setOpen]       = useState(false);
+    const [hoverManage, setHM]  = useState(false);
+    const [hoverSignout, setHS] = useState(false);
+    const ref = useRef(null);
 
-    const [open, setOpen] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    useEffect(() => {
+        const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', h);
+        return () => document.removeEventListener('mousedown', h);
+    }, []);
 
     if (!userData) return null;
 
-    const handleLogout = () => {
-        // setShowConfirm(true);
-        logout();
-        navigate('/');
-    };
+    const name  = userData.userName || 'User Name';
+    const email = userData.email    || 'user@email.com';
+    const pic   = userData.picture  || UserImage;
 
-    const confirmLogout = () => {
-        setIsLoading(true); // ✅ Trigger loading state
-
-        // Simulate async logout or handle it
-        setTimeout(() => {
-            // logout(); // <- your actual logout function from context
-            logout();
-            navigate('/');
-        }, 1500); // Optional delay for demonstration
-    };
-
-    const cancelLogout = () => {
-        setShowConfirm(false);
-    };
+    /* ── shared style tokens ── */
+    const radius = '16px';
+    const purple  = '#6B46C1';
+    const purpleL = '#A78BFA';
+    const purpleBg = '#F5F0FF';
 
     return (
-        <div className="relative">
+        <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+
+            {/* ── Trigger button ── */}
             <button
-                onClick={() => setOpen(!open)}
-                className="relative w-12 h-12 bg-white border-none rounded-full cursor-pointer transition-all shadow-md overflow-hidden hover:scale-110 hover:rotate-3"
+                onClick={() => setOpen(o => !o)}
+                style={{
+                    width: '44px', height: '44px',
+                    borderRadius: '50%', border: 'none',
+                    padding: 0, cursor: 'pointer',
+                    background: 'transparent',
+                    outline: 'none', flexShrink: 0,
+                    boxShadow: 'none',
+                }}
             >
                 <img
-                    src={userData.picture || UserImage}
-                    alt={`${userData.userName !== "" ? userData.userName : "User Name"}'s Profile`}
+                    src={pic}
+                    onError={e => { e.target.onerror = null; e.target.src = UserImage; }}
+                    alt={name}
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover rounded-full"
+                    style={{
+                        width: '44px', height: '44px',
+                        borderRadius: '50%', objectFit: 'cover',
+                        display: 'block', border: 'none',
+                    }}
                 />
             </button>
 
+            {/* ── Dropdown panel ── */}
             {open && (
-                <div className="absolute right-0 top-16 w-96 bg-white from-white via-purple-50/30 to-pink-50/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden z-[1000] animate-slideIn">
-                    {/* Decorative elements */}
-                    <div className="absolute top-0 left-0 w-full h-full">
-                        <div className="absolute top-4 right-6 w-8 h-8 bg-gradient-to-br from-pink-300/20 to-purple-300/20 rounded-full blur-sm"></div>
-                        <div className="absolute top-12 right-12 w-4 h-4 bg-gradient-to-br from-yellow-300/30 to-orange-300/30 rounded-full blur-sm"></div>
-                        <div className="absolute bottom-20 left-8 w-6 h-6 bg-gradient-to-br from-blue-300/20 to-cyan-300/20 rounded-full blur-sm"></div>
-                    </div>
+                <>
+                    {/* invisible backdrop */}
+                    <div
+                        onClick={() => setOpen(false)}
+                        style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+                    />
 
-                    {/* Header */}
-                    <div className="relative p-8 bg-gradient-to-r from-violet-100/40 via-fuchsia-100/40 to-pink-100/40 border-b border-violet-200/30">
-                        <div className="flex items-center gap-5">
-                            <div className="relative">
-                                <div className="w-16 h-16 rounded-full overflow-hidden shadow-lg border-3 border-white/60 bg-gradient-to-br from-violet-200 to-pink-200 p-1">
+                    <div style={{
+                        position: 'absolute', right: 0, top: '54px', zIndex: 9999,
+                        width: '290px', borderRadius: radius,
+                        background: '#ffffff',
+                        border: '1px solid rgba(107,70,193,.15)',
+                        boxShadow: '0 8px 30px rgba(107,70,193,.15), 0 2px 8px rgba(0,0,0,.08)',
+                        overflow: 'hidden',
+                        animation: 'none',
+                    }}>
+
+                        {/* ── User block ── */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '13px',
+                            padding: '18px 18px 16px',
+                            borderBottom: '1px solid #f0ebff',
+                        }}>
+                            {/* avatar */}
+                            <div style={{
+                                width: '52px', height: '52px', borderRadius: '50%',
+                                flexShrink: 0,
+                                background: 'transparent',
+                                boxShadow: 'none',
+                            }}>
+                                <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', background: '#fff' }}>
                                     <img
-                                        src={userData.picture || UserImage}
-                                        onError={(e) => {
-                                            e.target.onerror = null;
-                                            e.target.src = "./assets/user.png";
-                                        }}
-                                        alt={`${userData.userName !== "" ? userData.userName : "User Name"}'s Profile`}
+                                        src={pic}
+                                        onError={e => { e.target.onerror = null; e.target.src = UserImage; }}
+                                        alt={name}
                                         referrerPolicy="no-referrer"
-                                        className="w-full h-full object-cover rounded-full"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                                     />
                                 </div>
                             </div>
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="text-xl text-black font-medium bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text">
-                                        {userData.userName !== "" ? userData.userName : "User Name"}
-                                    </h3>
-                                    <Star size={16} className="text-yellow-500 fill-yellow-500" />
+                            {/* info */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{
+                                    fontWeight: 700, fontSize: '15px', color: '#1e0a3c',
+                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                    letterSpacing: '-0.01em',
+                                }}>{name}</div>
+                                <div style={{
+                                    fontSize: '12px', color: '#9b7db8', marginTop: '2px',
+                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                }}>{email}</div>
+                            </div>
+                        </div>
+
+                        {/* ── Menu items ── */}
+                        <div style={{ padding: '8px' }}>
+
+                            {/* Manage account */}
+                            <Link
+                                to="/user/profile"
+                                state={userData}
+                                onClick={() => setOpen(false)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '10px 10px', borderRadius: '10px',
+                                    textDecoration: 'none',
+                                    background: hoverManage ? 'rgba(107,70,193,.04)' : 'transparent',
+                                    border: `1px solid ${hoverManage ? 'rgba(107,70,193,.07)' : 'transparent'}`,
+                                    transition: 'all .15s ease',
+                                    cursor: 'pointer',
+                                }}
+                                onMouseEnter={() => setHM(true)}
+                                onMouseLeave={() => setHM(false)}
+                            >
+                                {/* icon box */}
+                                <div style={{
+                                    width: '34px', height: '34px', borderRadius: '8px',
+                                    background: purpleBg, border: '1px solid rgba(107,70,193,.15)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                }}>
+                                    <Settings size={16} style={{ color: purple }} />
                                 </div>
-                                <p className="text-sm text-gray-600 mb-2">{userData.email !== "" ? userData.email : "User Email"}</p>
-                            </div>
-                        </div>
-                    </div>
+                                <span style={{ flex: 1, fontSize: '14px', fontWeight: 500, color: '#1e0a3c' }}>
+                                    Manage account
+                                </span>
+                                <span style={{
+                                    fontSize: '11px', color: purpleL, fontWeight: 500,
+                                    background: purpleBg, padding: '2px 7px',
+                                    borderRadius: '5px', border: '1px solid rgba(107,70,193,.15)',
+                                    whiteSpace: 'nowrap',
+                                }}>
+                                    Ctrl + A
+                                </span>
+                            </Link>
 
-                    {/* Menu */}
-                    <div className="py-3 relative">
-                        <Link to="/user/profile" onClick={() => setOpen(!open)} state={userData} className="group flex items-center px-8 py-4 hover:bg-gradient-to-r hover:from-violet-50/80 hover:to-fuchsia-50/80 transition-all duration-300 border-b border-violet-100/20">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br from-violet-100 to-violet-200 mr-4 group-hover:scale-110 transition-transform shadow-sm">
-                                <User size={20} className="text-violet-600" />
-                            </div>
-                            <div className="flex-1">
-                                <div className="font-semibold text-md text-gray-800 group-hover:text-violet-700">Your Profile</div>
-                                <div className="text-xs text-gray-500">Manage your account</div>
-                            </div>
-                            <ChevronRight size={16} className="text-gray-400 transition-all group-hover:translate-x-1 group-hover:text-violet-500" />
-                        </Link>
+                            {/* divider */}
+                            <div style={{
+                                height: '1px', margin: '4px 2px',
+                                background: 'linear-gradient(90deg, transparent, #e9d5ff 40%, #fbcfe8 65%, transparent)',
+                            }} />
 
-                        {/* Divider */}
-                        <div className="my-4 mx-8 relative">
-                            <div className="border-t border-gradient-to-r from-transparent via-violet-200/50 to-transparent"></div>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-6 h-6 bg-gradient-to-br from-violet-100 to-pink-100 rounded-full border border-white shadow-sm"></div>
-                            </div>
-                        </div>
-
-                        {/* Logout */}
-                        <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }} className="group flex items-center px-8 py-4 hover:bg-gradient-to-r hover:from-red-50/80 hover:to-pink-50/80 transition-all duration-300 text-red-600">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200 mr-4 group-hover:scale-110 transition-transform shadow-sm">
-                                <LogOut size={20} className="text-red-600" />
-                            </div>
-                            <div className="flex-1">
-                                <div className="font-semibold text-sm group-hover:text-red-700">Log Out</div>
-                                <div className="text-xs text-red-400">Sign out of account</div>
-                            </div>
-                            <ChevronRight size={16} className="text-red-400 transition-all group-hover:translate-x-1 group-hover:text-red-500" />
-                        </a>
-                    </div>
-
-                    {/* Bottom Decoration */}
-                    <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-violet-300/30 via-fuchsia-300/30 to-pink-300/30"></div>
-                </div>
-            )}
-
-            {open && (
-                <div
-                    className="fixed inset-0 z-[999]"
-                    onClick={() => setOpen(false)}
-                ></div>
-            )}
-
-            {/* Logout Confirmation Modal */}
-            {/* Confirmation Modal */}
-            {false && (
-                <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
-                    {/* Fixed backdrop with subtle spotlight */}
-                    <div
-                        className="absolute inset-0 backdrop-blur-sm"
-                        onClick={cancelLogout}
-                        style={{
-                            background: 'radial-gradient(circle at center, rgba(0,0,0,0.1), rgba(0,0,0,0.5))'
-                        }}
-                    />
-
-                    {/* Glassmorphic Modal */}
-                    <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-md transform transition-all duration-500 border border-white/20 overflow-hidden">
-                        {/* Gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl blur-sm pointer-events-none" />
-
-                        {/* Close button */}
-                        <button
-                            onClick={cancelLogout}
-                            disabled={isLoading}
-                            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-100/80 hover:bg-gray-200/80 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all duration-200 backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-110 z-10 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <X size={18} />
-                        </button>
-
-                        {/* Content */}
-                        <div className="relative p-10 text-center">
-                            {/* Animated icon */}
-                            <div className="relative w-20 h-20 mx-auto mb-8">
-                                <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-full animate-ping" />
-                                <div className="absolute inset-2 bg-gradient-to-r from-red-500/30 to-pink-500/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
-
-                                <div className="relative w-20 h-20 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center shadow-xl">
-                                    <LogOut size={32} className="text-black" />
+                            {/* Sign out */}
+                            <button
+                                onClick={() => { logout(); navigate('/'); }}
+                                onMouseEnter={() => setHS(true)}
+                                onMouseLeave={() => setHS(false)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '10px 10px', borderRadius: '10px',
+                                    background: hoverSignout ? 'rgba(239,68,68,.04)' : 'transparent',
+                                    border: `1px solid ${hoverSignout ? 'rgba(239,68,68,.07)' : 'transparent'}`,
+                                    transition: 'all .15s ease',
+                                    cursor: 'pointer', width: '100%', textAlign: 'left',
+                                }}
+                            >
+                                <div style={{
+                                    width: '34px', height: '34px', borderRadius: '8px',
+                                    background: '#fff1f2', border: '1px solid rgba(239,68,68,.15)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                }}>
+                                    <LogOut size={16} style={{ color: '#ef4444' }} />
                                 </div>
-
-                                {/* Mini floating icons */}
-                                <Shield size={16} className="absolute -top-2 -right-2 text-blue-500 animate-bounce" style={{ animationDelay: '1s' }} />
-                                <Zap size={16} className="absolute -bottom-2 -left-2 text-yellow-500 animate-bounce" style={{ animationDelay: '1.5s' }} />
-                            </div>
-                           {/* Message */}
-                            <p className="text-gray-800 mb-8 leading-relaxed text-lg">
-                                Are you sure you want to Log Out ?
-                            </p>
-
-                            {/* Buttons */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <button
-                                    onClick={cancelLogout}
-                                    disabled={isLoading}
-                                    className="flex-1 px-8 py-4 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl hover:scale-105 border border-gray-200/50"
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    onClick={confirmLogout}
-                                    disabled={isLoading}
-                                    className="flex-1 px-8 py-4 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-red-600 font-semibold transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:scale-105 relative overflow-hidden"
-                                >
-                                    {/* Shine effect */}
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-700" />
-
-                                    {isLoading ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-5 h-5 rounded-full border-2 border-red-500 border-t-transparent animate-spin" />
-                                            <span className="whitespace-nowrap">Logout...</span>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <LogOut size={18} className="relative" />
-                                            <span className="relative">Logout</span>
-                                        </>
-                                    )}
-                                </button>
-
-
-                            </div>
+                                <span style={{ flex: 1, fontSize: '14px', fontWeight: 500, color: '#ef4444' }}>
+                                    Sign out
+                                </span>
+                                <span style={{
+                                    fontSize: '11px', color: '#ef4444', fontWeight: 500,
+                                    background: '#fff1f2', padding: '2px 7px',
+                                    borderRadius: '5px', border: '1px solid rgba(239,68,68,.15)',
+                                    whiteSpace: 'nowrap',
+                                }}>
+                                    Ctrl + L
+                                </span>
+                            </button>
                         </div>
 
-                        {/* Bottom glow */}
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-3/4 h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent blur-sm" />
+                        {/* ── Footer ── */}
+                        <div style={{
+                            borderTop: '1px solid #f0ebff',
+                            padding: '10px 0 11px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                        }}>
+                            <Lock size={11} style={{ color: purpleL }} />
+                            <span style={{ fontSize: '11.5px', color: '#9b7db8', fontWeight: 500 }}>
+                                Secured by{' '}
+                                <strong style={{ color: purple, fontWeight: 700 }}>JobFit</strong>
+                            </span>
+                        </div>
+
                     </div>
-                </div>
+                </>
             )}
-
-
         </div>
     );
 };
