@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import api from "../../api/api";
 
 const Recruiter_Post_view = () => {
   const [formData, setFormData] = useState({
@@ -54,12 +55,7 @@ const Recruiter_Post_view = () => {
     if (validate()) {
       setIsSubmitting(true);
       try {
-        const response = await axios.post("https://jobfit-s5v7.onrender.com/api/jobs", formData, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`
-          }
-        });
+        const response = await api.post("/jobs", formData);
 
         console.log("Form Data Response:", response.data);
         toast.success("Job posted successfully!", {

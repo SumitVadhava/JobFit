@@ -23,6 +23,7 @@ import { useAuth } from './contexts/AuthContexts'
 import User_Best_Resume_view from './pages/User/User_Best_Resume_view'
 import Recruiter_CandidateProfile_view from './pages/User/Recruiter_CandidateProfile_view'
 import { ToastContainer } from 'react-toastify'
+import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_view'
 
 
 
