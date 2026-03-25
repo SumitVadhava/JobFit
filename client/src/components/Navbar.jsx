@@ -6,8 +6,7 @@ import Avatar from "./Avatar";
 import { useAuth } from "../contexts/AuthContexts";
 import { FiLogOut } from 'react-icons/fi';
 
-/* ── Nav link with hover-reveal shortcut ── */
-const NavLink = ({ href, label, shortcut }) => {
+const NavShortcutItem = ({ href, label, shortcut }) => {
     const [hovered, setHovered] = useState(false);
     return (
         <li style={{ position: 'relative', listStyle: 'none' }}
