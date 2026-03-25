@@ -4,7 +4,7 @@ const signup = (req, res, next) => {
   if (!userName || !email || !password || !role) {
     return res.status(400).json({
       message:
-        "Missing required fields: userName or email or password or role or status or recruiterKey",
+        "Missing required fields: name or email or password or role or status or recruiterKey",
     });
   }
 
@@ -14,9 +14,9 @@ const signup = (req, res, next) => {
 const login = (req, res, next) => {
   const { email, password, role, recruiterKey } = req.body;
 
-  if (!email || !password) {
+  if (!email || !password || !role) {
     return res.status(400).json({
-      message: "Missing required fields: email or password",
+      message: "Missing required fields: email or password or role ",
     });
   }
 

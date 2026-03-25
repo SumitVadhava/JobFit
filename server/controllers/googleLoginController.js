@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const googleAddLoginController = async (req, res) => {
-  const { name, email, picture, google_id } = req.body;
+  const { name, email, picture, google_id, role } = req.body;
 
   try {
     let existingUser = await User.findOne({ google_id: google_id });
@@ -14,6 +14,7 @@ const googleAddLoginController = async (req, res) => {
         email: email,
         picture: picture,
         google_id: google_id,
+        role: role,
       });
 
       await newUser.save();
@@ -23,7 +24,7 @@ const googleAddLoginController = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: userToUse._id, email: userToUse.email },
+      { id: userToUse._id, email: userToUse.email, role: userToUse.role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN },
     );
@@ -40,6 +41,7 @@ const googleAddLoginController = async (req, res) => {
       userName: userToUse.userName,
       email: userToUse.email,
       picture: userToUse.picture,
+      role: userToUse.role,
     };
 
     return res.status(200).json({
