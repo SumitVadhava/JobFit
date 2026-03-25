@@ -286,28 +286,20 @@ const AuthForm = ({ role, setUserData }) => {
           role: role,
         };
 
-        axios
-          .post("https://jobfit-s5v7.onrender.com/api/Google_login", userToSave)
-          .then((response) => {
-            console.log("User saved:", response.data);
-            login(response.data.user, response.data.token, role);
-            setUserData({
-              userName: response.data.user.name,
-              email: response.data.user.email,
-              sub: response.data.user.google_id,
-              picture: response.data.user.picture,
-              role: role,
-            });
+        const response = await axios.post("https://jobfit-s5v7.onrender.com/api/Google_login", userToSave);
+        console.log("User saved:", response.data);
+        login(response.data.user, response.data.token, role);
+        setUserData({
+          userName: response.data.user.name,
+          email: response.data.user.email,
+          sub: response.data.user.google_id,
+          picture: response.data.user.picture,
+          role: role,
+        });
 
+        // onClose();
+        navigate("/");
 
-            // onClose();
-            navigate("/");
-          })
-          .catch((error) => {
-            console.error("Error saving user:", error);
-          });
-
-        console.log(response.data.user);
 
 
 
