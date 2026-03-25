@@ -15,11 +15,19 @@ const options = {
     },
     servers: [
       {
-        // Use same-origin by default so Swagger "Try it out" works in local/dev/prod.
-        url: process.env.SWAGGER_SERVER_URL || "http://localhost:5173/",
-        description: "Current Server",
+        url: "http://localhost:5000",
+        description: "Local Server",
+      },
+      {
+        url: "https://jobfit-s5v7.onrender.com",
+        description: "Render Server",
+      },
+      {
+        url: "https://jobfit-delta.vercel.app",
+        description: "Frontend",
       },
     ],
+
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -64,10 +72,9 @@ const options = {
             },
             role: {
               type: "string",
-              enum: ["student", "faculty", "admin"],
-              example: "student",
+              enum: ['admin', 'user','recruiter', 'candidate'],
+              example: "user",
             },
-            phone: { type: "string", example: "9876543210" },
           },
         },
         GoogleLoginRequest: {
@@ -126,8 +133,6 @@ const options = {
             userName: { type: "string", example: "John Doe" },
             email: { type: "string", example: "john@example.com" },
             role: { type: "string", example: "student" },
-            phone: { type: "string", example: "9876543210" },
-            createdAt: { type: "string", format: "date-time" },
           },
         },
         // ── Job ──────────────────────────────────────────────────
@@ -135,49 +140,41 @@ const options = {
           type: "object",
           properties: {
             _id: { type: "string", example: "64abc123def456" },
-            title: { type: "string", example: "Software Engineer" },
-            company: { type: "string", example: "TechCorp" },
+            jobTitle: { type: "string", example: "Software Engineer" },
+            department: { type: "string", example: "Engineering" },
+            experience: { type: "string", example: "1-2 years" },
+            responsibilities:{type: "string", example: "Develop and maintain software applications."},
+            qualifications:{type: "string", example: "Bachelor's degree in Computer Science or related field."},
+            companyName: { type: "string", example: "TechCorp" },
             location: { type: "string", example: "Bangalore, India" },
-            description: {
+            workPlaceType: { type: "string", example: "Remote",enum: ['Remote', 'On-site', 'Hybrid'] },
+            jobDescription: {
               type: "string",
               example: "Looking for a skilled SE...",
             },
-            salary: { type: "string", example: "12-18 LPA" },
-            type: {
-              type: "string",
-              enum: ["full-time", "part-time", "internship"],
-              example: "full-time",
-            },
-            skills: {
-              type: "array",
-              items: { type: "string" },
-              example: ["Node.js", "React"],
-            },
-            createdAt: { type: "string", format: "date-time" },
+            img: { type: "string", example: "https://example.com/company-logo.jpg" },
+            bookmarked: { type: "boolean", example: false },
           },
         },
         JobRequest: {
           type: "object",
           required: ["title", "company", "location", "description"],
           properties: {
-            title: { type: "string", example: "Software Engineer" },
-            company: { type: "string", example: "TechCorp" },
+            _id: { type: "string", example: "64abc123def456" },
+            jobTitle: { type: "string", example: "Software Engineer" },
+            department: { type: "string", example: "Engineering" },
+            experience: { type: "string", example: "1-2 years" },
+            responsibilities:{type: "string", example: "Develop and maintain software applications."},
+            qualifications:{type: "string", example: "Bachelor's degree in Computer Science or related field."},
+            companyName: { type: "string", example: "TechCorp" },
             location: { type: "string", example: "Bangalore, India" },
-            description: {
+            workPlaceType: { type: "string", example: "Remote",enum: ['Remote', 'On-site', 'Hybrid'] },
+            jobDescription: {
               type: "string",
               example: "Looking for a skilled SE...",
             },
-            salary: { type: "string", example: "12-18 LPA" },
-            type: {
-              type: "string",
-              enum: ["full-time", "part-time", "internship"],
-              example: "full-time",
-            },
-            skills: {
-              type: "array",
-              items: { type: "string" },
-              example: ["Node.js", "React"],
-            },
+            img: { type: "string", example: "https://example.com/company-logo.jpg" },
+            bookmarked: { type: "boolean", example: false },
           },
         },
         // ── Profile ──────────────────────────────────────────────
@@ -187,12 +184,12 @@ const options = {
             _id: { type: "string" },
             userName: { type: "string", example: "John Doe" },
             email: { type: "string", example: "john@example.com" },
-            phone: { type: "string", example: "9876543210" },
             role: { type: "string", example: "student" },
-            bio: { type: "string", example: "Aspiring software developer" },
+            description: { type: "string", example: "Aspiring software developer" },
             skills: { type: "array", items: { type: "string" } },
             education: { type: "array", items: { type: "object" } },
             experience: { type: "array", items: { type: "object" } },
+            img: { type: "string", example: "https://example.com/profile.jpg" },
           },
         },
         // ── Generic ──────────────────────────────────────────────
