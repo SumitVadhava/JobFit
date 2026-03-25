@@ -1,10 +1,66 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Bell, Menu, X } from "lucide-react"; // optional icons
 import logo from '../assets/logo.png';
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import Avatar from "./Avatar";
 import { useAuth } from "../contexts/AuthContexts";
 import { FiLogOut } from 'react-icons/fi';
+
+const NavShortcutItem = ({ to, label, shortcut, userRole, location, onClick }) => {
+
+    const [hovered, setHovered] = useState(false);
+    return (
+        <li className="w-full md:w-auto"
+            style={{ position: 'relative', listStyle: 'none' }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
+            <NavLink
+                to={to}
+                onClick={onClick}
+                className={({ isActive }) => {
+                    const isActuallyActive = userRole !== "default" && (isActive || location.hash === to);
+                    return `flex items-center justify-center px-2 md:px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${isActuallyActive
+                        ? "text-[#9b44fe] bg-gray-100 shadow-sm"
+                        : "text-gray-700 hover:text-[#9b44fe] hover:bg-gray-100"
+                        }`;
+                }}
+            >
+                {label}
+            </NavLink>
+                {shortcut && hovered && (
+                <span style={{
+                    position: 'absolute', top: '100%', left: '50%',
+                    transform: 'translateX(-50%)',
+                    marginTop: '4px',
+                    background: '#1e0a3c',
+                    color: '#fff',
+                    fontSize: '11px', fontWeight: 600,
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    whiteSpace: 'nowrap',
+                    pointerEvents: 'none',
+                    zIndex: 100,
+                    boxShadow: '0 2px 8px rgba(0,0,0,.18)',
+                    letterSpacing: '.03em',
+                    opacity: hovered ? 1 : 0,
+                    transition: 'opacity .15s ease',
+                }}>
+                    {shortcut}
+                    {/* tooltip arrow */}
+                    <span style={{
+                        position: 'absolute', top: '-5px', left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 0, height: 0,
+                        borderLeft: '5px solid transparent',
+                        borderRight: '5px solid transparent',
+                        borderBottom: '5px solid #1e0a3c',
+                    }} />
+                </span>
+            )}
+        </li>
+    );
+};
 
 const Navbar = ({ userData }) => {
     const { user, role, token } = useAuth();
@@ -18,30 +74,29 @@ const Navbar = ({ userData }) => {
             { label: "About Us", href: "#footer" },
         ],
         admin: [
-            { label: "Dashboard", href: "/admin/dashboard" },
-            { label: "Users", href: "/admin/users" },
-            { label: "Jobs", href: "/admin/jobs" },
-            { label: "Companies", href: "/admin/companies" },
+            { label: "Dashboard", href: "/admin/dashboard", shortcut: 'Ctrl + D' },
+            { label: "Users", href: "/admin/users", shortcut: 'Ctrl + U' },
+            { label: "Jobs", href: "/admin/jobs", shortcut: 'Ctrl + J' },
+            { label: "Companies", href: "/admin/companies", shortcut: 'Ctrl + C' },
         ],
         candidate: [
-            { label: "Dashboard", href: "/user/dashboard" },
-            { label: "Resume Builder", href: "/user/resume" },
-            { label: "Best Resumes", href: "/user/best-resumes" },
-            { label: "Jobs", href: "/user/job-search" },
-            { label: "Saved Jobs", href: "/user/saved-jobs" },
+            { label: "Dashboard", href: "/user/dashboard", shortcut: 'Ctrl + D' },
+            { label: "Resume Builder", href: "/user/resume", shortcut: 'Ctrl + R' },
+            { label: "Best Resumes", href: "/user/best-resumes", shortcut: 'Ctrl + BR' },
+            { label: "Jobs", href: "/user/job-search", shortcut: 'Ctrl + J' },
+            { label: "Saved Jobs", href: "/user/saved-jobs", shortcut: 'Ctrl + SJ' },
         ],
         user: [
-            { label: "Dashboard", href: "/user/dashboard" },
-            { label: "Resume Builder", href: "/user/resume" },
-            { label: "Best Resumes", href: "/user/best-resumes" },
-            { label: "Jobs", href: "/user/job-search" },
-            { label: "Saved Jobs", href: "/user/saved-jobs" },
+            { label: "Dashboard", href: "/user/dashboard", shortcut: 'Ctrl + D' },
+            { label: "Resume Builder", href: "/user/resume", shortcut: 'Ctrl + R' },
+            { label: "Best Resumes", href: "/user/best-resumes", shortcut: 'Ctrl + BR' },
+            { label: "Jobs", href: "/user/job-search", shortcut: 'Ctrl + J' },
+            { label: "Saved Jobs", href: "/user/saved-jobs", shortcut: 'Ctrl + SJ' },
         ],
         recruiter: [
-            { label: "Dashboard", href: "/recruiter/recruiter-analytics" },
-            { label: "Post Job", href: "/recruiter/recruiter-postjob" },
-            { label: "Posted Jobs", href: "/recruiter/recruiter-postedjobs" },
-            { label: "Candidates", href: "/recruiter/recruiter-candidates" },
+            { label: "Dashboard", href: "/recruiter/recruiter-analytics", shortcut: 'Ctrl + D' },
+            { label: "Post Job", href: "/recruiter/recruiter-postjob", shortcut: 'Ctrl + PJ' },
+            { label: "Candidates", href: "/recruiter/recruiter-candidates", shortcut: 'Ctrl + C' },
         ],
     };
 
@@ -63,6 +118,126 @@ const Navbar = ({ userData }) => {
     const userRole = isLoggedIn ? userData.role : "default";
     // const userRole = "admin"
 
+    /* ── Global keyboard shortcuts ── */
+    const pendingKey = useRef(null);   // first key of a 2-key sequence
+    const seqTimer = useRef(null);   // cleanup timer
+
+    useEffect(() => {
+        const onKeyDown = (e) => {
+            // only fire when Ctrl is held, not inside an input/textarea
+            if (!e.ctrlKey) return;
+            const tag = document.activeElement?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+            if (!isLoggedIn) return;
+
+            const key = e.key.toLowerCase();
+
+            // ── single-key shortcuts ──────────────────────────
+            if (key === 'd') {
+                e.preventDefault();
+                if (userRole === 'admin') navigate('/admin/dashboard');
+                else if (userRole === 'recruiter') navigate('/recruiter/recruiter-analytics');
+                else navigate('/user/dashboard');
+                pendingKey.current = null;
+                return;
+            }
+            if (key === 'r' && pendingKey.current !== 'b') {
+                e.preventDefault();
+                if (userRole === 'candidate' || userRole === 'user') navigate('/user/resume');
+                pendingKey.current = null;
+                return;
+            }
+            if (key === 'j' && pendingKey.current !== 's' && pendingKey.current !== 'p') {
+                e.preventDefault();
+                if (userRole === 'admin') navigate('/admin/jobs');
+                else if (userRole === 'candidate' || userRole === 'user') navigate('/user/job-search');
+                pendingKey.current = null;
+                return;
+            }
+            if (key === 'u' && userRole === 'admin') {
+                e.preventDefault();
+                navigate('/admin/users');
+                pendingKey.current = null;
+                return;
+            }
+            if (key === 'c') {
+                e.preventDefault();
+                if (userRole === 'recruiter') navigate('/recruiter/recruiter-candidates');
+                else if (userRole === 'admin') navigate('/admin/companies');
+                pendingKey.current = null;
+                return;
+            }
+            if (key === 'a') {
+                e.preventDefault();
+                navigate('/user/profile');
+                pendingKey.current = null;
+                return;
+            }
+            if (key === 'l') {
+                e.preventDefault();
+                logout();
+                navigate('/');
+                pendingKey.current = null;
+                return;
+            }
+
+            // ── two-key sequence starters ─────────────────────
+            // Ctrl+B → wait for R  (Best Resumes)
+            if (key === 'b') {
+                e.preventDefault();
+                pendingKey.current = 'b';
+                clearTimeout(seqTimer.current);
+                seqTimer.current = setTimeout(() => { pendingKey.current = null; }, 600);
+                return;
+            }
+            // Ctrl+S → wait for J  (Saved Jobs)
+            if (key === 's') {
+                e.preventDefault();
+                pendingKey.current = 's';
+                clearTimeout(seqTimer.current);
+                seqTimer.current = setTimeout(() => { pendingKey.current = null; }, 600);
+                return;
+            }
+            // Ctrl+P → wait for J (Post Job)
+            if (key === 'p' && userRole === 'recruiter') {
+                e.preventDefault();
+                pendingKey.current = 'p';
+                clearTimeout(seqTimer.current);
+                seqTimer.current = setTimeout(() => { pendingKey.current = null; }, 600);
+                return;
+            }
+
+            // ── second key of sequence ────────────────────────
+            if (key === 'r' && pendingKey.current === 'b') {
+                e.preventDefault();
+                if (userRole === 'candidate' || userRole === 'user') navigate('/user/best-resumes');
+                pendingKey.current = null;
+                clearTimeout(seqTimer.current);
+                return;
+            }
+            if (key === 'j' && pendingKey.current === 's') {
+                e.preventDefault();
+                if (userRole === 'candidate' || userRole === 'user') navigate('/user/saved-jobs');
+                pendingKey.current = null;
+                clearTimeout(seqTimer.current);
+                return;
+            }
+            if (key === 'j' && pendingKey.current === 'p') {
+                e.preventDefault();
+                if (userRole === 'recruiter') navigate('/recruiter/recruiter-postjob');
+                pendingKey.current = null;
+                clearTimeout(seqTimer.current);
+                return;
+            }
+        };
+
+        window.addEventListener('keydown', onKeyDown);
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+            clearTimeout(seqTimer.current);
+        };
+    }, [isLoggedIn, navigate, logout]);
+
     return (
         <div className="w-full sticky top-0 z-50 border-b border-gray-200 bg-white/30 backdrop-blur-md shadow-sm">
             <nav className="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto sticky top-0 bg-white/30 backdrop-blur-md px-4 md:px-6 lg:px-8 py-3 md:py-4 z-50 ">
@@ -83,21 +258,14 @@ const Navbar = ({ userData }) => {
                 <div className="hidden md:flex md:flex-row items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
                     <ul className="flex flex-col md:flex-row items-center text-gray-700 font-medium w-full md:w-auto gap-2">
                         {navLinks[userRole]?.map((link) => (
-                            <li key={link.href} className="w-full md:w-auto">
-                                <NavLink
-                                    to={link.href}
-                                    className={({ isActive }) => {
-                                        const isActuallyActive = userRole !== "default" && (isActive || location.hash === link.href);
-                                        return `flex items-center justify-center px-2 md:px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${
-                                            isActuallyActive 
-                                            ? "text-[#9b44fe] bg-gray-100 shadow-sm" 
-                                            : "text-gray-700 hover:text-[#9b44fe] hover:bg-gray-100"
-                                        }`;
-                                    }}
-                                >
-                                    {link.label}
-                                </NavLink>
-                            </li>
+                            <NavShortcutItem
+                                key={link.href}
+                                to={link.href}
+                                label={link.label}
+                                shortcut={link.shortcut}
+                                userRole={userRole}
+                                location={location}
+                            />
                         ))}
                     </ul>
                     {
@@ -198,22 +366,15 @@ const Navbar = ({ userData }) => {
                         <div className="mt-4">
                             <ul className="space-y-3">
                                 {navLinks[userRole]?.map((link) => (
-                                    <li key={link.href}>
-                                        <NavLink
-                                            to={link.href}
-                                            className={({ isActive }) => {
-                                                const isActuallyActive = userRole !== "default" && (isActive || location.hash === link.href);
-                                                return `block px-4 py-3 text-lg font-medium rounded-lg transition-colors duration-200 ${
-                                                    isActuallyActive 
-                                                    ? "bg-gray-100 text-[#9b44fe]" 
-                                                    : "text-gray-800 hover:bg-gray-100"
-                                                }`;
-                                            }}
-                                            onClick={toggleDrawer}
-                                        >
-                                            {link.label}
-                                        </NavLink>
-                                    </li>
+                                    <NavShortcutItem
+                                        key={link.href}
+                                        to={link.href}
+                                        label={link.label}
+                                        shortcut={link.shortcut}
+                                        userRole={userRole}
+                                        location={location}
+                                        onClick={toggleDrawer}
+                                    />
                                 ))}
                             </ul>
                             {isLoggedIn ? (
