@@ -26,6 +26,7 @@ import { ToastContainer } from 'react-toastify'
 import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_view'
 import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './pages/Unauthorized'
+import ApplyJob from './pages/User/User_ApplyJob_view'
 
 
 
@@ -135,6 +136,14 @@ function App() {
               <Recruiter_CandidateProfile_view userProp={userProp} />
             </ProtectedRoute>} />
 
+        <Route
+          path='/user/apply/:jobId'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <ApplyJob />
+            </ProtectedRoute>} />
 
         <Route
           path='/admin/dashboard'

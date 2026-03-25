@@ -81,7 +81,7 @@ const Navbar = ({ userData }) => {
                     </button>
                 </div>
                 <div className="hidden md:flex md:flex-row items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
-                    <ul className="flex flex-col md:flex-row items-center text-gray-700 font-medium w-full md:w-auto">
+                    <ul className="flex flex-col md:flex-row items-center text-gray-700 font-medium w-full md:w-auto gap-2">
                         {navLinks[userRole]?.map((link) => (
                             <li key={link.href} className="w-full md:w-auto">
                                 <NavLink

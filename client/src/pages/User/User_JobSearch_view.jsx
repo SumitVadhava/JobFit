@@ -389,11 +389,13 @@
 
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
 
 const JobSearch = () => {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -438,7 +440,7 @@ const JobSearch = () => {
           img: job.img || "https://via.placeholder.com/150?text=Company+Logo",
           bookmarked: job.bookmarked || false
         }));
-
+        
         setJobs(formattedJobs);
 
         // Initialize bookmarks based on API response
@@ -1186,6 +1188,7 @@ const JobSearch = () => {
                         <div className="flex items-center gap-3">
                           {/* Apply Button */}
                           <button
+                            onClick={() => navigate(`/user/apply/${job._id}`)}
                             className="group/btn relative inline-flex items-center gap-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-7 py-3 rounded-2xl transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-gray-900/25 active:scale-[0.97]">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
