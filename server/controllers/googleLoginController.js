@@ -23,7 +23,7 @@ const googleAddLoginController = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: userToUse._id, email: userToUse.email },
+      { id: userToUse._id, email: userToUse.email, role: userToUse.role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN },
     );
@@ -40,6 +40,7 @@ const googleAddLoginController = async (req, res) => {
       userName: userToUse.userName,
       email: userToUse.email,
       picture: userToUse.picture,
+      role: userToUse.role,
     };
 
     return res.status(200).json({

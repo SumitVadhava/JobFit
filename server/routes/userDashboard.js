@@ -1,7 +1,7 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const userDashboardController = require('../controllers/userDashboardController');
-const userDashboard = require('../middlewares/userDashboardMid');
+const userDashboardController = require("../controllers/userDashboardController");
+const userDashboard = require("../middlewares/userDashboardMid");
 
 /**
  * @swagger
@@ -28,7 +28,11 @@ const userDashboard = require('../middlewares/userDashboardMid');
  *       401:
  *         description: Unauthorized
  */
-router.get('/userDashboard', userDashboard, userDashboardController.getUserDashboardData);
+router.get(
+  "/userDashboard",
+  userDashboard,
+  userDashboardController.getUserDashboardData,
+);
 
 /**
  * @swagger
@@ -48,7 +52,11 @@ router.get('/userDashboard', userDashboard, userDashboardController.getUserDashb
  *       401:
  *         description: Unauthorized
  */
-router.get('/resumeBuilder', userDashboard, userDashboardController.getResumeBuilderData);
+router.get(
+  "/resumeBuilder",
+  userDashboard,
+  userDashboardController.getResumeBuilderData,
+);
 
 /**
  * @swagger
@@ -76,7 +84,7 @@ router.get('/resumeBuilder', userDashboard, userDashboardController.getResumeBui
  *       401:
  *         description: Unauthorized
  */
-router.get('/job', userDashboard, userDashboardController.getJobData);
+router.get("/job", userDashboard, userDashboardController.getJobData);
 
 /**
  * @swagger
@@ -104,6 +112,29 @@ router.get('/job', userDashboard, userDashboardController.getJobData);
  *       401:
  *         description: Unauthorized
  */
-router.get('/savedJobs', userDashboard, userDashboardController.getSavedJobsData);
+router.get(
+  "/savedJobs",
+  userDashboard,
+  userDashboardController.getSavedJobsData,
+);
+
+/**
+ * @swagger
+ * /api/user/applied-companies:
+ *   get:
+ *     summary: Get applied companies and application details for the current user
+ *     tags: [User Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Companies and job applications for the current user
+ *       401:
+ *         description: Unauthorized
+ */
+router.get(
+  "/applied-companies",
+  userDashboardController.getAppliedCompaniesData,
+);
 
 module.exports = router;
