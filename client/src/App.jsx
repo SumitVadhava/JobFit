@@ -23,12 +23,9 @@ import { useAuth } from './contexts/AuthContexts'
 import User_Best_Resume_view from './pages/User/User_Best_Resume_view'
 import Recruiter_CandidateProfile_view from './pages/User/Recruiter_CandidateProfile_view'
 import { ToastContainer } from 'react-toastify'
-<<<<<<< HEAD
 import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_view'
-=======
 import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './pages/Unauthorized'
->>>>>>> 1801d9fd3c1814a3d2f1ceef8a62eda61e19d313
 
 
 
@@ -79,23 +76,6 @@ function App() {
       <Routes>
         <Route path='/' element={<HeroSection />} />
         <Route path='/login' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
-<<<<<<< HEAD
-        <Route path='/user/dashboard' element={<UserAnalytics />} />
-        <Route path='/user/ats' element={<AtsScreenBrackDown atsData={atsData} />} />
-        <Route path='/user/job-search' element={<JobSearch />} />
-        <Route path='/user/resume' element={<Resumes atsData={atsData} setAtsData={setAtsData} />} />
-        <Route path='/user/saved-jobs' element={<SavedJobs />} />
-        <Route path='/user/best-resumes' element={<User_Best_Resume_view />} />
-        <Route path='/user/profile' element={<Recruiter_CandidateProfile_view userProp={userProp} />} />
-        <Route path='/admin/dashboard' element={<AdminAnalytics />} />
-        <Route path='/admin/users' element={<JobFitUsersTable />} />
-        <Route path='/admin/jobs' element={<JobDescription />} />
-        <Route path='/admin/companies' element={<Companies />} />
-        <Route path="/recruiter/recruiter-analytics" element={<Recruiter_Analytics_view />} />
-        <Route path="/recruiter/recruiter-postjob" element={<Recruiter_Post_view />} />
-        <Route path="/recruiter/recruiter-postedjobs" element={<Recruiter_Posted_Jobs_view />} />
-        <Route path="/recruiter/recruiter-candidates" element={<Recruiter_Candidates_view />} />
-=======
 
 
         <Route
@@ -215,7 +195,16 @@ function App() {
               <Recruiter_Candidates_view />
             </ProtectedRoute>} />
         <Route path="/unauthorized" element={<Unauthorized />} />
->>>>>>> 1801d9fd3c1814a3d2f1ceef8a62eda61e19d313
+        <Route
+          path="/recruiter/recruiter-postedjobs"
+          element={
+            <ProtectedRoute
+              allowedRoles={['recruiter']}
+            >
+              <Recruiter_Posted_Jobs_view />
+            </ProtectedRoute>} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        
       </Routes>
       {/* <GoogleOneTapLogin /> */}
     </>
