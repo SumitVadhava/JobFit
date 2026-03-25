@@ -86,6 +86,7 @@ function App() {
         <Route path='/admin/companies' element={<Companies />} />
         <Route path="/recruiter/recruiter-analytics" element={<Recruiter_Analytics_view />} />
         <Route path="/recruiter/recruiter-postjob" element={<Recruiter_Post_view />} />
+        <Route path="/recruiter/recruiter-postedjobs" element={<Recruiter_Posted_Jobs_view />} />
         <Route path="/recruiter/recruiter-candidates" element={<Recruiter_Candidates_view />} />
       </Routes>
       {/* <GoogleOneTapLogin /> */}
