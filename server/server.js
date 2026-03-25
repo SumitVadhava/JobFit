@@ -19,6 +19,13 @@ require("./config/connection")();
 
 const app = express();
 
+const allowedOrigins = (
+  process.env.CORS_ORIGIN || "http://localhost:5173,http://localhost:3000"
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   "/api-docs",
   swaggerUi.serve,
@@ -43,14 +50,23 @@ app.use(
       displayRequestDuration: true,
       filter: true,
     },
-  })
+  }),
 );
 
 // Middlewares
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173" || "http://localhost:3000" ,
+    origin: (origin, callback) => {
+      // Allow server-to-server calls and tools that do not send an Origin header.
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );

@@ -15,8 +15,9 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:9705",
-        description: "Local Development Server",
+        // Use same-origin by default so Swagger "Try it out" works in local/dev/prod.
+        url: process.env.SWAGGER_SERVER_URL || "http://localhost:5173/",
+        description: "Current Server",
       },
     ],
     components: {
@@ -34,18 +35,38 @@ const options = {
           type: "object",
           required: ["email", "password"],
           properties: {
-            email: { type: "string", format: "email", example: "user@example.com" },
-            password: { type: "string", format: "password", example: "Secret@123" },
+            email: {
+              type: "string",
+              format: "email",
+              example: "user@example.com",
+            },
+            password: {
+              type: "string",
+              format: "password",
+              example: "Secret@123",
+            },
           },
         },
         SignupRequest: {
           type: "object",
-          required: ["name", "email", "password", "role"],
+          required: ["userName", "email", "password", "role"],
           properties: {
-            name: { type: "string", example: "John Doe" },
-            email: { type: "string", format: "email", example: "john@example.com" },
-            password: { type: "string", format: "password", example: "Secret@123" },
-            role: { type: "string", enum: ["student", "faculty", "admin"], example: "student" },
+            userName: { type: "string", example: "John Doe" },
+            email: {
+              type: "string",
+              format: "email",
+              example: "john@example.com",
+            },
+            password: {
+              type: "string",
+              format: "password",
+              example: "Secret@123",
+            },
+            role: {
+              type: "string",
+              enum: ["student", "faculty", "admin"],
+              example: "student",
+            },
             phone: { type: "string", example: "9876543210" },
           },
         },
@@ -64,7 +85,10 @@ const options = {
             data: {
               type: "object",
               properties: {
-                token: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+                token: {
+                  type: "string",
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                },
                 user: { $ref: "#/components/schemas/User" },
               },
             },
@@ -75,14 +99,22 @@ const options = {
           type: "object",
           required: ["email"],
           properties: {
-            email: { type: "string", format: "email", example: "user@example.com" },
+            email: {
+              type: "string",
+              format: "email",
+              example: "user@example.com",
+            },
           },
         },
         VerifyOtpRequest: {
           type: "object",
           required: ["email", "otp"],
           properties: {
-            email: { type: "string", format: "email", example: "user@example.com" },
+            email: {
+              type: "string",
+              format: "email",
+              example: "user@example.com",
+            },
             otp: { type: "string", example: "123456" },
           },
         },
@@ -91,7 +123,7 @@ const options = {
           type: "object",
           properties: {
             _id: { type: "string", example: "64abc123def456" },
-            name: { type: "string", example: "John Doe" },
+            userName: { type: "string", example: "John Doe" },
             email: { type: "string", example: "john@example.com" },
             role: { type: "string", example: "student" },
             phone: { type: "string", example: "9876543210" },
@@ -106,10 +138,21 @@ const options = {
             title: { type: "string", example: "Software Engineer" },
             company: { type: "string", example: "TechCorp" },
             location: { type: "string", example: "Bangalore, India" },
-            description: { type: "string", example: "Looking for a skilled SE..." },
+            description: {
+              type: "string",
+              example: "Looking for a skilled SE...",
+            },
             salary: { type: "string", example: "12-18 LPA" },
-            type: { type: "string", enum: ["full-time", "part-time", "internship"], example: "full-time" },
-            skills: { type: "array", items: { type: "string" }, example: ["Node.js", "React"] },
+            type: {
+              type: "string",
+              enum: ["full-time", "part-time", "internship"],
+              example: "full-time",
+            },
+            skills: {
+              type: "array",
+              items: { type: "string" },
+              example: ["Node.js", "React"],
+            },
             createdAt: { type: "string", format: "date-time" },
           },
         },
@@ -120,10 +163,21 @@ const options = {
             title: { type: "string", example: "Software Engineer" },
             company: { type: "string", example: "TechCorp" },
             location: { type: "string", example: "Bangalore, India" },
-            description: { type: "string", example: "Looking for a skilled SE..." },
+            description: {
+              type: "string",
+              example: "Looking for a skilled SE...",
+            },
             salary: { type: "string", example: "12-18 LPA" },
-            type: { type: "string", enum: ["full-time", "part-time", "internship"], example: "full-time" },
-            skills: { type: "array", items: { type: "string" }, example: ["Node.js", "React"] },
+            type: {
+              type: "string",
+              enum: ["full-time", "part-time", "internship"],
+              example: "full-time",
+            },
+            skills: {
+              type: "array",
+              items: { type: "string" },
+              example: ["Node.js", "React"],
+            },
           },
         },
         // ── Profile ──────────────────────────────────────────────
@@ -131,7 +185,7 @@ const options = {
           type: "object",
           properties: {
             _id: { type: "string" },
-            name: { type: "string", example: "John Doe" },
+            userName: { type: "string", example: "John Doe" },
             email: { type: "string", example: "john@example.com" },
             phone: { type: "string", example: "9876543210" },
             role: { type: "string", example: "student" },
