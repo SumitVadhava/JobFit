@@ -14,8 +14,7 @@ const options = {
       },
     },
     servers: [
-      {
-        // Use same-origin by default so Swagger "Try it out" works in local/dev/prod.
+      {     
         url: process.env.SWAGGER_SERVER_URL || "http://localhost:5173/",
         description: "Current Server",
       },
