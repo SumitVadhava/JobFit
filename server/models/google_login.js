@@ -17,6 +17,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    enum: ["candidate", "recruiter","admin", "user"],
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("google_logins", userSchema);
