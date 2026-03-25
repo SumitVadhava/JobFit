@@ -12,11 +12,19 @@ const options = {
       contact: {
         name: "Code Conquerors",
       },
-    },
-    servers: [
-      {     
-        url: process.env.SWAGGER_SERVER_URL || "http://localhost:5173/" || "https://jobfit-delta.vercel.app",
-        description: "Current Server",
+        },
+        servers: [
+      {
+        url: "http://localhost:5000",
+        description: "Local Server",
+      },
+      {
+        url: "https://jobfit-s5v7.onrender.com",
+        description: "Render Server",
+      },
+      {
+        url: "https://jobfit-delta.vercel.app",
+        description: "Frontend",
       },
     ],
     components: {
