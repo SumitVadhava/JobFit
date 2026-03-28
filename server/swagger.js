@@ -5,15 +5,12 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "JobFit API",
+      title: "API",
       version: "1.0.0",
       description:
         "REST API documentation for the JobFit platform — a job matching and resume analysis system built by Code Conquerors.",
-      contact: {
-        name: "Code Conquerors",
-      },
-        },
-        servers: [
+    },
+    servers: [
       {
         url: "http://localhost:5000",
         description: "Local Server",
@@ -38,7 +35,6 @@ const options = {
         },
       },
       schemas: {
-        // ── Auth ─────────────────────────────────────────────────
         LoginRequest: {
           type: "object",
           required: ["email", "password"],

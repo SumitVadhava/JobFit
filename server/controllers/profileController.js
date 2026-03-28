@@ -6,7 +6,6 @@ const handleError = (res, error, defaultMessage = "Server error") => {
   res.status(500).json({ message: defaultMessage, error: error.message });
 };
 
-// GET /api/profile
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : null;
@@ -25,7 +24,6 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// POST /api/profile
 exports.createProfile = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : null;
