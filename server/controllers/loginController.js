@@ -1,6 +1,7 @@
 const User = require("../models/login");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { ROLES } = require("../utils/roles");
 
 const getLoginController = async (req, res) => {
   const { email, password, role, recruiterKey } = req.body;
@@ -13,7 +14,7 @@ const getLoginController = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    if (user.role === "recruiter" && user.recruiterKey) {
+    if (user.role === ROLES.RECRUITER && user.recruiterKey) {
       const isRecruiterKeyValid = await bcrypt.compare(
         recruiterKey,
         user.recruiterKey,
@@ -24,7 +25,7 @@ const getLoginController = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN },
     );
