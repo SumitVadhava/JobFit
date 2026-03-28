@@ -357,7 +357,7 @@ const CandidatesView = () => {
         />
       </div>
 
-      {/* Status Select */}
+      {/* Status Select 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Status
@@ -369,7 +369,7 @@ const CandidatesView = () => {
           placeholder="Select status"
           icon={Users}
         />
-      </div>
+      </div>*/}
 
       {/* Action Buttons */}
       <div className="flex gap-3 pt-4">
@@ -477,7 +477,7 @@ const CandidatesView = () => {
                         "Skills",
                         "Education",
                         "Location",
-                        "Status",
+                        // "Status",
                         "Actions",
                       ].map((header) => (
                         <th
@@ -527,7 +527,7 @@ const CandidatesView = () => {
                         <td className="px-3 py-3 whitespace-nowrap text-gray-700 text-sm">
                           {candidate.location}
                         </td>
-                        <td className="px-3 py-3 whitespace-nowrap">
+                        {/*<td className="px-3 py-3 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
                               statusColors[candidate.status].bg
@@ -537,9 +537,9 @@ const CandidatesView = () => {
                           >
                             {candidate.status}
                           </span>
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap text-right">
-                          <button className="inline-flex items-center space-x-1 px-2 py-1 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-all duration-200 transform group-hover:scale-105">
+                        </td>*/}
+                        <td className="px-3 py-3 whitespace-nowrap text-right inline-flex items-center justify-center">
+                          <button className="inline-flex items-center justify-center space-x-1 px-2 py-1 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-all duration-200 transform group-hover:scale-105">
                             <Eye className="w-3.5 h-3.5" />
                             <span>View</span>
                           </button>
