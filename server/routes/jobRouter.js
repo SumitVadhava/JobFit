@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const job = require("../middlewares/jobsMid");
 const jobController = require("../controllers/jobController");
+const authorizeRole = require("../middlewares/authorizeRole");
+const { ROLES } = require("../utils/roles");
 
 /**
  * @swagger
@@ -40,7 +42,7 @@ const jobController = require("../controllers/jobController");
  *       401:
  *         description: Unauthorized
  */
-router.post("/", job, jobController.createJob);
+router.post("/", authorizeRole(ROLES.RECRUITER), job, jobController.createJob);
 
 /**
  * @swagger
@@ -132,7 +134,12 @@ router.get("/:id", jobController.getJobById);
  *       401:
  *         description: Unauthorized
  */
-router.put("/:id", job, jobController.updateJob);
+router.put(
+  "/:id",
+  authorizeRole(ROLES.RECRUITER),
+  job,
+  jobController.updateJob,
+);
 
 /**
  * @swagger
@@ -161,6 +168,10 @@ router.put("/:id", job, jobController.updateJob);
  *       401:
  *         description: Unauthorized
  */
-router.delete("/:id", jobController.deleteJob);
+router.delete(
+  "/:id",
+  authorizeRole(ROLES.ADMIN, ROLES.RECRUITER),
+  jobController.deleteJob,
+);
 
 module.exports = router;

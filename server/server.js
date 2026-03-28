@@ -10,6 +10,8 @@ const adminDashboardRouter = require("./routes/adminDashboardRouter");
 const userDashboardRouter = require("./routes/userDashboard");
 const profileRouter = require("./routes/profileRouter");
 const auth = require("./middlewares/auth");
+const authorizeRole = require("./middlewares/authorizeRole");
+const { ROLES, USER_FACING_ROLES } = require("./utils/roles");
 const resumeRoute = require("./ATS/resume");
 const path = require("path");
 const multer = require("multer");
@@ -97,10 +99,15 @@ app.use("/public", express.static(path.join(__dirname, "public")));
 app.use("/api", loginRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/jobs", auth, jobRouter);
-app.use("/api/admin", auth, adminDashboardRouter);
-app.use("/api/user", auth, userDashboardRouter);
+app.use("/api/admin", auth, authorizeRole(ROLES.ADMIN), adminDashboardRouter);
+app.use(
+  "/api/user",
+  auth,
+  authorizeRole(...USER_FACING_ROLES),
+  userDashboardRouter,
+);
 app.use("/api/profile", auth, profileRouter);
-app.use("/api/resume", auth, resumeRoute);
+app.use("/api/resume", auth, authorizeRole(...USER_FACING_ROLES), resumeRoute);
 
 
 
