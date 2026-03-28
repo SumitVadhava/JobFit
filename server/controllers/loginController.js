@@ -5,16 +5,28 @@ const { ROLES } = require("../utils/roles");
 
 const getLoginController = async (req, res) => {
   const { email, password, role, recruiterKey } = req.body;
-
   try {
-    const user = await User.findOne({ email: email });
-    if (!user) return res.status(400).json({ message: "Invalid email credentials" });
+    const user = await User.findOne({ email }).select("+password");
+    if (!user)
+      return res.status(400).json({ message: "Invalid email credentials" });
+
+    if (!user.password) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid password credentials" });
 
+    if (role && user.role !== role) {
+      return res.status(400).json({ message: "Invalid role for this account" });
+    }
+
     if (user.role === ROLES.RECRUITER && user.recruiterKey) {
+      if (!recruiterKey) {
+        return res.status(400).json({ message: "Recruiter key is required" });
+      }
+
       const isRecruiterKeyValid = await bcrypt.compare(
         recruiterKey,
         user.recruiterKey,
