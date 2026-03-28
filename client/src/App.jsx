@@ -23,6 +23,10 @@ import { useAuth } from './contexts/AuthContexts'
 import User_Best_Resume_view from './pages/User/User_Best_Resume_view'
 import Recruiter_CandidateProfile_view from './pages/User/Recruiter_CandidateProfile_view'
 import { ToastContainer } from 'react-toastify'
+import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_view'
+import ProtectedRoute from './components/ProtectedRoute'
+import Unauthorized from './pages/Unauthorized'
+import ApplyJob from './pages/User/User_ApplyJob_view'
 
 
 
@@ -72,21 +76,144 @@ function App() {
       <Navbar userData={userProp} />
       <Routes>
         <Route path='/' element={<HeroSection />} />
-        <Route path='/auth' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
-        <Route path='/user/dashboard' element={<UserAnalytics />} />
-        <Route path='/user/ats' element={<AtsScreenBrackDown atsData={atsData} />} />
-        <Route path='/user/job-search' element={<JobSearch />} />
-        <Route path='/user/resume' element={<Resumes atsData={atsData} setAtsData={setAtsData} />} />
-        <Route path='/user/saved-jobs' element={<SavedJobs />} />
-        <Route path='/user/best-resumes' element={<User_Best_Resume_view />} />
-        <Route path='/user/profile' element={<Recruiter_CandidateProfile_view userProp={userProp} />} />
-        <Route path='/admin/dashboard' element={<AdminAnalytics />} />
-        <Route path='/admin/users' element={<JobFitUsersTable />} />
-        <Route path='/admin/jobs' element={<JobDescription />} />
-        <Route path='/admin/companies' element={<Companies />} />
-        <Route path="/recruiter/recruiter-analytics" element={<Recruiter_Analytics_view />} />
-        <Route path="/recruiter/recruiter-postjob" element={<Recruiter_Post_view />} />
-        <Route path="/recruiter/recruiter-candidates" element={<Recruiter_Candidates_view />} />
+        <Route path='/login' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
+
+
+        <Route
+          path='/user/dashboard'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <UserAnalytics />
+            </ProtectedRoute>} />
+        <Route
+          path='/user/ats'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <AtsScreenBrackDown atsData={atsData} />
+            </ProtectedRoute>} />
+        <Route
+          path='/user/job-search'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <JobSearch />
+            </ProtectedRoute>} />
+        <Route
+          path='/user/resume'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <Resumes atsData={atsData} setAtsData={setAtsData} />
+            </ProtectedRoute>} />
+        <Route
+          path='/user/saved-jobs'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <SavedJobs />
+            </ProtectedRoute>} />
+        <Route
+          path='/user/best-resumes'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <User_Best_Resume_view />
+            </ProtectedRoute>} />
+        <Route
+          path='/user/profile'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <Recruiter_CandidateProfile_view userProp={userProp} />
+            </ProtectedRoute>} />
+
+        <Route
+          path='/user/apply/:jobId'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <ApplyJob />
+            </ProtectedRoute>} />
+
+        <Route
+          path='/admin/dashboard'
+          element={
+            <ProtectedRoute
+              allowedRoles={['admin']}
+            >
+              <AdminAnalytics />
+            </ProtectedRoute>} />
+        <Route
+          path='/admin/users'
+          element={
+            <ProtectedRoute
+              allowedRoles={['admin']}
+            >
+              <JobFitUsersTable />
+            </ProtectedRoute>} />
+        <Route
+          path='/admin/jobs'
+          element={
+            <ProtectedRoute
+              allowedRoles={['admin']}
+            >
+              <JobDescription />
+            </ProtectedRoute>} />
+        <Route
+          path='/admin/companies'
+          element={
+            <ProtectedRoute
+              allowedRoles={['admin']}
+            >
+              <Companies />
+            </ProtectedRoute>} />
+
+
+        <Route
+          path="/recruiter/recruiter-analytics"
+          element={
+            <ProtectedRoute
+              allowedRoles={['recruiter']}
+            >
+              <Recruiter_Analytics_view />
+            </ProtectedRoute>} />
+        <Route
+          path="/recruiter/recruiter-postjob"
+          element={
+            <ProtectedRoute
+              allowedRoles={['recruiter']}
+            >
+              <Recruiter_Post_view />
+            </ProtectedRoute>} />
+        <Route
+          path="/recruiter/recruiter-candidates"
+          element={
+            <ProtectedRoute
+              allowedRoles={['recruiter']}
+            >
+              <Recruiter_Candidates_view />
+            </ProtectedRoute>} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route
+          path="/recruiter/recruiter-postedjobs"
+          element={
+            <ProtectedRoute
+              allowedRoles={['recruiter']}
+            >
+              <Recruiter_Posted_Jobs_view />
+            </ProtectedRoute>} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        
       </Routes>
       {/* <GoogleOneTapLogin /> */}
     </>

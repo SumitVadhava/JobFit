@@ -405,15 +405,15 @@ const CandidatesView = () => {
         </div>
 
         {/* Main Layout */}
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-4">
           {/* Desktop Sidebar Filters */}
-          <div className="hidden lg:block w-80 xl:w-96">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
-              <div className="flex items-center space-x-2 mb-6">
+          <div className="hidden lg:block w-56 flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-6">
+              <div className="flex items-center space-x-2 mb-4">
                 <Filter className="w-5 h-5 text-purple-600" />
-                <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
               </div>
-              <div className="border-t border-gray-200 pt-6">
+              <div className="border-t border-gray-200 pt-4">
                 <FilterSection />
               </div>
             </div>
@@ -466,8 +466,8 @@ const CandidatesView = () => {
 
             {/* Desktop Table */}
             <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div>
+                <table className="w-full table-fixed">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       {[
@@ -482,7 +482,7 @@ const CandidatesView = () => {
                       ].map((header) => (
                         <th
                           key={header}
-                          className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap"
+                          className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap"
                         >
                           {header}
                         </th>
@@ -495,14 +495,14 @@ const CandidatesView = () => {
                         key={idx}
                         className="hover:bg-purple-50 transition-colors duration-200 group"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900">
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="font-medium text-gray-900 text-sm">
                             {candidate.name}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 py-3 whitespace-nowrap">
                           <div
-                            className={`font-semibold ${
+                            className={`font-semibold text-sm ${
                               candidate.score >= 90
                                 ? "text-green-600"
                                 : candidate.score >= 80
@@ -513,23 +513,23 @@ const CandidatesView = () => {
                             {candidate.score}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                        <td className="px-3 py-3 whitespace-nowrap text-gray-700 text-sm">
                           {candidate.experience} yrs
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="max-w-xs truncate text-gray-700">
+                        <td className="px-3 py-3">
+                          <div className="truncate text-gray-700 text-sm">
                             {candidate.skills.join(", ")}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                        <td className="px-3 py-3 whitespace-nowrap text-gray-700 text-sm">
                           {candidate.education}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                        <td className="px-3 py-3 whitespace-nowrap text-gray-700 text-sm">
                           {candidate.location}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 py-3 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
                               statusColors[candidate.status].bg
                             } ${statusColors[candidate.status].color} ${
                               statusColors[candidate.status].border
@@ -538,9 +538,9 @@ const CandidatesView = () => {
                             {candidate.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <button className="inline-flex items-center space-x-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-all duration-200 transform group-hover:scale-105">
-                            <Eye className="w-4 h-4" />
+                        <td className="px-3 py-3 whitespace-nowrap text-right">
+                          <button className="inline-flex items-center space-x-1 px-2 py-1 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-all duration-200 transform group-hover:scale-105">
+                            <Eye className="w-3.5 h-3.5" />
                             <span>View</span>
                           </button>
                         </td>

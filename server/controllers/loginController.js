@@ -8,11 +8,11 @@ const getLoginController = async (req, res) => {
 
   try {
     const user = await User.findOne({ email: email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) return res.status(400).json({ message: "Invalid email credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Invalid password credentials" });
 
     if (user.role === ROLES.RECRUITER && user.recruiterKey) {
       const isRecruiterKeyValid = await bcrypt.compare(

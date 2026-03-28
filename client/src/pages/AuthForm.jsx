@@ -3,6 +3,7 @@ import * as Yup from "yup";
 import { useGoogleLogin } from "@react-oauth/google";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import axios from "axios";
+import api from "../api/api";
 import { useAuth } from "../contexts/AuthContexts";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -91,14 +92,7 @@ const AuthForm = ({ role, setUserData }) => {
     }
 
     try {
-      const res = await fetch("https://jobfit-s5v7.onrender.com/api/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!res.ok) throw new Error("Failed to send OTP");
-
+      const res = await api.post("/send-otp", { email });
       setVerificationResult("📨 OTP sent successfully!");
       return Promise.resolve();
     } catch (err) {
@@ -112,29 +106,19 @@ const AuthForm = ({ role, setUserData }) => {
     setVerificationResult("🔄 Verifying OTP...");
 
     try {
-      const res = await fetch("https://jobfit-s5v7.onrender.com/api/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
-      });
+      const res = await api.post("/verify-otp", { email, otp });
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok && data.success) {
+      if (data.success) {
         setVerificationResult("✅ OTP verified successfully!");
         setIsOTPOpen(false);
 
         // After successful OTP verification, proceed with registration
         try {
-          const registerRes = await fetch("https://jobfit-s5v7.onrender.com/api/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, email, password }),
-          });
+          const registerRes = await api.post("/register", { username, email, password });
+          const registerData = registerRes.data;
 
-          const registerData = await registerRes.json();
-
-          if (registerRes.ok) {
+          if (registerRes.status === 200 || registerRes.status === 201) {
             const { token, user } = registerData;
             login(user, token);
             navigate("/dashboard");
@@ -168,7 +152,7 @@ const AuthForm = ({ role, setUserData }) => {
         // For signup, first send OTP
         setIsOtpLoading(true); // Start loading
         try {
-          const response = await axios.post("https://jobfit-s5v7.onrender.com/api/auth/send-otp", {
+          const response = await api.post("/auth/send-otp", {
             email: formValues.email,
           });
 
@@ -199,7 +183,8 @@ const AuthForm = ({ role, setUserData }) => {
         const status = "active";
         console.log(userName, email, password, status, role, recruiterKey);
 
-        const response = await axios.post("https://jobfit-s5v7.onrender.com/api/login", { email, password, role, recruiterKey });
+        const response = await api.post("/login", { email, password, role, recruiterKey });
+        console.log(response.data);
 
         if (response.data.message === "Invalid credentials") {
           toast.error("Login Failed!", {
@@ -286,7 +271,7 @@ const AuthForm = ({ role, setUserData }) => {
           role: role,
         };
 
-        const response = await axios.post("https://jobfit-s5v7.onrender.com/api/Google_login", userToSave);
+        const response = await api.post("/Google_login", userToSave);
         console.log("User saved:", response.data);
         login(response.data.user, response.data.token, role);
         setUserData({
@@ -301,7 +286,7 @@ const AuthForm = ({ role, setUserData }) => {
         navigate("/");
 
 
-
+        
 
       } catch (err) {
         console.error("Failed to fetch user info", err);
@@ -505,7 +490,7 @@ const AuthForm = ({ role, setUserData }) => {
           setUserData={setUserData}
           onResend={async () => {
             try {
-              await axios.post("https://jobfit-s5v7.onrender.com/api/auth/send-otp", {
+              await api.post("/auth/send-otp", {
                 email: formValues.email,
               });
               return Promise.resolve();

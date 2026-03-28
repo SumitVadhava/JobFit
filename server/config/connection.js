@@ -43,7 +43,13 @@ const connectDB = () => {
     });
 
   mongoose.connection.on("disconnected", () => {
-    console.warn("MongoDB disconnected");
+    console.warn("MongoDB disconnected — retrying in 5s...");
+    setTimeout(() => {
+      mongoose
+        .connect(mongoURI, { serverSelectionTimeoutMS: 10000 })
+        .then(() => console.log("MongoDB reconnected successfully"))
+        .catch((err) => console.error("MongoDB reconnect failed:", err.message));
+    }, 5000);
   });
 
   mongoose.connection.on("error", (err) => {
