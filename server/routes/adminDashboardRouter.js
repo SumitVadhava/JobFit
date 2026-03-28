@@ -30,6 +30,7 @@ const adminDashboard = require('../middlewares/adminDashboardMid');
  *       403:
  *         description: Forbidden – admin role required
  */
+
 router.get('/dashboard', adminDashboard, adminController.getDashboardData);
 
 /**
@@ -91,6 +92,7 @@ router.get('/users', adminDashboard, adminController.getUsersData);
  *       403:
  *         description: Forbidden
  */
+
 router.delete('/users', adminDashboard, adminController.getUsersData);
 
 /**
@@ -111,6 +113,7 @@ router.delete('/users', adminDashboard, adminController.getUsersData);
  *       401:
  *         description: Unauthorized
  */
+
 router.get('/recruiters', adminDashboard, adminController.getUsersData);
 
 /**
@@ -139,6 +142,7 @@ router.get('/recruiters', adminDashboard, adminController.getUsersData);
  *       401:
  *         description: Unauthorized
  */
+
 router.get('/jobs', adminDashboard, adminController.getJobsData);
 
 /**
@@ -159,6 +163,7 @@ router.get('/jobs', adminDashboard, adminController.getJobsData);
  *       401:
  *         description: Unauthorized
  */
+
 router.get('/companies', adminDashboard, adminController.getCompaniesData);
 
 module.exports = router;

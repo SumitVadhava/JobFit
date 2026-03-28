@@ -31,10 +31,7 @@ const connectDB = () => {
       {
         serverSelectionTimeoutMS: 10000,
       },
-      // |{
-      // useNewUrlParser: true,
-      // useUnifiedTopology: true,
-      // }
+
     )
     .then(() => console.log("Database connected successfully"))
     .catch((error) => {

@@ -42,6 +42,7 @@ const { ROLES } = require("../utils/roles");
  *       401:
  *         description: Unauthorized
  */
+
 router.post("/", authorizeRole(ROLES.RECRUITER), job, jobController.createJob);
 
 /**
@@ -70,6 +71,7 @@ router.post("/", authorizeRole(ROLES.RECRUITER), job, jobController.createJob);
  *       401:
  *         description: Unauthorized
  */
+
 router.get("/", jobController.getAllJobs);
 
 /**
@@ -99,6 +101,7 @@ router.get("/", jobController.getAllJobs);
  *       401:
  *         description: Unauthorized
  */
+
 router.get("/:id", jobController.getJobById);
 
 /**

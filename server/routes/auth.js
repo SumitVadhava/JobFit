@@ -43,6 +43,7 @@ const { sendOtp, verifyOtp } = require("./../services/otp.service");
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+
 router.post("/send-otp", async (req, res) => {
   const { email } = req.body;
 
@@ -94,6 +95,7 @@ router.post("/send-otp", async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+
 router.post("/verify-otp", (req, res) => {
   const { email, otp } = req.body;
 

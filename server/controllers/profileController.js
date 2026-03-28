@@ -50,7 +50,6 @@ exports.createProfile = async (req, res) => {
   }
 };
 
-// PUT /api/profile
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : null;
@@ -76,7 +75,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// DELETE /api/profile
 exports.deleteProfile = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : null;

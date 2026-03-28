@@ -7,7 +7,6 @@ const path = require("path");
 
 const router = express.Router();
 
-// Multer config to store uploaded PDFs in /uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -18,18 +17,15 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// POST /api/resume/upload
 router.post("/upload", upload.single("pdf"), async (req, res) => {
   try {
     const filePath = req.file.path;
-    const jobDesc = req.body.jobDesc; // 👈 Received from frontend
+    const jobDesc = req.body.jobDesc;
 
-    // Prepare multipart/form-data
     const formData = new FormData();
-    formData.append("pdf", fs.createReadStream(filePath)); // 👈 Send PDF file
-    formData.append("jobDesc", jobDesc); // 👈 Send Job Description text
+    formData.append("pdf", fs.createReadStream(filePath)); 
+    formData.append("jobDesc", jobDesc); 
 
-    // Send to Python FastAPI backend
     const response = await axios.post(
       "https://jobfit-ats-api-1.onrender.com/analyze",
       formData,
@@ -38,14 +34,12 @@ router.post("/upload", upload.single("pdf"), async (req, res) => {
       },
     );
 
-    // Send the AI's response back to the frontend
     res.json({
       success: true,
       analysis: response.data,
     });
 
-    // Optional: Clean up the uploaded file
-    // fs.unlinkSync(filePath);
+  
   } catch (error) {
     console.error("Resume analysis error:", error.message);
     res
