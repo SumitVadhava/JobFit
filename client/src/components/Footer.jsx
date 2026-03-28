@@ -169,10 +169,10 @@ const Footer = () => {
             {/* Copyright and Legal */}
             <div className="flex items-center space-x-4">
               <p className="text-black 500 hover:text-purple-700 transition-colors">
-                © 2025 JobFit Pro. All rights reserved.
+                © 2026 JobFit. All rights reserved.
               </p>
             </div>
-            {/* Partner Services */}
+            {/* Partner Services 
             <div className="flex items-center space-x-2">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -207,6 +207,7 @@ const Footer = () => {
                 </div>
               </div>
             </div>
+            */}
           </div>
         </div>
       </div>

@@ -1,14 +1,8 @@
 const Profile = require("../models/profiles");
 
-/**
- * Shared validation logic for profile data (used for both CREATE and UPDATE)
- * @param {Object} body - Request body
- * @returns {String|null} Error message or null if valid
- */
 const validateProfileData = (body) => {
   const { img, description, experience, atsScore, education, skills } = body;
 
-  // Validate experience array items
   if (experience !== undefined) {
     if (!Array.isArray(experience)) return "experience must be an array";
     for (const exp of experience) {
@@ -23,7 +17,6 @@ const validateProfileData = (body) => {
     }
   }
 
-  // Validate education array items
   if (education !== undefined) {
     if (!Array.isArray(education)) return "education must be an array";
     for (const edu of education) {
@@ -33,7 +26,6 @@ const validateProfileData = (body) => {
     }
   }
 
-  // Validate skills array items
   if (skills !== undefined) {
     if (!Array.isArray(skills)) return "skills must be an array";
     for (const skill of skills) {
@@ -43,7 +35,6 @@ const validateProfileData = (body) => {
     }
   }
 
-  // Validate atsScore if provided
   if (atsScore !== undefined && typeof atsScore !== 'number') {
     return "atsScore must be a number";
   }
@@ -51,7 +42,6 @@ const validateProfileData = (body) => {
   return null;
 };
 
-// Middleware for PUT /api/profile
 const validateUpdateProfile = (req, res, next) => {
   const { img, description, experience, atsScore, education, skills } = req.body;
 
@@ -76,7 +66,6 @@ const validateUpdateProfile = (req, res, next) => {
   next();
 };
 
-// Middleware for POST /api/profile
 const validateCreateProfile = async (req, res, next) => {
   try {
     const userId = req.user ? req.user.id : null;
@@ -85,7 +74,6 @@ const validateCreateProfile = async (req, res, next) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    // 1. Check if profile already exists
     const existing = await Profile.findOne({ user: userId });
     if (existing) {
       return res.status(409).json({
@@ -93,7 +81,6 @@ const validateCreateProfile = async (req, res, next) => {
       });
     }
 
-    // 2. Validate structure of incoming data
     const error = validateProfileData(req.body);
     if (error) return res.status(400).json({ message: error });
 

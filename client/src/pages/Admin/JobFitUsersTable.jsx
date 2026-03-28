@@ -1,340 +1,3 @@
-// import React, { useState, useMemo } from 'react';
-
-// const JobFitUserTable = () => {
-
-//     const [users, setUsers] = useState([
-//         { id: 1, name: "Ethan Harper", email: "ethan.harper@email.com", role: "Admin", status: "Active", lastActive: "2023-11-15" },
-//         { id: 2, name: "Olivia Bennett", email: "olivia.bennett@email.com", role: "Recruiter", status: "Active", lastActive: "2023-11-14" },
-//         { id: 3, name: "Noah Carter", email: "noah.carter@email.com", role: "Candidate", status: "Inactive", lastActive: "2023-11-13" },
-//     ]);
-//     const [searchTerm, setSearchTerm] = useState('');
-//     const [filterRole, setFilterRole] = useState('All');
-//     const [filterStatus, setFilterStatus] = useState('All');
-//     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-//     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-//     const [currentUser, setCurrentUser] = useState(null);
-//     const [editName, setEditName] = useState('');
-//     const [editEmail, setEditEmail] = useState('');
-
-//         // ✅ Fetch users from backend when component mounts
-//     // useEffect(() => {
-//     //     const fetchUsers = async () => {
-//     //         try {
-//     //             const res = await axios.get("http://localhost:5000/api/users");
-//     //             setUsers(res.data);
-//     //             console.log("Fetched Users:", res.data); // 👈 Show data in console
-//     //         } catch (error) {
-//     //             console.error("Error fetching users:", error);
-//     //         }
-//     //     };
-
-//     //     fetchUsers();
-//     // }, []);
-
-//     const handleSearch = (e) => {
-//         setSearchTerm(e.target.value);
-//     };
-
-//     const handleFilter = (type, value) => {
-//         if (type === 'Role') setFilterRole(value);
-//         if (type === 'Status') setFilterStatus(value);
-//     };
-
-//     const handleSort = (key) => {
-//         setSortConfig(prev => ({
-//             key,
-//             direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-//         }));
-//     };
-
-//     const handleViewUser = (userId) => {
-//         alert(`Viewing user profile for ID: ${userId}`);
-//     };
-
-//     const handleEditUser = (user) => {
-//         if (user.role === 'Admin') return;
-//         setCurrentUser(user);
-//         setEditName(user.name);
-//         setEditEmail(user.email);
-//         setIsEditModalOpen(true);
-//     };
-
-//     const handleDeleteUser = (userId) => {
-//         const user = users.find(u => u.id === userId);
-//         if (user.role === 'Admin') {
-//             alert("Cannot delete an Admin user.");
-//             return;
-//         }
-//         if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
-//             setUsers(users.filter(u => u.id !== userId));
-//         }
-//     };
-
-//     const handleSaveEdit = () => {
-//         if (!editName || !editEmail) {
-//             alert("Name and email cannot be empty.");
-//             return;
-//         }
-//         if (!editEmail.includes('@')) {
-//             alert("Please enter a valid email address.");
-//             return;
-//         }
-//         setUsers(users.map(user =>
-//             user.id === currentUser.id ? { ...user, name: editName, email: editEmail } : user
-//         ));
-//         setIsEditModalOpen(false);
-//         setCurrentUser(null);
-//         setEditName('');
-//         setEditEmail('');
-//     };
-
-//     const handleCloseModal = () => {
-//         setIsEditModalOpen(false);
-//         setCurrentUser(null);
-//         setEditName('');
-//         setEditEmail('');
-//     };
-
-//     const filteredAndSortedUsers = useMemo(() => {
-//         let filteredUsers = [...users];
-
-//         if (searchTerm) {
-//             filteredUsers = filteredUsers.filter(user =>
-//                 user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//                 user.email.toLowerCase().includes(searchTerm.toLowerCase())
-//             );
-//         }
-
-//         if (filterRole !== 'All') {
-//             filteredUsers = filteredUsers.filter(user => user.role === filterRole);
-//         }
-
-//         if (filterStatus !== 'All') {
-//             filteredUsers = filteredUsers.filter(user => user.status === filterStatus);
-//         }
-
-//         if (sortConfig.key) {
-//             filteredUsers.sort((a, b) => {
-//                 if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-//                 if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
-//                 return 0;
-//             });
-//         }
-
-//         return filteredUsers;
-//     }, [users, searchTerm, filterRole, filterStatus, sortConfig]);
-
-//     return (
-//         <div className="relative min-h-screen bg-gray-50 font-sans">
-//             <div className="flex flex-col h-full">
-//                 {/* <header className="flex items-center justify-between border-b border-gray-200 px-4 sm:px-6 py-4 bg-white shadow-sm">
-//                     <div className="flex items-center gap-3">
-//                         <svg className="w-5 h-5 text-indigo-600" viewBox="0 0 48 48" fill="currentColor">
-//                             <path d="M44 11.2727C44 14.0109 39.8386 16.3957 33.69 17.6364C39.8386 18.877 44 21.2618 44 24C44 26.7382 39.8386 29.123 33.69 30.3636C39.8386 31.6043 44 33.9891 44 36.7273C44 40.7439 35.0457 44 24 44C12.9543 44 4 40.7439 4 36.7273C4 33.9891 8.16144 31.6043 14.31 30.3636C8.16144 29.123 4 26.7382 4 24C4 21.2618 8.16144 18.877 14.31 17.6364C8.16144 16.3957 4 14.0109 4 11.2727C4 7.25611 12.9543 4 24 4C35.0457 4 44 7.25611 44 11.2727Z" />
-//                         </svg>
-//                         <h2 className="text-lg sm:text-xl font-semibold text-gray-800">JobFit Pro</h2>
-//                     </div>
-//                 </header> */}
-
-//                 <div className="px-4 sm:px-6 lg:px-8 py-6 flex justify-center flex-1">
-//                     <div className="w-full max-w-full sm:max-w-6xl">
-//                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-white rounded-lg shadow-sm">
-//                             <div className="flex flex-col gap-2">
-//                                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Users</h1>
-//                                 <p className="text-sm text-gray-500">Manage users and their accounts</p>
-//                             </div>
-//                         </div>
-
-//                         <div className="mt-4 px-4">
-//                             <div className="relative">
-//                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-//                                     <svg className="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
-//                                         <path d="M229.66 218.34l-50.07-50.06a88 88 0 1 0-11.32 11.31l50.07 50.07a8 8 0 0 0 11.32-11.32zM40 112a72 72 0 1 1 72 72 72.08 72.08 0 0 1-72-72z"/>
-//                                     </svg>
-//                                 </div>
-//                                 <input
-//                                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 placeholder-gray-400 text-sm sm:text-base"
-//                                     placeholder="Search users by name or email"
-//                                     value={searchTerm}
-//                                     onChange={handleSearch}
-//                                 />
-//                             </div>
-//                         </div>
-
-//                         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 p-4">
-//                             {[
-//                                 { label: 'Role', options: ['All', 'Admin', 'Recruiter', 'Candidate'] },
-//                                 { label: 'Status', options: ['All', 'Active', 'Inactive'] }
-//                             ].map(({ label, options }) => (
-//                                 <div key={label} className="relative w-full sm:w-auto">
-//                                     <select
-//                                         className="h-10 px-4 pr-8 rounded-lg border border-gray-200 bg-white text-sm text-gray-800 focus:ring-2 focus:ring-indigo-500 appearance-none w-full"
-//                                         onChange={(e) => handleFilter(label, e.target.value)}
-//                                         value={label === 'Role' ? filterRole : filterStatus}
-//                                     >
-//                                         {options.map(option => (
-//                                             <option key={option} value={option}>{option}</option>
-//                                         ))}
-//                                     </select>
-//                                     <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
-//                                         <path d="M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80a8 8 0 0 1 11.32-11.32L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32z"/>
-//                                     </svg>
-//                                 </div>
-//                             ))}
-//                             <button
-//                                 className="h-10 px-4 rounded-lg border border-gray-200 bg-white text-sm text-gray-800 hover:bg-gray-50 w-full sm:w-auto"
-//                                 onClick={() => handleSort('lastActive')}
-//                             >
-//                                 Sort by Date {sortConfig.key === 'lastActive' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-//                             </button>
-//                         </div>
-
-//                         <div className="mt-4 px-4">
-//                             <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-//                                 <table className="min-w-full divide-y divide-gray-200">
-//                                     <thead className="bg-gray-50 hidden sm:table-header-group">
-//                                         <tr>
-//                                             {['Name', 'Email', 'Role', 'Status', 'Last Active', 'Actions'].map((head) => (
-//                                                 <th
-//                                                     key={head}
-//                                                     className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-800 cursor-pointer hover:bg-gray-100"
-//                                                     onClick={() => head !== 'Actions' && handleSort(head.toLowerCase())}
-//                                                 >
-//                                                     <div className="flex items-center gap-2">
-//                                                         {head}
-//                                                         {sortConfig.key === head.toLowerCase() && (
-//                                                             <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
-//                                                                 <path d={sortConfig.direction === 'asc' ? 
-//                                                                     "M128 40l80 80H48z" : 
-//                                                                     "M128 216l-80-80h160z"}/>
-//                                                             </svg>
-//                                                         )}
-//                                                     </div>
-//                                                 </th>
-//                                             ))}
-//                                         </tr>
-//                                     </thead>
-//                                     <tbody className="divide-y divide-gray-200">
-//                                         {filteredAndSortedUsers.map((user) => (
-//                                             <tr key={user.id} className="flex flex-col sm:table-row hover:bg-gray-50 transition-colors">
-//                                                 <td className="px-4 sm:px-6 py-2 sm:py-4 text-sm text-gray-800 sm:table-cell">
-//                                                     <span className="sm:hidden font-semibold">Name: </span>{user.name}
-//                                                 </td>
-//                                                 <td className="px-4 sm:px-6 py-2 sm:py-4 text-sm text-gray-500 sm:table-cell">
-//                                                     <span className="sm:hidden font-semibold">Email: </span>{user.email}
-//                                                 </td>
-//                                                 <td className="px-4 sm:px-6 py-2 sm:py-4 sm:table-cell">
-//                                                     <span className="sm:hidden font-semibold">Role: </span>
-//                                                     <span className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-//                                                         {user.role}
-//                                                     </span>
-//                                                 </td>
-//                                                 <td className="px-4 sm:px-6 py-2 sm:py-4 sm:table-cell">
-//                                                     <span className="sm:hidden font-semibold">Status: </span>
-//                                                     <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-//                                                         user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-//                                                     }`}>
-//                                                         {user.status}
-//                                                     </span>
-//                                                 </td>
-//                                                 <td className="px-4 sm:px-6 py-2 sm:py-4 text-sm text-gray-500 sm:table-cell">
-//                                                     <span className="sm:hidden font-semibold">Last Active: </span>{user.lastActive}
-//                                                 </td>
-//                                                 <td className="px-4 sm:px-6 py-2 sm:py-4 flex gap-2 sm:table-cell">
-//                                                     <span className="sm:hidden font-semibold">Actions: </span>
-//                                                     <button
-//                                                         className="text-indigo-600 hover:text-indigo-800"
-//                                                         onClick={() => handleViewUser(user.id)}
-//                                                         title="View"
-//                                                     >
-//                                                         <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
-//                                                             <path d="M128 56c-78 0-118.76 85.23-120.21 87.18a8 8 0 0 0 0 9.64C9.24 154.77 49.95 240 128 240s118.76-85.23 120.21-87.18a8 8 0 0 0 0-9.64C246.76 141.23 206.05 56 128 56zm0 168c-44.11 0-80-40.17-80-88s35.89-88 80-88 80 40.17 80 88-35.89 88-80 88zm0-136a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 64a24 24 0 1 1 24-24 24 24 0 0 1-24 24z"/>
-//                                                         </svg>
-//                                                     </button>
-//                                                     {user.role !== 'Admin' && (
-//                                                         <>
-//                                                             <button
-//                                                                 className="text-blue-600 hover:text-blue-800"
-//                                                                 onClick={() => handleEditUser(user)}
-//                                                                 title="Edit"
-//                                                             >
-//                                                                 <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
-//                                                                     <path d="M227.31 73.37 182.63 28.68a16 16 0 0 0-22.63 0L36.69 152a16 16 0 0 0-4.69 11.32V208a16 16 0 0 0 16 16h44.69a16 16 0 0 0 11.31-4.69l123.32-123.31a16 16 0 0 0 0-22.63zM92.69 208H48v-44.69l88-88 44.69 44.69zm96-96-44.69-44.69L184 24l44.69 44.69z"/>
-//                                                                 </svg>
-//                                                             </button>
-//                                                             <button
-//                                                                 className="text-red-600 hover:text-red-800"
-//                                                                 onClick={() => handleDeleteUser(user.id)}
-//                                                                 title="Delete"
-//                                                             >
-//                                                                 <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
-//                                                                     <path d="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16zM96 40a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96zm96 168H64V64h128zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0zm48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0z"/>
-//                                                                 </svg>
-//                                                             </button>
-//                                                         </>
-//                                                     )}
-//                                                 </td>
-//                                             </tr>
-//                                         ))}
-//                                     </tbody>
-//                                 </table>
-//                                 {filteredAndSortedUsers.length === 0 && (
-//                                     <div className="p-6 text-center text-gray-500 text-sm sm:text-base">
-//                                         No users found matching the criteria.
-//                                     </div>
-//                                 )}
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-
-//                 {isEditModalOpen && (
-//                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-//                         <div className="bg-white rounded-lg p-6 w-full max-w-md">
-//                             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Edit User</h2>
-//                             <div className="mb-4">
-//                                 <label className="block text-sm font-medium text-gray-700">Name</label>
-//                                 <input
-//                                     type="text"
-//                                     className="w-full px-3 py-2 mt-1 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
-//                                     value={editName}
-//                                     onChange={(e) => setEditName(e.target.value)}
-//                                 />
-//                             </div>
-//                             <div className="mb-4">
-//                                 <label className="block text-sm font-medium text-gray-700">Email</label>
-//                                 <input
-//                                     type="email"
-//                                     className="w-full px-3 py-2 mt-1 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
-//                                     value={editEmail}
-//                                     onChange={(e) => setEditEmail(e.target.value)}
-//                                 />
-//                             </div>
-//                             <div className="flex justify-end gap-2">
-//                                 <button
-//                                     className="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300"
-//                                     onClick={handleCloseModal}
-//                                 >
-//                                     Cancel
-//                                 </button>
-//                                 <button
-//                                     className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
-//                                     onClick={handleSaveEdit}
-//                                 >
-//                                     Save
-//                                 </button>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 )}
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default JobFitUserTable;
-
-
 import React, { useState, useMemo } from 'react';
 import {
     Box,
@@ -369,13 +32,12 @@ const JobFitUserTable = () => {
     const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
     const [users, setUsers] = useState([
-        { id: 1, name: 'Ethan Harper', email: 'ethan.harper@email.com', role: 'Recruiter', status: 'Active', lastActive: '2023-11-15' },
-        { id: 2, name: 'Olivia Bennett', email: 'olivia.bennett@email.com', role: 'Recruiter', status: 'Active', lastActive: '2023-11-14' },
-        { id: 3, name: 'Noah Carter', email: 'noah.carter@email.com', role: 'Candidate', status: 'Inactive', lastActive: '2023-11-13' },
+        { id: 1, name: 'Ethan Harper', email: 'ethan.harper@email.com', role: 'Recruiter', lastActive: '2023-11-15' },
+        { id: 2, name: 'Olivia Bennett', email: 'olivia.bennett@email.com', role: 'Recruiter', lastActive: '2023-11-14' },
+        { id: 3, name: 'Noah Carter', email: 'noah.carter@email.com', role: 'Candidate', lastActive: '2023-11-13' },
     ]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState('All');
-    const [filterStatus, setFilterStatus] = useState('All');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
@@ -388,7 +50,6 @@ const JobFitUserTable = () => {
 
     const handleFilter = (type, value) => {
         if (type === 'Role') setFilterRole(value);
-        if (type === 'Status') setFilterStatus(value);
     };
 
     const handleSort = (key) => {
@@ -456,9 +117,7 @@ const JobFitUserTable = () => {
             filteredUsers = filteredUsers.filter((user) => user.role === filterRole);
         }
 
-        if (filterStatus !== 'All') {
-            filteredUsers = filteredUsers.filter((user) => user.status === filterStatus);
-        }
+
 
         if (sortConfig.key) {
             filteredUsers.sort((a, b) => {
@@ -469,12 +128,9 @@ const JobFitUserTable = () => {
         }
 
         return filteredUsers;
-    }, [users, searchTerm, filterRole, filterStatus, sortConfig]);
+    }, [users, searchTerm, filterRole, sortConfig]);
 
-    const statusColors = {
-        Active: { bg: '#E6F4EA', color: '#2E7D32' },
-        Inactive: { bg: '#FFE4E6', color: '#DC2626' },
-    };
+
 
     const roleColors = {
         Admin: { bg: '#F3E8FF', color: '#6B46C1' },
@@ -504,7 +160,6 @@ const JobFitUserTable = () => {
                             'Name',
                             ...(isMobile ? [] : ['Email', 'Last Active']),
                             'Role',
-                            'Status',
                             'Actions',
                         ].map((head) => (
                             <TableCell
@@ -610,28 +265,7 @@ const JobFitUserTable = () => {
                                     {user.role}
                                 </Box>
                             </TableCell>
-                            <TableCell
-                                sx={{
-                                    fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                                    py: { xs: 1.5, sm: 2 },
-                                    px: { xs: 1, sm: 2, md: 3 },
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: 'inline-flex',
-                                        px: 2,
-                                        py: 0.5,
-                                        borderRadius: '6px',
-                                        bgcolor: statusColors[user.status].bg,
-                                        color: statusColors[user.status].color,
-                                        fontWeight: 500,
-                                        fontSize: { xs: '0.7rem', sm: '0.875rem' },
-                                    }}
-                                >
-                                    {user.status}
-                                </Box>
-                            </TableCell>
+
                             <TableCell
                                 sx={{
                                     textAlign: 'right',
@@ -742,24 +376,7 @@ const JobFitUserTable = () => {
                                 {user.role}
                             </Box>
                         </Typography>
-                        <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                            Status:{' '}
-                            <Box
-                                component="span"
-                                sx={{
-                                    display: 'inline-flex',
-                                    px: 2,
-                                    py: 0.5,
-                                    borderRadius: '6px',
-                                    bgcolor: statusColors[user.status].bg,
-                                    color: statusColors[user.status].color,
-                                    fontWeight: 500,
-                                    fontSize: { xs: '0.7rem', sm: '0.875rem' },
-                                }}
-                            >
-                                {user.status}
-                            </Box>
-                        </Typography>
+
                         {user.role !== 'Admin' && (
                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
                                 <Button
@@ -895,7 +512,6 @@ const JobFitUserTable = () => {
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 1, sm: 2 }, justifyContent: 'center' }}>
                                 {[
                                     { label: 'Role', options: ['All', 'Admin', 'Recruiter', 'Candidate'] },
-                                    { label: 'Status', options: ['All', 'Active', 'Inactive'] },
                                 ].map(({ label, options }) => (
                                     <FormControl key={label} sx={{ minWidth: { xs: '100%', sm: 120, md: 150 } }}>
                                         <InputLabel sx={{
@@ -905,7 +521,7 @@ const JobFitUserTable = () => {
                                             {label}
                                         </InputLabel>
                                         <Select
-                                            value={label === 'Role' ? filterRole : filterStatus}
+                                            value={filterRole}
                                             label={label}
                                             onChange={(e) => handleFilter(label, e.target.value)}
                                             size="small"

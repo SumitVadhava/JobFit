@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 module.exports = (req, res, next) => {
-  // Get the token from the Authorization header
+
   const token =
     req.headers["authorization"] && req.headers["authorization"].split(" ")[1];
 
@@ -14,7 +14,6 @@ module.exports = (req, res, next) => {
     });
   }
 
-  // Verify the token using the secret key from .env
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).json({
@@ -24,10 +23,8 @@ module.exports = (req, res, next) => {
       });
     }
 
-    // Attach the decoded user information to the request object
     req.user = decoded;
 
-    // Proceed to the next middleware or route handler
     next();
   });
 };

@@ -44,6 +44,7 @@ const { ROLES } = require("../utils/roles");
  *       403:
  *         description: Forbidden - recruiter role required
  */
+
 router.post("/", authorizeRole(ROLES.RECRUITER), job, jobController.createJob);
 
 /**
@@ -72,6 +73,7 @@ router.post("/", authorizeRole(ROLES.RECRUITER), job, jobController.createJob);
  *       401:
  *         description: Unauthorized
  */
+
 router.get("/", jobController.getAllJobs);
 
 /**
@@ -183,6 +185,7 @@ router.post(
  *       401:
  *         description: Unauthorized
  */
+
 router.get("/:id", jobController.getJobById);
 
 /**
