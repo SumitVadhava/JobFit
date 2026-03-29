@@ -182,6 +182,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
 
         const status = "active";
         console.log(userName, email, password, status, role, recruiterKey);
+        role="recruiter"
 
         const response = await api.post("/login", { email, password, role, recruiterKey });
         console.log(response.data);
@@ -279,7 +280,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
           email: response.data.user.email,
           sub: response.data.user.google_id,
           picture: response.data.user.picture,
-          role: role,
+          role: response.data.user.role,
         });
 
         // onClose();

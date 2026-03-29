@@ -131,7 +131,7 @@ function App() {
               <User_Best_Resume_view />
             </ProtectedRoute>} />
         <Route
-          path='/user/profile'
+          path='/user/profile/:id?'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
