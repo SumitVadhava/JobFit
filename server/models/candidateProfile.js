@@ -11,11 +11,21 @@ const candidateProfileSchema = new mongoose.Schema({
     required: false,
     default: null
   },
+  resumeLink: {
+    type: String,
+    required: false,
+    default: null
+  },
   description: {
     type: String,
     required: false,
     default: null
   },
+  resumelink: {
+    type: String,
+    required: false,
+    default: null
+  },  
   atsScore: {
     type: Number,
     required: false,

@@ -1,35 +1,38 @@
 import React, { useState } from 'react'
 import RoleSelector from './RoleSelector'
-import ModeSelector from './ModeSelector';
 import AuthForm from './AuthForm';
 
 const AuthPage = ({ userData, setUserData, isLogin }) => {
-    const [step, setStep] = useState(1);
+    // 'login' = show login form, 'role' = show role selection, 'signup' = show signup form
+    const [step, setStep] = useState('login');
     const [selectedRole, setSelectedRole] = useState(null);
-    // const [mode, setMode] = useState(null);
 
-    const handleRoleSelect = (selectedRole) => {
-        setSelectedRole(selectedRole); // e.g., 'recruiter'
-        setStep(2);
+    const handleRoleSelect = (role) => {
+        setSelectedRole(role);
+        setStep('signup');
     };
 
-    // const handleModeSelect = (selectedMode) => {
-    //     setMode(selectedMode); // 'login' or 'register'
-    //     setStep(3);
-    // };
+    const handleSwitchToSignup = () => {
+        setStep('role');
+    };
+
+    const handleSwitchToLogin = () => {
+        setStep('login');
+        setSelectedRole(null);
+    };
 
     const handleBack = () => {
-        if (step === 2) {
-            setStep(1); // Go back to role selection
-        } else if (step === 1) {
+        if (step === 'signup') {
+            setStep('role');
+        } else if (step === 'role') {
+            setStep('login');
             setSelectedRole(null);
-            setStep(1); // Go back to role selection
         }
     };
 
     return (
         <div className='max-w-7xl mx-auto h-[86vh]'>
-            {step > 1 && (
+            {step !== 'login' && (
                 <button
                     onClick={handleBack}
                     className="relative top-4 left-4 flex items-center gap-2 px-4 py-2 text-sm font-light text-gray-600 hover:text-gray-900 bg-white/80 hover:bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 aria-label='Go back to previous page"
@@ -53,14 +56,24 @@ const AuthPage = ({ userData, setUserData, isLogin }) => {
                 </button>
             )}
 
-            {step === 1 && <RoleSelector onSelect={handleRoleSelect} />}
-            {/* {step === 2 && <ModeSelector onSelect={handleModeSelect} />} */}
-            {step === 2 && (
-                <>
-                    {selectedRole === 'recruiter' && <AuthForm role={selectedRole} setUserData={setUserData}  />}
-                    {selectedRole === 'candidate' && <AuthForm role={selectedRole} setUserData={setUserData}  />}
-                    {selectedRole === 'admin' && <AuthForm role={selectedRole} setUserData={setUserData}  />}
-                </>
+            {step === 'login' && (
+                <AuthForm
+                    role="candidate"
+                    setUserData={setUserData}
+                    forceLogin={true}
+                    onSwitchToSignup={handleSwitchToSignup}
+                />
+            )}
+
+            {step === 'role' && <RoleSelector onSelect={handleRoleSelect} />}
+
+            {step === 'signup' && (
+                <AuthForm
+                    role={selectedRole}
+                    setUserData={setUserData}
+                    forceLogin={false}
+                    onSwitchToLogin={handleSwitchToLogin}
+                />
             )}
         </div>
     )

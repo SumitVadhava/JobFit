@@ -28,7 +28,7 @@ async function sendOtp(email) {
     to: email,
     subject: "Your One-Time Password (OTP) for Login",
     text: `Your OTP is: ${otp}. Please do not share it with anyone.`,
-   html: `  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f6f8; padding: 40px 0;">
+    html: `  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f6f8; padding: 40px 0;">
       <tr>
         <td align="center">
 
@@ -37,8 +37,8 @@ async function sendOtp(email) {
 
             <!-- Logo -->
             <tr>
-              <td align="center" style="padding: 30px 20px 10px;">
-                <img src="https://raw.githubusercontent.com/SumitVadhava/demo/main/JobFit2.png" alt="JobFit Logo" style="width: 100px; height: auto; display: block;" />
+              <td align="center" style="margin: 10px; padding: 30px 20px 10px;" >
+                <img src="https://drive.google.com/uc?export=view&id=1v_SoU5Gq3FWkKyhQ6r0WSzJy6yHUVJ9R" alt="JobFit Logo" style="width: 100px; height: auto; display: block;" />
               </td>
             </tr>
 
@@ -67,7 +67,7 @@ async function sendOtp(email) {
             <tr>
               <td align="center" style="padding: 0 30px;">
                 <p style="font-size: 14px; color: #666;">
-                  This code is valid for <strong>5 minutes</strong>. Please use it promptly to complete your login.
+                  This code is valid for <strong>5 minutes</strong>. Please use it carefully to complete your login.
                 </p>
               </td>
             </tr>
@@ -88,10 +88,10 @@ async function sendOtp(email) {
         </td>
       </tr>
     </table> `};
-  
+
   await transporter.sendMail(mailOptions);
   otpStore.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
-  
+
   return otp;
 }
 
@@ -100,9 +100,9 @@ function verifyOtp(email, inputOtp) {
   if (!data || Date.now() > data.expiresAt) return false;
 
   const isValid = data.otp === inputOtp;
-  
+
   if (isValid) otpStore.delete(email);
-  
+
   return isValid;
 }
 

@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const userDashboardController = require("../controllers/userDashboardController");
 const userDashboard = require("../middlewares/userDashboardMid");
+const authorizeRole = require("../middlewares/authorizeRole");
+const { ROLES } = require("../utils/roles");
 
 /**
  * @swagger
@@ -28,10 +30,35 @@ const userDashboard = require("../middlewares/userDashboardMid");
  *       401:
  *         description: Unauthorized
  */
-router.get(
+router.get("/userDashboard", userDashboardController.getUserDashboardData);
+
+/**
+ * @swagger
+ * /api/user/userDashboard:
+ *   patch:
+ *     summary: Update user dashboard fields dynamically
+ *     tags: [User Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: User dashboard updated
+ *       400:
+ *         description: Invalid payload
+ *       401:
+ *         description: Unauthorized
+ */
+router.patch(
   "/userDashboard",
   userDashboard,
-  userDashboardController.getUserDashboardData,
+  userDashboardController.updateUserDashboardData,
 );
 
 /**
@@ -52,11 +79,7 @@ router.get(
  *       401:
  *         description: Unauthorized
  */
-router.get(
-  "/resumeBuilder",
-  userDashboard,
-  userDashboardController.getResumeBuilderData,
-);
+router.get("/resumeBuilder", userDashboardController.getResumeBuilderData);
 
 /**
  * @swagger
@@ -84,7 +107,7 @@ router.get(
  *       401:
  *         description: Unauthorized
  */
-router.get("/job", userDashboard, userDashboardController.getJobData);
+router.get("/job", userDashboardController.getJobData);
 
 /**
  * @swagger
@@ -100,21 +123,15 @@ router.get("/job", userDashboard, userDashboardController.getJobData);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Job'
+ *               $ref: '#/components/schemas/SavedJobsListResponse'
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - candidate/user role required
  */
 router.get(
   "/savedJobs",
-  userDashboard,
+  authorizeRole(ROLES.CANDIDATE, ROLES.USER),
   userDashboardController.getSavedJobsData,
 );
 
@@ -134,6 +151,7 @@ router.get(
  */
 router.get(
   "/applied-companies",
+  authorizeRole(ROLES.CANDIDATE, ROLES.USER),
   userDashboardController.getAppliedCompaniesData,
 );
 

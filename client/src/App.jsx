@@ -35,6 +35,8 @@ import CookiePolicy from './pages/CookiePolicy'
 import FeatureUserRegistration from './pages/FeatureUserRegistration'
 import FeatureResumeMatching from './pages/FeatureResumeMatching'
 import FeatureATSAnalytics from './pages/FeatureATSAnalytics'
+import ScrollToTop from './components/ScrollToTop'
+import Recruiter_History from './pages/Recruiter/Recruiter_History'
 
 
 
@@ -55,10 +57,10 @@ function App() {
   useEffect(() => {
     if (isLoggedIn) {
       setUserProp({
-        userName: user.userName || user.name, // Add fallback to user.name
+        userName: user.userName || user.name,
         email: user.email,
-        sub: user._id || "", // Add user ID
-        picture: user.picture || "", // Add default picture
+        sub: user._id || "",
+        picture: user.picture || "",
         role: role
       });
     }
@@ -82,10 +84,10 @@ function App() {
         theme="light"
       />
       <Navbar userData={userProp} />
+      <ScrollToTop />
       <Routes>
         <Route path='/' element={<HeroSection />} />
         <Route path='/login' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
-
 
         <Route
           path='/user/dashboard'
@@ -188,7 +190,7 @@ function App() {
 
 
         <Route
-          path="/recruiter/recruiter-analytics"
+          path="/recruiter/recruiter-dashboard"
           element={
             <ProtectedRoute
               allowedRoles={['recruiter']}
@@ -211,6 +213,16 @@ function App() {
             >
               <Recruiter_Candidates_view />
             </ProtectedRoute>} />
+
+        <Route
+          path="/recruiter/recruiter-history"
+          element={
+            <ProtectedRoute
+              allowedRoles={['recruiter']}
+            >
+              <Recruiter_History />
+            </ProtectedRoute>} />
+
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route
           path="/recruiter/recruiter-postedjobs"
@@ -232,7 +244,7 @@ function App() {
         <Route path="/features/user-registration" element={<FeatureUserRegistration />} />
         <Route path="/features/resume-matching" element={<FeatureResumeMatching />} />
         <Route path="/features/ats-analytics" element={<FeatureATSAnalytics />} />
-        
+
       </Routes>
       {/* <GoogleOneTapLogin /> */}
     </>
