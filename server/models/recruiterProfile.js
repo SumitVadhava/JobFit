@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const candidateProfileSchema = new mongoose.Schema({
+const recruiterProfileSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'logins',
@@ -26,7 +26,12 @@ const candidateProfileSchema = new mongoose.Schema({
     required: false,
     default: null
   },
-  resumeLink: {
+  company: {
+    type: String,
+    required: false,
+    default: null
+  },
+  position: {
     type: String,
     required: false,
     default: null
@@ -36,34 +41,16 @@ const candidateProfileSchema = new mongoose.Schema({
     required: false,
     default: null
   },
-  atsScore: {
-    type: Number,
-    required: false,
-    default: 0
-  },
-  experience: {
+  website: {
     type: String,
     required: false,
-    default: "0-2 years"
+    default: null
   },
-  education: {
-    type: [
-      {
-        degree: { type: String, required: true },
-        university: { type: String, required: true },
-        yearOfPassing: { type: Number, required: true }
-      }
-    ],
-    default: []
-  },
-  skills: {
-    type: [
-      {
-        skillName: { type: String, required: true }
-      }
-    ],
-    default: []
+  location: {
+    type: String,
+    required: false,
+    default: null
   }
 });
 
-module.exports = mongoose.model("candidateProfile", candidateProfileSchema);
+module.exports = mongoose.model("recruiterProfile", recruiterProfileSchema);
