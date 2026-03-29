@@ -9,9 +9,9 @@ import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import OTPDemo from "../components/Otp";
 
-const AuthForm = ({ role, setUserData }) => {
+const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToLogin }) => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(forceLogin !== undefined ? forceLogin : true);
   const [showPassword, setShowPassword] = useState(false);
   const [formValues, setFormValues] = useState({
     userName: "",
@@ -470,7 +470,15 @@ const AuthForm = ({ role, setUserData }) => {
               {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
               <span
                 className="text-[#2d79f3] font-medium cursor-pointer"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  if (isLogin && onSwitchToSignup) {
+                    onSwitchToSignup();
+                  } else if (!isLogin && onSwitchToLogin) {
+                    onSwitchToLogin();
+                  } else {
+                    setIsLogin(!isLogin);
+                  }
+                }}
               >
                 {isLogin ? "Sign Up" : "Login"}
               </span>

@@ -4,6 +4,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
 import { useAuth } from "../../contexts/AuthContexts";
+import ButtonLogo from "../../assets/button_logo.png"
 
 const ApplyJob = () => {
   const { jobId } = useParams();
@@ -27,7 +28,7 @@ const ApplyJob = () => {
         setLoading(true);
         const response = await api.get(`/jobs/${jobId}`);
         console.log(response.data);
-        
+
         setJob(response.data.job);
       } catch (err) {
         console.error("Error fetching job:", err);
@@ -264,7 +265,7 @@ const ApplyJob = () => {
             <ul className="space-y-2.5 ml-11">
               {toBulletPoints(job.jobDescription).map((point, i) => (
                 <li key={i} className="flex items-start gap-3 text-[0.88rem] text-gray-600 leading-relaxed">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-black mt-2 shrink-0" />
                   <span>{point}</span>
                 </li>
               ))}
@@ -285,7 +286,7 @@ const ApplyJob = () => {
               <ul className="space-y-2.5 ml-11">
                 {toBulletPoints(job.responsibilities).map((point, i) => (
                   <li key={i} className="flex items-start gap-3 text-[0.88rem] text-gray-600 leading-relaxed">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-black mt-2 shrink-0" />
                     <span>{point}</span>
                   </li>
                 ))}
@@ -307,7 +308,7 @@ const ApplyJob = () => {
               <ul className="space-y-2.5 ml-11">
                 {toBulletPoints(job.qualifications).map((point, i) => (
                   <li key={i} className="flex items-start gap-3 text-[0.88rem] text-gray-600 leading-relaxed">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-black mt-2 shrink-0" />
                     <span>{point}</span>
                   </li>
                 ))}
@@ -380,9 +381,8 @@ const ApplyJob = () => {
                     </div>
                   ) : (
                     <div
-                      className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 ${
-                        isDragging ? "border-purple-400 bg-purple-50/50" : "border-gray-200 bg-gray-50/50 hover:border-purple-300 hover:bg-purple-50/30"
-                      }`}
+                      className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 ${isDragging ? "border-purple-400 bg-purple-50/50" : "border-gray-200 bg-gray-50/50 hover:border-purple-300 hover:bg-purple-50/30"
+                        }`}
                       onDrop={handleDrop}
                       onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                       onDragLeave={() => setIsDragging(false)}
@@ -423,7 +423,7 @@ const ApplyJob = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="group w-full sm:w-auto mt-8 relative px-10 py-3.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold rounded-xl shadow-md shadow-purple-200/50 hover:shadow-lg hover:shadow-purple-300/50 transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 overflow-hidden"
+                className="group w-full sm:w-auto mt-8 relative px-10 py-3.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl shadow-md shadow-gray-200/50 hover:shadow-lg hover:shadow-gray-300/50 transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 overflow-hidden"
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -435,13 +435,14 @@ const ApplyJob = () => {
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" className="transition-transform duration-300 group-hover:translate-x-0.5">
+                    {/* <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" className="transition-transform duration-300 group-hover:-translate-y-0.5 -rotate-45 mt-1">
                       <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,13-9.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14L118.42,148.9l47.24-47.25a8,8,0,0,0-11.32-11.32L107.1,137.58,23.91,98.12l.14,0L215.94,40Z" />
-                    </svg>
+                    </svg> */}
+                    <img src={ButtonLogo} className="w-6 group-hover:-translate-y-0.5" alt="" />
                     Submit Application
                   </span>
                 )}
-                <span className="absolute inset-0 bg-gradient-to-r from-purple-700 to-purple-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl -z-10" />
+                <span className="absolute inset-0 bg-gray-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl -z-10" />
               </button>
             </div>
           </form>

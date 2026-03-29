@@ -27,6 +27,7 @@ import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_
 import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './pages/Unauthorized'
 import ApplyJob from './pages/User/User_ApplyJob_view'
+import ScrollToTop from './components/ScrollToTop'
 import Recruiter_History from './pages/Recruiter/Recruiter_History'
 
 
@@ -75,6 +76,7 @@ function App() {
         theme="light"
       />
       <Navbar userData={userProp} />
+      <ScrollToTop />
       <Routes>
         <Route path='/' element={<HeroSection />} />
         <Route path='/login' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />

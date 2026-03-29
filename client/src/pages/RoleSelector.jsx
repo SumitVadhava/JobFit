@@ -9,7 +9,7 @@ const RoleSelector = ({ onSelect }) => {
   const roles = [
     { name: 'candidate', icon: <FaUser /> },
     { name: 'recruiter', icon: <FaUserTie /> },
-    { name: 'admin', icon: <FaUserCog /> },
+    // { name: 'admin', icon: <FaUserCog /> },
   ];
 
   return (
