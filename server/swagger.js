@@ -37,7 +37,7 @@ const options = {
       schemas: {
         LoginRequest: {
           type: "object",
-          required: ["email", "password", "role"],
+          required: ["email", "password"],
           properties: {
             email: {
               type: "string",
@@ -49,16 +49,12 @@ const options = {
               format: "password",
               example: "Secret@123",
             },
-            role: {
-              type: "string",
-              enum: ["admin", "user", "recruiter", "candidate"],
-              example: "candidate",
-            },
             recruiterKey: {
               type: "string",
               nullable: true,
               example: "RECRUITER_SECRET_KEY",
-              description: "Required only when role is recruiter",
+              description:
+                "Required only for recruiter accounts that have a recruiter key",
             },
           },
         },
