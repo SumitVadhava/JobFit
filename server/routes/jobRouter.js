@@ -121,6 +121,70 @@ router.get(
 
 /**
  * @swagger
+ * /api/jobs/{jobId}/candidates:
+ *   get:
+ *     summary: Get all candidates who applied to a specific recruiter job
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Job document ID owned by the logged-in recruiter
+ *     responses:
+ *       200:
+ *         description: Candidates retrieved successfully
+ *       400:
+ *         description: Invalid job id
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - recruiter can access only own jobs
+ *       404:
+ *         description: Job not found
+ */
+router.get(
+  "/:jobId/candidates",
+  authorizeRole(ROLES.RECRUITER),
+  jobController.getCandidatesByJobId,
+);
+
+/**
+ * @swagger
+ * /api/jobs/recruiter/{recruiterId}/candidates:
+ *   get:
+ *     summary: Get all candidates across all jobs of a specific recruiter
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: recruiterId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Recruiter user ID (must match token user id)
+ *     responses:
+ *       200:
+ *         description: Candidates across recruiter jobs retrieved successfully
+ *       400:
+ *         description: Invalid recruiter id
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - recruiter can access only own data
+ */
+router.get(
+  "/recruiter/:recruiterId/candidates",
+  authorizeRole(ROLES.RECRUITER),
+  jobController.getCandidatesForRecruiterJobs,
+);
+
+/**
+ * @swagger
  * /api/jobs/{id}/apply:
  *   post:
  *     summary: Apply for a job (candidate only)
@@ -162,7 +226,7 @@ router.post(
  * @swagger
  * /api/jobs/{id}/save:
  *   post:
- *     summary: Save a job for the logged-in candidate
+ *     summary: Save a job for the current user (candidate/user)
  *     tags: [Jobs]
  *     security:
  *       - bearerAuth: []
@@ -191,14 +255,14 @@ router.post(
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - candidate role required
+ *         description: Forbidden - candidate/user role required
  *       404:
  *         description: Job not found
  */
 
 router.post(
   "/:id/save",
-  authorizeRole(ROLES.CANDIDATE),
+  authorizeRole(ROLES.CANDIDATE, ROLES.USER),
   jobController.saveJob,
 );
 
@@ -206,7 +270,7 @@ router.post(
  * @swagger
  * /api/jobs/{id}/unsave:
  *   delete:
- *     summary: Remove a saved job for the logged-in candidate
+ *     summary: Remove a saved job for the current user (candidate/user)
  *     tags: [Jobs]
  *     security:
  *       - bearerAuth: []
@@ -229,14 +293,14 @@ router.post(
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - candidate role required
+ *         description: Forbidden - candidate/user role required
  *       404:
  *         description: Saved job not found
  */
 
 router.delete(
   "/:id/unsave",
-  authorizeRole(ROLES.CANDIDATE),
+  authorizeRole(ROLES.CANDIDATE, ROLES.USER),
   jobController.unsaveJob,
 );
 

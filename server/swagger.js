@@ -1,5 +1,6 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const path = require("path");
 
 const options = {
   definition: {
@@ -12,12 +13,12 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:5000",
-        description: "Local Server",
-      },
-      {
         url: "https://jobfit-s5v7.onrender.com",
         description: "Render Server",
+      },
+      {
+        url: "http://localhost:5000",
+        description: "Local Server",
       },
       {
         url: "https://jobfit-delta.vercel.app",
@@ -37,7 +38,7 @@ const options = {
       schemas: {
         LoginRequest: {
           type: "object",
-          required: ["email", "password", "role"],
+          required: ["email", "password"],
           properties: {
             email: {
               type: "string",
@@ -49,16 +50,12 @@ const options = {
               format: "password",
               example: "Secret@123",
             },
-            role: {
-              type: "string",
-              enum: ["admin", "user", "recruiter", "candidate"],
-              example: "candidate",
-            },
             recruiterKey: {
               type: "string",
               nullable: true,
               example: "RECRUITER_SECRET_KEY",
-              description: "Required only when role is recruiter",
+              description:
+                "Required only for recruiter accounts that have a recruiter key",
             },
           },
         },
@@ -431,7 +428,7 @@ const options = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ["./routes/*.js"],
+  apis: [path.join(__dirname, "./routes/*.js")],
 };
 
 const specs = swaggerJsdoc(options);
