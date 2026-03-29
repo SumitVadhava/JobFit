@@ -1,4 +1,4 @@
-const Profile = require("../models/profiles");
+const Profile = require("../models/candidateProfile");
 const handleError = (res, error, defaultMessage = "Server error") => {
   if (error.name === "ValidationError") {
     return res.status(400).json({ message: error.message, errors: error.errors });
