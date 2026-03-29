@@ -15,6 +15,42 @@ const NavShortcutItem = ({
     onClick,
 }) => {
     const [hovered, setHovered] = useState(false);
+    const navigate = useNavigate();
+
+    const handleClick = (e) => {
+        if (to.startsWith("#")) {
+            e.preventDefault();
+            const targetId = to.substring(1);
+            
+            if (location.pathname !== "/") {
+                navigate("/");
+                setTimeout(() => {
+                    if (targetId === "home") {
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                    } else {
+                        const element = document.getElementById(targetId);
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }
+                    }
+                }, 100);
+            } else {
+                if (targetId === "home") {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                    const element = document.getElementById(targetId);
+                    if (element) {
+                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                }
+            }
+        }
+        
+        if (onClick) {
+            onClick(e);
+        }
+    };
+
     return (
         <li
             className="w-full md:w-auto"
@@ -24,7 +60,7 @@ const NavShortcutItem = ({
         >
             <NavLink
                 to={to}
-                onClick={onClick}
+                onClick={handleClick}
                 className={({ isActive }) => {
                     const isActuallyActive =
                         userRole !== "default" && (isActive || location.hash === to);
@@ -86,10 +122,10 @@ const Navbar = ({ userData }) => {
 
     const navLinks = {
         default: [
+            { label: "Home", href: "#home" },
             { label: "Features", href: "#key-features" },
             { label: "Testimonials", href: "#user-review" },
             { label: "FAQs", href: "#faq-section" },
-            { label: "About Us", href: "#footer" },
         ],
         admin: [
             { label: "Dashboard", href: "/admin/dashboard", shortcut: "Ctrl + D" },
