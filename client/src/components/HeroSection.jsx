@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ArrowRight } from "lucide-react";
 import Skeleton from "./Skeleton";
 import KeyFeatures from "./KeyFeature";
 // import UserReviewSection from "./UserReviewSection";
@@ -33,13 +34,16 @@ const HeroSection = () => {
     }, []);
 
     const handleGetStarted = () => {
-        if (role === "recruiter") {
-            navigate("/recruiter/recruiter-analytics");
-        } else if (role === 'candidate') {
+        if (!role || role === "default") {
+            navigate("/login");
+        } else if (role === "recruiter") {
+            navigate("/recruiter/recruiter-dashboard");
+        } else if (role === 'candidate' || role === 'user') {
             navigate("/user/dashboard");
-        }
-        else if (role === 'admin') {
-            navigate("/admin/dashboard")
+        } else if (role === 'admin') {
+            navigate("/admin/dashboard");
+        } else {
+            navigate("/login");
         }
     };
 
@@ -72,9 +76,10 @@ const HeroSection = () => {
                                 <div className="flex gap-4">
                                     <button
                                         onClick={handleGetStarted}
-                                        className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-800"
+                                        className="bg-purple-600 text-white flex items-center gap-2 px-6 py-2 rounded transition-all duration-300 hover:bg-purple-800 group"
                                     >
                                         Get started
+                                        <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
                                     </button>
                                     <button className="border border-purple-600 text-purple-600 px-6 py-2 rounded hover:bg-purple-100" onClick={() => window.open('http://www.youtube.com/@JobFit-1.0', '_blank')}>
                                         Watch Video

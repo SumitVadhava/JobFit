@@ -1,706 +1,642 @@
-// import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import api from '../../api/api';
+import { Paper, Box, Typography } from '@mui/material';
+import BusinessIcon from '@mui/icons-material/Business';
+import WorkIcon from '@mui/icons-material/Work';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 
-// const ErrorBoundary = ({ children }) => {
-//   const [hasError, setHasError] = useState(false);
-//   const [error, setError] = useState(null);
+/* ─── Google Fonts ─── */
+const fontLink = document.createElement('link');
+fontLink.rel = 'stylesheet';
+fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap';
+document.head.appendChild(fontLink);
 
-//   React.useEffect(() => {
-//     const errorHandler = (error) => {
-//       setHasError(true);
-//       setError(error);
-//     };
-//     window.addEventListener('error', errorHandler);
-//     return () => window.removeEventListener('error', errorHandler);
-//   }, []);
+/* ─── Design tokens ─── */
+const t = {
+  bg: '#F9FAFB',
+  surface: '#FFFFFF',
+  card: '#FFFFFF',
+  border: '#E9D5FF',
+  borderHov: '#C084FC',
+  text: '#111827',
+  muted: '#6B7280',
+  accent: '#6B46C1',
+  accentDim: '#F3E8FF',
+  green: '#15803D',
+  greenDim: '#DCFCE7',
+  red: '#DC2626',
+  redDim: '#FEE2E2',
+  amber: '#B45309',
+  amberDim: '#FEF3C7',
+};
 
-//   if (hasError) {
-//     return <h1 className="text-red-600 text-center p-4">Error: {error?.message || 'Something went wrong.'}</h1>;
-//   }
-//   return children;
-// };
+/* ─── Global Styles ─── */
+const GlobalStyle = () => (
+  <style>{`
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: ${t.bg}; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: ${t.surface}; }
+    ::-webkit-scrollbar-thumb { background: ${t.border}; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: ${t.borderHov}; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes shimmer {
+      0%  { background-position: -200% 0; }
+      100%{ background-position:  200% 0; }
+    }
+    .shimmer-row {
+      background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    .sort-th { cursor: pointer; user-select: none; }
+    .sort-th:hover { background: #F3F0FF !important; color: ${t.accent} !important; }
+    .sort-arrow { opacity: 0; transition: opacity 0.18s, transform 0.18s; }
+    .sort-th:hover .sort-arrow { opacity: 0.5; }
+    .sort-arrow.active { opacity: 1; }
+  `}</style>
+);
 
-// const Header = ({ onSearch }) => {
-//   return (
-//     <header className="sticky top-0 z-10 flex justify-center whitespace-nowrap  px-4 sm:px-10 py-4 bg-white">
-//       <label className="flex w-full max-w-[600px] h-12">
-//         <div className="flex w-full items-center rounded-xl bg-white border border-[#dbe1e6] shadow-md hover:shadow-lg transition-shadow duration-300">
-//           <div className="text-[#60768a] flex items-center justify-center pl-4 pr-2">
-//             <svg
-//               xmlns="http://www.w3.org/2000/svg"
-//               width="28px"
-//               height="28px"
-//               fill="currentColor"
-//               viewBox="0 0 256 256"
-//               className="transform hover:scale-110 transition-transform duration-200"
-//             >
-//               <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
-//             </svg>
-//           </div>
-//           <input
-//             placeholder="Search companies..."
-//             className="w-full rounded-r-xl bg-transparent text-[#111518] px-3 py-2 text-base placeholder:text-[#60768a] focus:outline-none focus:ring-2 focus:ring-[#0c7ff2] focus:border-transparent transition-all duration-200"
-//             onChange={(e) => onSearch(e.target.value)}
-//           />
-//         </div>
-//       </label>
-//     </header>
-//   );
-// };
-
-// const FilterButtons = ({ onIndustryFilter, onLocationFilter }) => {
-//   const [industryOpen, setIndustryOpen] = useState(false);
-//   const [locationOpen, setLocationOpen] = useState(false);
-
-//   const industries = ['All', 'Technology', 'Finance', 'Creative', 'Consulting'];
-//   const locations = ['All', 'New York', 'London', 'San Francisco', 'Remote'];
-
-//   return (
-//     <div className="flex gap-3 p-3 flex-wrap pr-4">
-//       <div className="relative">
-//         <button
-//           className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-[#f0f2f5] pl-4 pr-2"
-//           onClick={() => setIndustryOpen(!industryOpen)}
-//         >
-//           <p className="text-[#111518] text-sm font-medium leading-normal">Industry</p>
-//           <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-//             <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z" />
-//           </svg>
-//         </button>
-//         {industryOpen && (
-//           <div className="absolute z-10 mt-2 w-40 bg-white border border-[#dbe1e6] rounded-lg shadow-lg">
-//             {industries.map((industry) => (
-//               <button
-//                 key={industry}
-//                 className="block w-full text-left px-4 py-2 text-sm text-[#111518] hover:bg-[#f0f2f5]"
-//                 onClick={() => {
-//                   onIndustryFilter(industry === 'All' ? '' : industry);
-//                   setIndustryOpen(false);
-//                 }}
-//               >
-//                 {industry}
-//               </button>
-//             ))}
-//           </div>
-//         )}
-//       </div>
-//       <div className="relative">
-//         <button
-//           className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-[#f0f2f5] pl-4 pr-2"
-//           onClick={() => setLocationOpen(!locationOpen)}
-//         >
-//           <p className="text-[#111518] text-sm font-medium leading-normal">Location</p>
-//           <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-//             <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z" />
-//           </svg>
-//         </button>
-//         {locationOpen && (
-//           <div className="absolute z-10 mt-2 w-40 bg-white border border-[#dbe1e6] rounded-lg shadow-lg">
-//             {locations.map((location) => (
-//               <button
-//                 key={location}
-//                 className="block w-full text-left px-4 py-2 text-sm text-[#111518] hover:bg-[#f0f2f5]"
-//                 onClick={() => {
-//                   onLocationFilter(location === 'All' ? '' : location);
-//                   setLocationOpen(false);
-//                 }}
-//               >
-//                 {location}
-//               </button>
-//             ))}
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// const CompanyTable = ({ companies, onView }) => (
-//   <div className="px-4 py-3 @container">
-//     <div className="flex overflow-hidden rounded-xl border border-[#dbe1e6] bg-white">
-//       <table className="flex-1 hidden md:table">
-//         <thead>
-//           <tr className="bg-white">
-//             <th className="px-4 py-3 text-left text-[#111518] w-[400px] text-sm font-medium leading-normal">
-//               Company Name
-//             </th>
-//             <th className="px-4 py-3 text-left text-[#111518] w-[400px] text-sm font-medium leading-normal">
-//               Contact
-//             </th>
-//             <th className="px-4 py-3 text-left text-[#111518] w-[400px] text-sm font-medium leading-normal">
-//               Jobs Posted
-//             </th>
-//             <th className="px-4 py-3 text-left text-[#111518] w-60 text-[#60768a] text-sm font-medium leading-normal">
-//               Actions
-//             </th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {companies.map((company, index) => (
-//             <tr key={index} className="border-t border-t-[#dbe1e6]">
-//               <td className="h-[72px] px-4 py-2 w-[400px] text-[#111518] text-sm font-normal leading-normal">
-//                 {company.name}
-//               </td>
-//               <td className="h-[72px] px-4 py-2 w-[400px] text-[#60768a] text-sm font-normal leading-normal">
-//                 {company.contact}
-//               </td>
-//               <td className="h-[72px] px-4 py-2 w-[400px] text-[#60768a] text-sm font-normal leading-normal">
-//                 {company.jobsPosted}
-//               </td>
-//               <td className="h-[72px] px-4 py-2 w-60 text-[#60768a] text-sm font-bold leading-normal tracking-[0.015em]">
-//                 <button
-//                   onClick={() => onView(company)}
-//                   className="text-[#60768a] hover:text-[#0c7ff2] transition-colors"
-//                 >
-//                   View
-//                 </button>
-//               </td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
-//       <div className="md:hidden divide-y divide-[#dbe1e6]">
-//         {companies.map((company, index) => (
-//           <div key={index} className="p-4 bg-white hover:bg-[#f0f2f5] transition-colors">
-//             <div className="flex justify-between items-start">
-//               <div>
-//                 <p className="text-sm font-medium text-[#111518]">{company.name}</p>
-//                 <p className="text-sm text-[#60768a]">{company.contact}</p>
-//                 <p className="text-sm text-[#60768a]">Jobs: {company.jobsPosted}</p>
-//               </div>
-//               <button
-//                 onClick={() => onView(company)}
-//                 className="text-[#60768a] hover:text-[#0c7ff2] transition-colors"
-//                 title="View Details"
-//               >
-//                 <svg
-//                   xmlns="http://www.w3.org/2000/svg"
-//                   width="20"
-//                   height="20"
-//                   fill="currentColor"
-//                   viewBox="0 0 256 256"
-//                 >
-//                   <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-16-56a16,16,0,1,1,16-16A16,16,0,0,1,112,160Z" />
-//                 </svg>
-//               </button>
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   </div>
-// );
-
-// const Companies = () => {
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [industryFilter, setIndustryFilter] = useState('');
-//   const [locationFilter, setLocationFilter] = useState('');
-
-//   const companies = [
-//     { name: 'Tech Innovators Inc.', contact: 'contact@techinnovators.com', jobsPosted: 12, industry: 'Technology', location: 'San Francisco' },
-//     { name: 'Global Solutions Ltd.', contact: 'info@globalsolutions.com', jobsPosted: 8, industry: 'Consulting', location: 'London' },
-//     { name: 'Creative Minds Co.', contact: 'hello@creativeminds.com', jobsPosted: 5, industry: 'Creative', location: 'New York' },
-//     { name: 'Future Dynamics Corp.', contact: 'support@futuredynamics.com', jobsPosted: 15, industry: 'Technology', location: 'Remote' },
-//     { name: 'Pioneer Ventures LLC', contact: 'inquiries@pioneerventures.com', jobsPosted: 10, industry: 'Finance', location: 'New York' },
-//   ];
-
-//   const handleSearch = (query) => {
-//     setSearchQuery(query.toLowerCase());
-//   };
-
-//   const handleIndustryFilter = (industry) => {
-//     setIndustryFilter(industry);
-//   };
-
-//   const handleLocationFilter = (location) => {
-//     setLocationFilter(location);
-//   };
-
-//   const handleView = (company) => {
-//     console.log(`Viewing company: ${company.name} (${company.contact}, Jobs: ${company.jobsPosted}, Industry: ${company.industry}, Location: ${company.location})`);
-//   };
-
-//   const filteredCompanies = companies.filter(
-//     (company) =>
-//       (company.name.toLowerCase().includes(searchQuery) || company.contact.toLowerCase().includes(searchQuery)) &&
-//       (industryFilter === '' || company.industry === industryFilter) &&
-//       (locationFilter === '' || company.location === locationFilter)
-//   );
-
-//   return (
-//     <ErrorBoundary>
-//       <div
-//         className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden"
-//         style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
-//       >
-//         <div className="layout-container flex h-full grow flex-col">
-//           <Header onSearch={handleSearch} />
-//           <div className="px-4 sm:px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-5">
-//             <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-//               <div className="flex flex-wrap justify-between gap-3 p-4">
-//                 <div className="flex min-w-[200px] sm:min-w-72 flex-col gap-3">
-//                   <p className="text-[#111518] tracking-tight text-2xl sm:text-[32px] font-bold leading-tight">
-//                     Companies
-//                   </p>
-//                   <p className="text-[#60768a] text-sm font-normal leading-normal">Manage companies and their job postings</p>
-//                 </div>
-//               </div>
-//               <FilterButtons onIndustryFilter={handleIndustryFilter} onLocationFilter={handleLocationFilter} />
-//               <CompanyTable companies={filteredCompanies} onView={handleView} />
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </ErrorBoundary>
-//   );
-// };
-
-// export default Companies;
-
-
-import React, { useState } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Paper,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Grid,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
-import { motion } from 'framer-motion';
-
-const ErrorBoundary = ({ children }) => {
-  const [hasError, setHasError] = useState(false);
-  const [error, setError] = useState(null);
-
-  React.useEffect(() => {
-    const errorHandler = (event) => {
-      setHasError(true);
-      setError(event.error || new Error('Unknown error occurred'));
-      console.error('ErrorBoundary caught:', event.error);
-    };
-    window.addEventListener('error', errorHandler);
-    return () => window.removeEventListener('error', errorHandler);
-  }, []);
-
-  if (hasError) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#F9FAFB' }}>
-        <Typography
-          variant="h6"
-          sx={{
-            color: '#DC2626',
-            textAlign: 'center',
-            p: 4,
-            fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' },
-            fontWeight: 600,
-          }}
-        >
-          Error: {error?.message || 'Something went wrong.'}
+/* ─── Stat Card ─── */
+const StatCard = ({ icon: Icon, label, value, color, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 16 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.45, delay }}
+    style={{ flex: 1, minWidth: 140 }}
+  >
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 3,
+        border: '1px solid #F1F5F9',
+        bgcolor: '#FFFFFF',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        transition: 'all 0.25s ease',
+        '&:hover': { borderColor: color, boxShadow: `0 4px 16px ${color}18` },
+      }}
+    >
+      <Box sx={{
+        width: 44, height: 44, borderRadius: 2.5,
+        bgcolor: `${color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon sx={{ fontSize: 22, color }} />
+      </Box>
+      <Box>
+        <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {label}
+        </Typography>
+        <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
+          {value}
         </Typography>
       </Box>
-    );
-  }
-  return children;
-};
+    </Paper>
+  </motion.div>
+);
 
-const FilterButtons = ({ onIndustryFilter, onLocationFilter, industryFilter, locationFilter }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+/* ─── Search Bar ─── */
+const SearchBar = ({ value, onChange }) => (
+  <div style={{ position: 'relative', width: '100%', maxWidth: 440 }}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={t.muted} strokeWidth="2"
+      style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+    </svg>
+    <input
+      type="text"
+      placeholder="Search by company name…"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      style={{
+        width: '100%',
+        background: t.card, border: `1px solid ${t.border}`,
+        borderRadius: 10, padding: '10px 14px 10px 40px',
+        color: t.text, fontSize: 13, fontFamily: "'Inter', sans-serif",
+        outline: 'none', transition: 'border-color .2s, box-shadow .2s',
+      }}
+      onFocus={e => { e.target.style.borderColor = t.accent; e.target.style.boxShadow = `0 0 0 2px ${t.accent}20`; }}
+      onBlur={e => { e.target.style.borderColor = t.border; e.target.style.boxShadow = 'none'; }}
+    />
+  </div>
+);
 
-  const industries = ['All', 'Technology', 'Finance', 'Creative', 'Consulting'];
-  const locations = ['All', 'New York', 'London', 'San Francisco', 'Remote'];
+/* ─── Mini Status Badge ─── */
+const StatusBadge = ({ count, label, bg, color }) => (
+  count > 0 ? (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      background: bg, color, border: `1px solid ${color}30`,
+      borderRadius: 99, padding: '2px 8px',
+      fontSize: 11, fontFamily: "'Inter', sans-serif", fontWeight: 600,
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />
+      {count} {label}
+    </span>
+  ) : null
+);
+
+/* ─── Sort Arrow ─── */
+const SortArrow = ({ direction, active }) => (
+  <svg
+    width="12" height="12" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+    className={`sort-arrow${active ? ' active' : ''}`}
+    style={{
+      marginLeft: 4, flexShrink: 0,
+      transform: direction === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)',
+      color: active ? t.accent : t.muted,
+      transition: 'transform 0.2s, opacity 0.2s',
+    }}
+  >
+    <path d="M12 5l0 14M5 12l7-7 7 7" />
+  </svg>
+);
+
+/* ─── Skeleton Rows ─── */
+const SkeletonRows = () => (
+  <>
+    {[1, 2, 3, 4, 5].map(i => (
+      <tr key={i}>
+        {[180, 80, 160, 80].map((w, j) => (
+          <td key={j} style={{ padding: '14px 20px', borderBottom: `1px solid ${t.border}` }}>
+            <div className="shimmer-row" style={{ height: 14, borderRadius: 6, width: w, maxWidth: '100%' }} />
+          </td>
+        ))}
+      </tr>
+    ))}
+  </>
+);
+
+/* ─── Pagination ─── */
+const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) => {
+  if (totalPages <= 1) return null;
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalItems);
+
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: { xs: 1, sm: 2 },
-        p: 3,
-        justifyContent: 'center',
-        maxWidth: { xs: '95%', sm: '90%', md: '1000px' },
-        mx: 'auto',
-      }}
-    >
-      <FormControl sx={{ minWidth: { xs: '100%', sm: 120, md: 150 } }}>
-        <Box sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, color: '#6B46C1' }}>
-          Industry
-        </Box>
-        <Select
-          value={industryFilter || 'All'}
-          onChange={(e) => onIndustryFilter(e.target.value === 'All' ? '' : e.target.value)}
-          size="small"
-          sx={{
-            borderRadius: '8px',
-            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E9D5FF' },
-            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#A78BFA' },
-            '& .MuiSelect-select': { fontSize: { xs: '0.75rem', sm: '0.875rem' } },
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+        {/* Prev */}
+        <button
+          onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+          disabled={currentPage === 1}
+          style={{
+            padding: 10, borderRadius: 12, border: 'none', background: 'transparent',
+            color: '#6B7280', cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            opacity: currentPage === 1 ? 0.3 : 1, transition: 'all 0.2s',
           }}
+          onMouseEnter={e => { if (currentPage !== 1) { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'; } }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; }}
         >
-          {industries.map((industry) => (
-            <MenuItem key={industry} value={industry}>
-              {industry}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      <FormControl sx={{ minWidth: { xs: '100%', sm: 120, md: 150 } }}>
-        <Box sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }, color: '#6B46C1' }}>
-          Location
-        </Box>
-        <Select
-          value={locationFilter || 'All'}
-          onChange={(e) => onLocationFilter(e.target.value === 'All' ? '' : e.target.value)}
-          size="small"
-          sx={{
-            borderRadius: '8px',
-            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E9D5FF' },
-            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#A78BFA' },
-            '& .MuiSelect-select': { fontSize: { xs: '0.75rem', sm: '0.875rem' } },
-          }}
-        >
-          {locations.map((location) => (
-            <MenuItem key={location} value={location}>
-              {location}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Box>
-  );
-};
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
+            <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z" />
+          </svg>
+        </button>
 
-const CompanyTable = ({ companies }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const renderTable = () => (
-    <TableContainer
-      component={Paper}
-      sx={{
-        borderRadius: 3,
-        boxShadow: '0 4px 12px rgba(107, 70, 193, 0.1)',
-        overflowX: 'auto',
-        minHeight: { xs: '300px', sm: '400px', md: '500px' },
-        bgcolor: '#FFFFFF',
-        border: '1px solid #E9D5FF',
-        maxWidth: { xs: '95%', sm: '90%', md: '1000px' },
-        width: 'fit-content',
-        mx: 'auto',
-      }}
-    >
-      <Table sx={{ minWidth: { sm: 650, md: 900 }, width: '100%' }} stickyHeader>
-        <TableHead sx={{ bgcolor: '#F9FAFB' }}>
-          <TableRow>
-            {[
-              'Company Name',
-              ...(isMobile ? [] : ['Contact', 'Jobs Posted']),
-            ].map((head) => (
-              <TableCell
-                key={head}
-                sx={{
-                  fontWeight: 600,
-                  fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                  color: '#1A1A1A',
-                  textAlign: 'left',
-                  whiteSpace: 'nowrap',
-                  bgcolor: '#F9FAFB',
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 1,
-                  py: { xs: 1.5, sm: 2 },
-                  px: { xs: 1, sm: 2, md: 3 },
-                }}
-              >
-                {head}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {companies.map((company, index) => (
-            <TableRow
-              key={index}
-              sx={{
-                '&:hover': {
-                  bgcolor: '#F3E8FF',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 8px rgba(107, 70, 193, 0.1)',
-                },
-                transition: 'all 0.3s ease',
-                bgcolor: index % 2 === 0 ? '#F9FAFB' : '#FFFFFF',
-                borderRadius: '8px',
-                m: 1,
-                display: 'table-row',
-              }}
-            >
-              <TableCell
-                sx={{
-                  fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                  color: '#1A1A1A',
-                  whiteSpace: 'nowrap',
-                  py: { xs: 1.5, sm: 2 },
-                  px: { xs: 1, sm: 2, md: 3 },
-                }}
-              >
-                {company.name}
-              </TableCell>
-              {!isMobile && (
-                <>
-                  <TableCell
-                    sx={{
-                      fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                      color: '#4A4A4A',
-                      py: { xs: 1.5, sm: 2 },
-                      px: { xs: 1, sm: 2, md: 3 },
-                    }}
-                  >
-                    {company.contact}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                      color: '#4A4A4A',
-                      py: { xs: 1.5, sm: 2 },
-                      px: { xs: 1, sm: 2, md: 3 },
-                    }}
-                  >
-                    {company.jobsPosted}
-                  </TableCell>
-                </>
-              )}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {companies.length === 0 && (
-        <Box sx={{ p: 4, textAlign: 'center', color: '#6B7280', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-          No companies found matching the criteria.
-        </Box>
-      )}
-    </TableContainer>
-  );
-
-  const renderCards = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, maxWidth: '95%', mx: 'auto' }}>
-      {companies.map((company, index) => (
-        <Paper
-          key={index}
-          sx={{
-            borderRadius: 3,
-            boxShadow: '0 4px 12px rgba(107, 70, 193, 0.1)',
-            bgcolor: '#FFFFFF',
-            border: '1px solid #E9D5FF',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 16px rgba(107, 70, 193, 0.15)',
-            },
-            transition: 'all 0.3s ease',
-            p: { xs: 2, sm: 2.5 },
-          }}
-        >
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: { xs: '1rem', sm: '1.125rem' },
-              color: '#1A1A1A',
-              fontWeight: 600,
-              mb: 1,
+        {/* Page Numbers */}
+        {pages.map(page => (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            style={{
+              width: 40, height: 40, borderRadius: 12, border: 'none',
+              fontSize: 14, fontFamily: "'Inter', sans-serif", fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.3s',
+              background: currentPage === page ? '#111827' : 'transparent',
+              color: currentPage === page ? '#FFFFFF' : '#6B7280',
+              boxShadow: currentPage === page ? '0 10px 15px rgba(17,24,39,0.2)' : 'none',
             }}
+            onMouseEnter={e => { if (currentPage !== page) { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'; } }}
+            onMouseLeave={e => { if (currentPage !== page) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; } }}
           >
-            {company.name}
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography
-              sx={{
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                color: '#4A4A4A',
-              }}
-            >
-              Contact: {company.contact}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                color: '#4A4A4A',
-              }}
-            >
-              Jobs Posted: {company.jobsPosted}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                color: '#4A4A4A',
-              }}
-            >
-              Industry: {company.industry}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                color: '#4A4A4A',
-              }}
-            >
-              Location: {company.location}
-            </Typography>
-          </Box>
-        </Paper>
-      ))}
-    </Box>
-  );
+            {page}
+          </button>
+        ))}
 
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-      {isMobile ? renderCards() : renderTable()}
-    </Box>
+        {/* Next */}
+        <button
+          onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          style={{
+            padding: 10, borderRadius: 12, border: 'none', background: 'transparent',
+            color: '#6B7280', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            opacity: currentPage === totalPages ? 0.3 : 1, transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => { if (currentPage !== totalPages) { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'; } }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
+            <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Count info */}
+      <p style={{ textAlign: 'center', fontSize: 12, color: '#9CA3AF', fontFamily: "'Inter', sans-serif", marginTop: 16, marginBottom: 32 }}>
+        Showing {start}–{end} of {totalItems} compan{totalItems !== 1 ? 'ies' : 'y'}
+      </p>
+    </div>
   );
 };
+
+/* ─── Company Table ─── */
+const SORTABLE_COLS = [
+  { key: 'companyName', label: 'Company' },
+  { key: 'totalJobs', label: 'Jobs Posted' },
+  { key: 'statusBreakdown', label: 'Status Breakdown' },
+  { key: 'lastPosted', label: 'Last Posted' },
+];
+
+const CompanyTable = ({ companies, loading, sortKey, sortDir, onSort }) => (
+  <div style={{
+    background: t.card, border: `1px solid ${t.border}`,
+    borderRadius: 16, overflow: 'hidden',
+    boxShadow: '0 4px 12px rgba(107, 70, 193, 0.05)',
+  }}>
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
+        <thead>
+          <tr style={{ borderBottom: `1px solid ${t.border}` }}>
+            {SORTABLE_COLS.map(col => (
+              <th
+                key={col.label}
+                className={col.key !== 'statusBreakdown' ? 'sort-th' : ''}
+                onClick={() => col.key !== 'statusBreakdown' && onSort(col.key)}
+                style={{
+                  padding: '16px 20px', textAlign: 'left',
+                  fontSize: 12, fontFamily: "'Inter', sans-serif",
+                  color: sortKey === col.key ? t.accent : t.muted,
+                  letterSpacing: '0.05em', textTransform: 'uppercase',
+                  fontWeight: 600, background: '#F9FAFB', whiteSpace: 'nowrap',
+                  transition: 'color .15s, background .15s',
+                  cursor: col.key !== 'statusBreakdown' ? 'pointer' : 'default',
+                }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  {col.label}
+                  {col.key !== 'statusBreakdown' && (
+                    <SortArrow direction={sortKey === col.key ? sortDir : 'asc'} active={sortKey === col.key} />
+                  )}
+                </span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? <SkeletonRows /> : (
+            <>
+              {companies.length === 0 && (
+                <tr>
+                  <td colSpan={4} style={{ padding: '60px 20px', textAlign: 'center', color: t.muted, fontFamily: "'Inter', sans-serif", fontSize: 14 }}>
+                    No companies match the current search.
+                  </td>
+                </tr>
+              )}
+              <AnimatePresence>
+                {companies.map((co, i) => (
+                  <motion.tr
+                    key={co.companyName}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ duration: .22, delay: i * 0.025 }}
+                    style={{ borderBottom: `1px solid ${t.border}`, transition: 'background .15s', cursor: 'default' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    {/* Company Name */}
+                    <td style={{ padding: '16px 20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          background: `${t.accent}14`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0,
+                        }}>
+                          <span style={{ fontSize: 15, fontWeight: 700, color: t.accent, fontFamily: "'Inter', sans-serif" }}>
+                            {co.companyName.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: t.text, fontWeight: 600 }}>
+                          {co.companyName}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Jobs Posted */}
+                    <td style={{ padding: '16px 20px' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: `${t.accent}10`, color: t.accent,
+                        border: `1px solid ${t.accent}25`,
+                        borderRadius: 99, padding: '4px 12px',
+                        fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: 700,
+                      }}>
+                        {co.totalJobs}
+                      </span>
+                    </td>
+
+                    {/* Status Breakdown */}
+                    <td style={{ padding: '16px 20px' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                        <StatusBadge count={co.reviewed} label="Reviewed" bg={t.greenDim} color={t.green} />
+                        <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />
+                        <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />
+                      </div>
+                    </td>
+
+                    {/* Last Posted */}
+                    <td style={{ padding: '16px 20px' }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: t.muted, fontWeight: 500 }}>
+                        {co.lastPostedLabel}
+                      </span>
+                    </td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            </>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+/* ─── Mobile Company Card ─── */
+const MobileCard = ({ co, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: .3, delay: index * 0.05 }}
+    style={{
+      background: t.card, border: `1px solid ${t.border}`,
+      borderRadius: 14, padding: '16px 18px',
+      display: 'flex', flexDirection: 'column', gap: 10,
+      boxShadow: '0 4px 12px rgba(107, 70, 193, 0.05)',
+    }}
+  >
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{
+        width: 40, height: 40, borderRadius: 10,
+        background: `${t.accent}14`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: 17, fontWeight: 700, color: t.accent, fontFamily: "'Inter', sans-serif" }}>
+          {co.companyName.charAt(0).toUpperCase()}
+        </span>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: t.text, fontWeight: 700, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {co.companyName}
+        </span>
+        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: t.muted }}>
+          {co.lastPostedLabel}
+        </span>
+      </div>
+      <span style={{
+        background: `${t.accent}10`, color: t.accent,
+        border: `1px solid ${t.accent}25`,
+        borderRadius: 99, padding: '3px 10px',
+        fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: 700, flexShrink: 0,
+      }}>
+        {co.totalJobs} job{co.totalJobs !== 1 ? 's' : ''}
+      </span>
+    </div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+      <StatusBadge count={co.reviewed} label="Reviewed" bg={t.greenDim} color={t.green} />
+      <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />
+      <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />
+    </div>
+  </motion.div>
+);
+
+/* ─── Main Component ─── */
+const COMPANIES_PER_PAGE = 8;
 
 const Companies = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
+  const [jobsData, setJobsData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [industryFilter, setIndustryFilter] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
+  const [sortKey, setSortKey] = useState('totalJobs');
+  const [sortDir, setSortDir] = useState('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
-  const companies = [
-    { name: 'Tech Innovators Inc.', contact: 'contact@techinnovators.com', jobsPosted: 12, industry: 'Technology', location: 'San Francisco' },
-    { name: 'Global Solutions Ltd.', contact: 'info@globalsolutions.com', jobsPosted: 8, industry: 'Consulting', location: 'London' },
-    { name: 'Creative Minds Co.', contact: 'hello@creativeminds.com', jobsPosted: 5, industry: 'Creative', location: 'New York' },
-    { name: 'Future Dynamics Corp.', contact: 'support@futuredynamics.com', jobsPosted: 15, industry: 'Technology', location: 'Remote' },
-    { name: 'Pioneer Ventures LLC', contact: 'inquiries@pioneerventures.com', jobsPosted: 10, industry: 'Finance', location: 'New York' },
-  ];
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
-  const handleSearch = (query) => {
-    setSearchQuery(query.toLowerCase());
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
+  useEffect(() => { fetchData(); }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/admin/jobs');
+      const raw = res.data?.data || res.data || [];
+      setJobsData(raw);
+    } catch {
+      toast.error('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleIndustryFilter = (industry) => {
-    setIndustryFilter(industry);
-  };
+  /* ─── Aggregate jobs → companies ─── */
+  const companiesMap = {};
+  jobsData.forEach(job => {
+    const name = job.companyName || 'Unknown';
+    if (!companiesMap[name]) {
+      companiesMap[name] = { companyName: name, totalJobs: 0, pending: 0, reviewed: 0, risky: 0, lastPosted: 0 };
+    }
+    const c = companiesMap[name];
+    c.totalJobs += 1;
+    const status = job.adminReview || 'pending';
+    if (status === 'reviewed') c.reviewed += 1;
+    else if (status === 'risky') c.risky += 1;
+    else c.pending += 1;
 
-  const handleLocationFilter = (location) => {
-    setLocationFilter(location);
-  };
+    const ts = job.createdAt
+      ? new Date(job.createdAt).getTime()
+      : new Date(parseInt(job._id?.substring(0, 8), 16) * 1000).getTime();
+    if (ts > c.lastPosted) c.lastPosted = ts;
+  });
 
-  const filteredCompanies = companies.filter(
-    (company) =>
-      (company.name.toLowerCase().includes(searchQuery) || company.contact.toLowerCase().includes(searchQuery)) &&
-      (industryFilter === '' || company.industry === industryFilter) &&
-      (locationFilter === '' || company.location === locationFilter)
+  const allCompanies = Object.values(companiesMap).map(c => ({
+    ...c,
+    lastPostedLabel: c.lastPosted
+      ? new Date(c.lastPosted).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : '—',
+  }));
+
+  /* ─── Stats ─── */
+  const totalJobs = jobsData.length;
+  const totalReviewed = jobsData.filter(j => j.adminReview === 'reviewed').length;
+  const totalRisky = jobsData.filter(j => j.adminReview === 'risky').length;
+
+  /* ─── Filter ─── */
+  const filtered = allCompanies.filter(co =>
+    !searchQuery || co.companyName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  /* ─── Sort ─── */
+  const sorted = [...filtered].sort((a, b) => {
+    let aVal = a[sortKey] ?? '';
+    let bVal = b[sortKey] ?? '';
+    if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+    if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+    if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  /* ─── Paginate ─── */
+  const totalPages = Math.ceil(sorted.length / COMPANIES_PER_PAGE);
+  const paginated = sorted.slice(
+    (currentPage - 1) * COMPANIES_PER_PAGE,
+    currentPage * COMPANIES_PER_PAGE
+  );
+
+  const handleSort = key => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('desc'); }
+    setCurrentPage(1);
+  };
+
+  const handleSearch = q => { setSearchQuery(q); setCurrentPage(1); };
+
   return (
-    <ErrorBoundary>
-      <motion.div
-        style={{
-          fontFamily: "'Inter', 'Roboto', sans-serif",
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          bgcolor: '#F9FAFB',
-          width: '100%',
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-      >
-        <Container
-          maxWidth="lg"
-          sx={{
-            maxWidth: { xs: '95%', sm: '90%', md: '1280px' },
-            mx: 'auto',
-            py: { xs: 2, sm: 4, md: 5 },
-            px: { xs: 1, sm: 3, md: 4 },
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
-          <Grid container spacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3, textAlign: 'center' }}>
-                <Typography
-                  variant="h4"
-                  fontWeight={700}
-                  sx={{
-                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.25rem' },
-                    color: '#1A1A1A',
-                  }}
-                >
+    <>
+      <GlobalStyle />
+      <ToastContainer
+        theme="light"
+        toastStyle={{ background: t.card, border: `1px solid ${t.border}`, fontFamily: "'Inter', sans-serif" }}
+      />
+      <div style={{
+        minHeight: '100vh', background: t.bg,
+        fontFamily: "'Inter', sans-serif",
+        padding: isMobile ? '24px 16px' : '40px 32px',
+      }}>
+        <div style={{ maxWidth: 1080, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
+
+          {/* ── Header ── */}
+          <motion.div
+            initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}
+          >
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                <div style={{ width: 4, height: 28, background: `linear-gradient(180deg, ${t.accent}, #A78BFA)`, borderRadius: 4 }} />
+                <h1 style={{
+                  fontFamily: "'Inter', sans-serif", fontSize: isMobile ? 22 : 28,
+                  fontWeight: 800, color: t.text, letterSpacing: '-0.02em',
+                }}>
                   Companies
-                </Typography>
-                {/* <Typography
-                  variant="body2"
-                  sx={{
-                    fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                    color: '#6B7280',
-                  }}
-                >
-                  Manage companies and their job postings
-                </Typography> */}
-              </Box>
-            </Grid>
-            <Grid item xs={12} sx={{ maxWidth: { xs: '95%', sm: '90%', md: '1000px' }, mx: 'auto' }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 3 } }}>
-                <TextField
-                  placeholder="Search companies..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  fullWidth
-                  variant="outlined"
-                  size="small"
-                  InputProps={{
-                    startAdornment: (
-                      <Box sx={{ mr: 1, color: '#6B7280' }}>
-                        <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
-                          <path d="M229.66 218.34l-50.07-50.06a88 88 0 1 0-11.32 11.31l50.07 50.07a8 8 0 0 0 11.32-11.32zM40 112a72 72 0 1 1 72 72 72.08 72.08 0 0 1-72-72z" />
-                        </svg>
-                      </Box>
-                    ),
-                  }}
-                  sx={{
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px',
-                      '& fieldset': { borderColor: '#E9D5FF' },
-                      '&:hover fieldset': { borderColor: '#A78BFA' },
-                    },
-                    '& .MuiInputBase-input': {
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    },
-                  }}
-                />
-                <FilterButtons
-                  onIndustryFilter={handleIndustryFilter}
-                  onLocationFilter={handleLocationFilter}
-                  industryFilter={industryFilter}
-                  locationFilter={locationFilter}
-                />
-              </Box>
-            </Grid>
-            <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-              <CompanyTable companies={filteredCompanies} />
-            </Grid>
-          </Grid>
-        </Container>
-      </motion.div>
-    </ErrorBoundary>
+                </h1>
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: t.muted, marginLeft: 14 }}>
+                Overview of all companies with posted job listings
+              </p>
+            </div>
+
+            <button
+              onClick={fetchData}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                background: t.card, border: `1px solid ${t.border}`,
+                color: t.accent, borderRadius: 9, padding: '8px 16px',
+                fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: 600,
+                cursor: 'pointer', transition: 'all .2s',
+                boxShadow: '0 2px 4px rgba(107, 70, 193, 0.05)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = t.accentDim; }}
+              onMouseLeave={e => { e.currentTarget.style.background = t.card; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                <path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                <path d="M8 16H3v5" />
+              </svg>
+              Refresh
+            </button>
+          </motion.div>
+
+          {/* ── Stat Cards ── */}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <StatCard label="Companies" value={allCompanies.length} color={t.accent} icon={BusinessIcon} delay={.1} />
+            <StatCard label="Total Jobs" value={totalJobs} color="#0284C7" icon={WorkIcon} delay={.15} />
+            <StatCard label="Reviewed" value={totalReviewed} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
+            <StatCard label="Risky" value={totalRisky} color={t.red} icon={ReportProblemIcon} delay={.25} />
+          </div>
+
+          {/* ── Search ── */}
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .3, duration: .4 }}
+          >
+            <SearchBar value={searchQuery} onChange={handleSearch} />
+          </motion.div>
+
+          {/* ── Table / Cards ── */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35, duration: .4 }}>
+            {isMobile ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {loading
+                  ? [1, 2, 3].map(i => (
+                    <div key={i} className="shimmer-row" style={{ height: 100, borderRadius: 14 }} />
+                  ))
+                  : paginated.length === 0
+                    ? (
+                      <div style={{
+                        background: t.card, border: `1px solid ${t.border}`,
+                        borderRadius: 14, padding: '48px 20px',
+                        textAlign: 'center', color: t.muted, fontSize: 14,
+                        fontFamily: "'Inter', sans-serif",
+                      }}>
+                        No companies match your search.
+                      </div>
+                    )
+                    : paginated.map((co, i) => (
+                      <MobileCard key={co.companyName} co={co} index={i} />
+                    ))
+                }
+              </div>
+            ) : (
+              <CompanyTable
+                companies={paginated}
+                loading={loading}
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={handleSort}
+              />
+            )}
+
+            {/* ── Pagination ── */}
+            {!loading && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                totalItems={sorted.length}
+                itemsPerPage={COMPANIES_PER_PAGE}
+              />
+            )}
+          </motion.div>
+
+        </div>
+      </div>
+    </>
   );
 };
 

@@ -24,7 +24,7 @@ const Footer = () => {
                 </h3>
                 <div className="flex space-x-4 items-center">
                   <a
-                    href="https://www.instagram.com/jobfits024"
+                    href="https://www.instagram.com/jobfit_official/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-pink-600 hover:opacity-70 hover:scale-110 transition-all text-[22px]"
@@ -40,7 +40,7 @@ const Footer = () => {
                     <FontAwesomeIcon icon={faXTwitter} />
                   </a>
                   <a
-                    href="https://www.linkedin.com/in/jobfit-undefined-5344663b3"
+                    href="https://www.linkedin.com/in/jobfit-organization-5344663b3"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#0077B5] hover:opacity-70 hover:scale-110 transition-all text-[22px]"
