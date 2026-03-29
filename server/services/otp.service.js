@@ -1,20 +1,12 @@
-const nodemailer = require("nodemailer");
+const axios = require("axios");
 const path = require("path");
-const { title } = require("process");
 require("dotenv").config();
 
 const otpStore = new Map();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+// Using Google Apps Script as an HTTP bridge to send emails
+// because Render blocks outbound SMTP on free tier.
+const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL;
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
@@ -23,12 +15,7 @@ function generateOtp() {
 async function sendOtp(email) {
   const otp = generateOtp();
 
-  const mailOptions = {
-    from: `"JobFit" <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: "Your One-Time Password (OTP) for Login",
-    text: `Your OTP is: ${otp}. Please do not share it with anyone.`,
-    html: `  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f6f8; padding: 40px 0;">
+  const htmlContent = `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f6f8; padding: 40px 0;">
       <tr>
         <td align="center">
 
@@ -66,20 +53,16 @@ async function sendOtp(email) {
             <!-- Info text -->
             <tr>
               <td align="center" style="padding: 0 30px;">
-                <p style="font-size: 14px; color: #666;">
-                  This code is valid for <strong>5 minutes</strong>. Please use it carefully to complete your login.
+                <p style="font-size: 14px; color: #777777; line-height: 1.5; margin-bottom: 20px;">
+                  If you did not request this verification code, please ignore this email.
                 </p>
               </td>
             </tr>
 
             <!-- Footer -->
             <tr>
-              <td align="center" style="padding: 25px 0 30px; background-color: #f9f9f9;">
-                <p style="font-size: 13px; color: #888; margin: 0 0 2px;">
-                  You're receiving this message because 
-                </p>
-                <p style="font-size: 13px; color: #888; margin: 0 0 2px;">your email was used to sign up to JobFit.</p>
-                <p style="font-size: 13px; color: #aaa; margin-top:3px;">— Team JobFit</p>
+              <td align="center" style="background-color: #f7f7f7; color: #888888; font-size: 12px; padding: 15px;">
+                Copyright &copy; 2024 JobFit. All rights reserved.
               </td>
             </tr>
 
@@ -87,12 +70,36 @@ async function sendOtp(email) {
 
         </td>
       </tr>
-    </table> `};
+    </table>`;
 
-  await transporter.sendMail(mailOptions);
-  otpStore.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+  const mailOptions = {
+    to: email,
+    subject: "Your One-Time Password (OTP) for Login",
+    text: `Your OTP is: ${otp}`,
+    html: htmlContent,
+  };
 
-  return otp;
+  try {
+    if (!GOOGLE_SCRIPT_URL) {
+      throw new Error("GOOGLE_SCRIPT_URL is not set in environment variables");
+    }
+
+    const response = await axios.post(GOOGLE_SCRIPT_URL, mailOptions);
+
+    if (response.data === "Success") {
+      otpStore.set(email, {
+        otp,
+        expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
+      });
+      console.log(`OTP sent to ${email} via Google Script`);
+      return otp;
+    } else {
+      throw new Error(`Google Script Error: ${response.data}`);
+    }
+  } catch (error) {
+    console.error("Error sending email:", error.message);
+    throw error;
+  }
 }
 
 function verifyOtp(email, inputOtp) {

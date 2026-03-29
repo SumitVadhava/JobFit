@@ -7,6 +7,8 @@ const loginRouter = require("./routes/loginRouter");
 const authRouter = require("./routes/auth");
 const jobRouter = require("./routes/jobRouter");
 const adminDashboardRouter = require("./routes/adminDashboardRouter");
+const adminCandidateRouter = require("./routes/adminCandidateRouter");
+const adminRecruiterRouter = require("./routes/adminRecruiterRouter");
 const userDashboardRouter = require("./routes/userDashboard");
 const profileRouter = require("./routes/profileRouter");
 const testimonialRouter = require("./routes/testimonialRouter");
@@ -30,16 +32,22 @@ const allowedOrigins = [
   "https://jobfit-s5v7.onrender.com"
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
+);
+
 
 app.use(
   "/api-docs",
@@ -67,21 +75,8 @@ app.use(
 
 app.use(helmet());
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-    
-      if (!origin) return callback(null, true);
+// CORS configuration consolidated at the top
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  }),
-);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -102,6 +97,8 @@ app.use("/api", loginRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/jobs", auth, jobRouter);
 app.use("/api/admin", auth, authorizeRole(ROLES.ADMIN), adminDashboardRouter);
+app.use("/api/admin/candidates", auth, authorizeRole(ROLES.ADMIN), adminCandidateRouter);
+app.use("/api/admin/recruiters", auth, authorizeRole(ROLES.ADMIN), adminRecruiterRouter);
 app.use(
   "/api/user",
   auth,

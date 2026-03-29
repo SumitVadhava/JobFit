@@ -1,7 +1,7 @@
 const AdminDashboard = require("../models/adminDashboard");
 const Login = require("../models/login");
 const Job = require("../models/jobs");
-const CandidateProfile = require("../models/candidateProfile");
+const mongoose = require("mongoose");
 
 exports.getDashboardData = async (req, res) => {
   try {
@@ -15,41 +15,98 @@ exports.getDashboardData = async (req, res) => {
   }
 };
 
-exports.getUsersData = async (req, res) => {
+// ─── Shared role-scoped helpers ───────────────────────────────────────────────
+
+const createAccountOfRole = (role) => async (req, res) => {
+  const bcrypt = require("bcrypt");
   try {
-    const users = await Login.find({ role: { $in: ["candidate", "user"] } }).select("userName email role status");
-    res.status(200).json({ error: false, data: users });
+    const { userName, email, password, status } = req.body;
+    if (!userName || !email || !password) {
+      return res.status(400).json({ error: true, message: "userName, email and password are required", data: null });
+    }
+    const existing = await Login.findOne({ email });
+    if (existing) {
+      return res.status(409).json({ error: true, message: "Email already registered", data: null });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await Login.create({ userName, email, password: hashedPassword, role, status: status || "active" });
+    const safeUser = { _id: newUser._id, userName: newUser.userName, email: newUser.email, role: newUser.role, status: newUser.status };
+    res.status(201).json({ error: false, message: `${role} account created successfully`, data: safeUser });
   } catch (error) {
-    res.status(500).json({ error: true, message: "Server error" });
+    res.status(500).json({ error: true, message: error.message, data: null });
   }
 };
 
-exports.deleteUser = async (req, res) => {
+const updateAccountOfRole = (role) => async (req, res) => {
   try {
-    const { userId } = req.body;
-    if (!userId) {
-      return res.status(400).json({ error: true, message: "userId is required" });
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: true, message: "Invalid userId format", data: null });
     }
-    
-    const deletedUser = await Login.findByIdAndDelete(userId);
-    if (!deletedUser) {
-      return res.status(404).json({ error: true, message: "User not found" });
+    const account = await Login.findById(userId);
+    if (!account) return res.status(404).json({ error: true, message: "Account not found", data: null });
+    if (account.role !== role) {
+      return res.status(403).json({ error: true, message: `User is not a ${role}`, data: null });
     }
-
-    res.status(200).json({ error: false, message: "Operation successful", data: {} });
+    const allowedFields = ["userName", "email", "status"];
+    const updates = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    }
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: true, message: "No valid fields provided to update", data: null });
+    }
+    const updated = await Login.findByIdAndUpdate(userId, updates, { new: true, runValidators: true }).select("userName email role status");
+    res.status(200).json({ error: false, message: `${role} updated successfully`, data: updated });
   } catch (error) {
-    res.status(500).json({ error: true, message: "Server error" });
+    res.status(500).json({ error: true, message: error.message, data: null });
   }
 };
 
+const deleteAccountOfRole = (role) => async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) return res.status(400).json({ error: true, message: "userId is required", data: null });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: true, message: "Invalid userId format", data: null });
+    }
+    const account = await Login.findById(userId);
+    if (!account) return res.status(404).json({ error: true, message: "Account not found", data: null });
+    if (account.role !== role) {
+      return res.status(403).json({ error: true, message: `User is not a ${role}`, data: null });
+    }
+    await Login.findByIdAndDelete(userId);
+    res.status(200).json({ error: false, message: `${role} deleted successfully`, data: {} });
+  } catch (error) {
+    res.status(500).json({ error: true, message: error.message, data: null });
+  }
+};
+
+// ─── Candidate CRUD ───────────────────────────────────────────────────────────
+exports.getCandidatesData = async (req, res) => {
+  try {
+    const candidates = await Login.find({ role: { $in: ["candidate", "user"] } }).select("userName email role status");
+    res.status(200).json({ error: false, data: candidates });
+  } catch (error) {
+    res.status(500).json({ error: true, message: error.message, data: null });
+  }
+};
+exports.createCandidate = createAccountOfRole("candidate");
+exports.updateCandidate = updateAccountOfRole("candidate");
+exports.deleteCandidate = deleteAccountOfRole("candidate");
+
+// ─── Recruiter CRUD ───────────────────────────────────────────────────────────
 exports.getRecruitersData = async (req, res) => {
   try {
     const recruiters = await Login.find({ role: "recruiter" }).select("userName email role status");
     res.status(200).json({ error: false, message: "Operation successful", data: recruiters });
   } catch (error) {
-    res.status(500).json({ error: true, message: "Server error", data: null });
+    res.status(500).json({ error: true, message: error.message, data: null });
   }
 };
+exports.createRecruiter = createAccountOfRole("recruiter");
+exports.updateRecruiter = updateAccountOfRole("recruiter");
+exports.deleteRecruiter = deleteAccountOfRole("recruiter");
 
 exports.getJobsData = async (req, res) => {
   try {
@@ -69,56 +126,4 @@ exports.getCompaniesData = async (req, res) => {
   }
 };
 
-// --- Candidate Profile Admin CRUD ---
 
-exports.createCandidateProfile = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const existing = await CandidateProfile.findOne({ user: userId });
-    if (existing) {
-      return res.status(400).json({ error: true, message: "Profile already exists" });
-    }
-    
-    const newProfile = await CandidateProfile.create({ user: userId, ...req.body });
-    res.status(201).json({ error: false, message: "Profile created", data: newProfile });
-  } catch (error) {
-    res.status(500).json({ error: true, message: "Server error", data: null });
-  }
-};
-
-exports.getCandidateProfile = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const profile = await CandidateProfile.findOne({ user: userId });
-    if (!profile) return res.status(404).json({ error: true, message: "Profile not found" });
-    res.status(200).json({ error: false, message: "Operation successful", data: profile });
-  } catch (error) {
-    res.status(500).json({ error: true, message: "Server error", data: null });
-  }
-};
-
-exports.updateCandidateProfile = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const updatedProfile = await CandidateProfile.findOneAndUpdate(
-      { user: userId },
-      { ...req.body },
-      { new: true, runValidators: true }
-    );
-    if (!updatedProfile) return res.status(404).json({ error: true, message: "Profile not found" });
-    res.status(200).json({ error: false, message: "Profile updated", data: updatedProfile });
-  } catch (error) {
-    res.status(500).json({ error: true, message: "Server error", data: null });
-  }
-};
-
-exports.deleteCandidateProfile = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const deleted = await CandidateProfile.findOneAndDelete({ user: userId });
-    if (!deleted) return res.status(404).json({ error: true, message: "Profile not found" });
-    res.status(200).json({ error: false, message: "Profile deleted", data: {} });
-  } catch (error) {
-    res.status(500).json({ error: true, message: "Server error", data: null });
-  }
-};
