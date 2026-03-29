@@ -288,6 +288,60 @@ const options = {
             application: { $ref: "#/components/schemas/AppliedJob" },
           },
         },
+        SaveJobResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              example: "Job saved successfully",
+            },
+            saved: {
+              type: "boolean",
+              example: true,
+            },
+          },
+        },
+        SavedJobItem: {
+          type: "object",
+          properties: {
+            savedId: { type: "string", example: "689f1d7b2c9b4f0012a34567" },
+            jobId: { type: "string", example: "689f13f42c9b4f0012a34321" },
+            companyName: { type: "string", example: "TechCorp" },
+            jobTitle: { type: "string", example: "Software Engineer" },
+            location: { type: "string", example: "Bangalore, India" },
+            department: { type: "string", example: "Engineering" },
+            workPlaceType: {
+              type: "string",
+              enum: ["remote", "onsite", "hybrid"],
+              example: "remote",
+            },
+            experience: { type: "string", example: "1-2 years" },
+            jobDescription: {
+              type: "string",
+              example: "Looking for a skilled SE...",
+            },
+            img: {
+              type: "string",
+              nullable: true,
+              example: "https://example.com/company-logo.jpg",
+            },
+            savedAt: {
+              type: "string",
+              format: "date-time",
+              example: "2026-03-29T09:30:00.000Z",
+            },
+          },
+        },
+        SavedJobsListResponse: {
+          type: "object",
+          properties: {
+            totalSavedJobs: { type: "number", example: 2 },
+            savedJobs: {
+              type: "array",
+              items: { $ref: "#/components/schemas/SavedJobItem" },
+            },
+          },
+        },
         AdminReviewUpdateRequest: {
           type: "object",
           required: ["adminReview"],
