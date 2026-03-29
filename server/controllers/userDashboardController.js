@@ -1,5 +1,6 @@
 const UserDashboard = require("../models/userDashboard");
 const AppliedJob = require("../models/appliedJobs");
+const SavedJob = require("../models/savedJobs");
 
 exports.getUserDashboardData = async (req, res) => {
   try {
@@ -45,16 +46,42 @@ exports.getJobData = async (req, res) => {
 
 exports.getSavedJobsData = async (req, res) => {
   try {
-    const dashboardData = await UserDashboard.findOne(
-      {},
-      { jobPostsByIndustry: 1, _id: 0 },
-    );
-    if (!dashboardData) {
-      return res.status(404).json({ message: "Saved jobs data not found" });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "User not authenticated" });
     }
-    res.status(200).json(dashboardData);
+
+    const savedJobs = await SavedJob.find({ userId: req.user.id })
+      .populate({
+        path: "jobId",
+        select:
+          "companyName jobTitle location department workPlaceType experience jobDescription img",
+      })
+      .sort({ savedAt: -1 });
+
+    const formattedSavedJobs = savedJobs
+      .filter((entry) => entry.jobId)
+      .map((entry) => ({
+        savedId: entry._id,
+        jobId: entry.jobId._id,
+        companyName: entry.jobId.companyName,
+        jobTitle: entry.jobId.jobTitle,
+        location: entry.jobId.location,
+        department: entry.jobId.department,
+        workPlaceType: entry.jobId.workPlaceType,
+        experience: entry.jobId.experience,
+        jobDescription: entry.jobId.jobDescription,
+        img: entry.jobId.img,
+        savedAt: entry.savedAt,
+      }));
+
+    return res.status(200).json({
+      totalSavedJobs: formattedSavedJobs.length,
+      savedJobs: formattedSavedJobs,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 

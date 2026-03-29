@@ -1,5 +1,6 @@
 const Job = require("../models/jobs");
 const AppliedJob = require("../models/appliedJobs");
+const SavedJob = require("../models/savedJobs");
 const mongoose = require("mongoose");
 const { ROLES } = require("../utils/roles");
 
@@ -105,6 +106,86 @@ exports.applyForJob = async (req, res) => {
         .json({ message: "You already applied to this job" });
     }
 
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.saveJob = async (req, res) => {
+  try {
+    const { id: jobId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job id" });
+    }
+
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const job = await Job.findById(jobId).select("_id");
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const existingSavedJob = await SavedJob.findOne({
+      userId: req.user.id,
+      jobId,
+    }).select("_id");
+
+    if (existingSavedJob) {
+      return res.status(200).json({
+        message: "Job already saved",
+        saved: true,
+      });
+    }
+
+    await SavedJob.create({
+      userId: req.user.id,
+      jobId,
+    });
+
+    return res.status(201).json({
+      message: "Job saved successfully",
+      saved: true,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.unsaveJob = async (req, res) => {
+  try {
+    const { id: jobId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job id" });
+    }
+
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const removed = await SavedJob.findOneAndDelete({
+      userId: req.user.id,
+      jobId,
+    });
+
+    if (!removed) {
+      return res.status(404).json({
+        message: "Saved job not found",
+        saved: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Job removed from saved jobs",
+      saved: false,
+    });
+  } catch (error) {
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });

@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const userDashboardController = require("../controllers/userDashboardController");
 const userDashboard = require("../middlewares/userDashboardMid");
+const authorizeRole = require("../middlewares/authorizeRole");
+const { ROLES } = require("../utils/roles");
 
 /**
  * @swagger
@@ -100,21 +102,15 @@ router.get("/job", userDashboard, userDashboardController.getJobData);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Job'
+ *               $ref: '#/components/schemas/SavedJobsListResponse'
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - candidate/user role required
  */
 router.get(
   "/savedJobs",
-  userDashboard,
+  authorizeRole(ROLES.CANDIDATE, ROLES.USER),
   userDashboardController.getSavedJobsData,
 );
 
@@ -134,6 +130,7 @@ router.get(
  */
 router.get(
   "/applied-companies",
+  authorizeRole(ROLES.CANDIDATE, ROLES.USER),
   userDashboardController.getAppliedCompaniesData,
 );
 
