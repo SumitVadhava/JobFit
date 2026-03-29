@@ -210,6 +210,7 @@
 
 import React from "react";
 import Marquee from "react-fast-marquee";
+import { Link } from "react-router-dom";
 import Profile from "../assets/profile.gif";
 import JobOffer from "../assets/jobOffer.gif";
 import Data_Extraction from "../assets/Data_extraction.gif";
@@ -357,9 +358,9 @@ const KeyFeatures = () => {
                 Sign up via email, create profiles with personal info,
                 job/hiring preferences for job seekers, recruiters, and admins.
               </p>
-              <button className="bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium">
+              <Link to="/features/user-registration" className="inline-block bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium">
                 Learn More
-              </button>
+              </Link>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 max-w-sm">
@@ -371,9 +372,9 @@ const KeyFeatures = () => {
                 Upload resumes/PDFs, extract skills/experience, match with job
                 descriptions, and calculate ATS scores (out of 100).
               </p>
-              <button className="bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium">
+              <Link to="/features/resume-matching" className="inline-block bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium">
                 Learn More
-              </button>
+              </Link>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 max-w-sm">
@@ -385,9 +386,9 @@ const KeyFeatures = () => {
                 Track ATS scores over time, view breakdowns (keywords, skills),
                 and get actionable feedback to improve resumes.
               </p>
-              <button className="bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium" id="user-review">
+              <Link to="/features/ats-analytics" className="inline-block bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium" id="user-review">
                 Learn More
-              </button>
+              </Link>
             </div>
           </div>
         </section>

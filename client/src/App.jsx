@@ -27,6 +27,14 @@ import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_
 import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './pages/Unauthorized'
 import ApplyJob from './pages/User/User_ApplyJob_view'
+import AboutUs from './pages/AboutUs'
+import ContactSupport from './pages/ContactSupport'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
+import CookiePolicy from './pages/CookiePolicy'
+import FeatureUserRegistration from './pages/FeatureUserRegistration'
+import FeatureResumeMatching from './pages/FeatureResumeMatching'
+import FeatureATSAnalytics from './pages/FeatureATSAnalytics'
 
 
 
@@ -212,7 +220,18 @@ function App() {
             >
               <Recruiter_Posted_Jobs_view />
             </ProtectedRoute>} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Public footer pages */}
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/contact" element={<ContactSupport />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/cookie-policy" element={<CookiePolicy />} />
+
+        {/* Feature detail pages */}
+        <Route path="/features/user-registration" element={<FeatureUserRegistration />} />
+        <Route path="/features/resume-matching" element={<FeatureResumeMatching />} />
+        <Route path="/features/ats-analytics" element={<FeatureATSAnalytics />} />
         
       </Routes>
       {/* <GoogleOneTapLogin /> */}

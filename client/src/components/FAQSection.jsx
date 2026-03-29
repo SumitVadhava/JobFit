@@ -4,9 +4,14 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-// import { Span } from "@chakra-ui/react";
 
 export default function FAQSection() {
+  const [expanded, setExpanded] = React.useState(null);
+
+  const handleChange = (panel) => (event, isExpanded) => {
+    setExpanded(isExpanded ? panel : null);
+  };
+
   const faqsJobSeekers = [
     {
       title: "What is JobFit?",
@@ -64,7 +69,7 @@ export default function FAQSection() {
   ];
 
   return (
-    <div className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" id="faq-section">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-bold text-purple-800 mb-8 text-center">
           JobFit – FAQ
@@ -76,41 +81,45 @@ export default function FAQSection() {
               For Job Seekers
             </h3>
             <div className="space-y-4">
-              {faqsJobSeekers.map((faq, index) => (
-                <Accordion
-                  key={index}
-                  // First FAQ expanded by default
-                  sx={{
-                    "&:before": { display: "none" },
-                    border: "1px solid #E5E7EB",
-                    borderRadius: "0.5rem",
-                    backgroundColor: "#FFFFFF",
-                    "&:hover": { boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" },
-                  }}
-                >
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon sx={{ color: "#6B46C1" }} />}
-                    aria-controls={`panel1-${index}-content`}
-                    id={`panel1-${index}-header`}
+              {faqsJobSeekers.map((faq, index) => {
+                const panelId = `jobseeker-${index}`;
+                return (
+                  <Accordion
+                    key={index}
+                    expanded={expanded === panelId}
+                    onChange={handleChange(panelId)}
                     sx={{
-                      backgroundColor: "#F9F9F9",
-                      borderBottom: "1px solid #E5E7EB",
+                      "&:before": { display: "none" },
+                      border: "1px solid #E5E7EB",
+                      borderRadius: "0.5rem",
+                      backgroundColor: "#FFFFFF",
+                      "&:hover": { boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" },
                     }}
                   >
-                    <Typography
-                      component="span"
-                      sx={{ fontWeight: "600", color: "#6B46C1" }}
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon sx={{ color: "#6B46C1" }} />}
+                      aria-controls={`${panelId}-content`}
+                      id={`${panelId}-header`}
+                      sx={{
+                        backgroundColor: "#F9F9F9",
+                        borderBottom: expanded === panelId ? "1px solid #E5E7EB" : "none",
+                      }}
                     >
-                      {faq.title}
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails sx={{ backgroundColor: "#FFFFFF" }}>
-                    <Typography sx={{ color: "#4B5563" }}>
-                      {faq.content}
-                    </Typography>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
+                      <Typography
+                        component="span"
+                        sx={{ fontWeight: "600", color: "#6B46C1" }}
+                      >
+                        {faq.title}
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ backgroundColor: "#FFFFFF" }}>
+                      <Typography sx={{ color: "#4B5563" }}>
+                        {faq.content}
+                      </Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                );
+              })}
             </div>
           </div>
 
@@ -120,40 +129,45 @@ export default function FAQSection() {
               For Recruiters
             </h3>
             <div className="space-y-4">
-              {faqsRecruiters.map((faq, index) => (
-                <Accordion
-                  key={index}
-                  sx={{
-                    "&:before": { display: "none" },
-                    border: "1px solid #E5E7EB",
-                    borderRadius: "0.5rem",
-                    backgroundColor: "#FFFFFF",
-                    "&:hover": { boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" },
-                  }}
-                >
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon sx={{ color: "#6B46C1" }} />}
-                    aria-controls={`panel2-${index}-content`}
-                    id={`panel2-${index}-header`}
+              {faqsRecruiters.map((faq, index) => {
+                const panelId = `recruiter-${index}`;
+                return (
+                  <Accordion
+                    key={index}
+                    expanded={expanded === panelId}
+                    onChange={handleChange(panelId)}
                     sx={{
-                      backgroundColor: "#F9F9F9",
-                      borderBottom: "1px solid #E5E7EB",
+                      "&:before": { display: "none" },
+                      border: "1px solid #E5E7EB",
+                      borderRadius: "0.5rem",
+                      backgroundColor: "#FFFFFF",
+                      "&:hover": { boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" },
                     }}
                   >
-                    <Typography
-                      component="span"
-                      sx={{ fontWeight: "600", color: "#6B46C1" }}
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon sx={{ color: "#6B46C1" }} />}
+                      aria-controls={`${panelId}-content`}
+                      id={`${panelId}-header`}
+                      sx={{
+                        backgroundColor: "#F9F9F9",
+                        borderBottom: expanded === panelId ? "1px solid #E5E7EB" : "none",
+                      }}
                     >
-                      {faq.title}
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails sx={{ backgroundColor: "#FFFFFF" }}>
-                    <Typography sx={{ color: "#4B5563" }}>
-                      {faq.content}
-                    </Typography>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
+                      <Typography
+                        component="span"
+                        sx={{ fontWeight: "600", color: "#6B46C1" }}
+                      >
+                        {faq.title}
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ backgroundColor: "#FFFFFF" }}>
+                      <Typography sx={{ color: "#4B5563" }}>
+                        {faq.content}
+                      </Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -171,9 +185,6 @@ export default function FAQSection() {
             <span> {"     "}</span>
             support for instant assistance!
           </p>
-          {/* <span className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors duration-200">
-            Chat with JobBot 
-          </span> */}
         </div>
       </div>
     </div>
