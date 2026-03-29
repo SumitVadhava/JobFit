@@ -1,6 +1,7 @@
 const Job = require("../models/jobs");
 const AppliedJob = require("../models/appliedJobs");
 const SavedJob = require("../models/savedJobs");
+const Profile = require("../models/candidateProfile");
 const mongoose = require("mongoose");
 const { ROLES } = require("../utils/roles");
 
@@ -215,6 +216,183 @@ exports.getRecruiterOwnJobs = async (req, res) => {
     return res.status(200).json({
       message: "Recruiter jobs retrieved successfully",
       jobs,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.getCandidatesByJobId = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job id" });
+    }
+
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const job = await Job.findById(jobId)
+      .select("_id recruiterId jobTitle companyName")
+      .lean();
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (String(job.recruiterId) !== String(req.user.id)) {
+      return res.status(403).json({
+        message: "Forbidden: you can only access candidates for your own jobs",
+      });
+    }
+
+    const applications = await AppliedJob.find({ jobId: job._id })
+      .populate({
+        path: "userId",
+        select: "userName email role status",
+      })
+      .sort({ appliedAt: -1 })
+      .lean();
+
+    const candidateIds = applications
+      .map((application) => application.userId?._id)
+      .filter(Boolean);
+
+    const profiles = await Profile.find({ user: { $in: candidateIds } })
+      .select("user img atsScore skills")
+      .lean();
+
+    const profileByUserId = new Map(
+      profiles.map((profile) => [String(profile.user), profile]),
+    );
+
+    const candidates = applications
+      .filter((application) => application.userId)
+      .map((application) => {
+        const profile = profileByUserId.get(String(application.userId._id));
+        return {
+          applicationId: application._id,
+          candidateId: application.userId._id,
+          userName: application.userId.userName,
+          email: application.userId.email,
+          status: application.status,
+          appliedAt: application.appliedAt,
+          profile: profile
+            ? {
+                img: profile.img,
+                atsScore: profile.atsScore,
+                skills: profile.skills,
+              }
+            : null,
+        };
+      });
+
+    return res.status(200).json({
+      message: "Candidates retrieved successfully",
+      job: {
+        jobId: job._id,
+        jobTitle: job.jobTitle,
+        companyName: job.companyName,
+      },
+      totalCandidates: candidates.length,
+      candidates,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.getCandidatesForRecruiterJobs = async (req, res) => {
+  try {
+    const { recruiterId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(recruiterId)) {
+      return res.status(400).json({ message: "Invalid recruiter id" });
+    }
+
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (String(req.user.id) !== String(recruiterId)) {
+      return res.status(403).json({
+        message: "Forbidden: you can only access candidates for your own jobs",
+      });
+    }
+
+    const recruiterJobs = await Job.find({ recruiterId })
+      .select("_id jobTitle companyName")
+      .lean();
+
+    if (recruiterJobs.length === 0) {
+      return res.status(200).json({
+        message: "No jobs found for this recruiter",
+        totalJobs: 0,
+        totalCandidates: 0,
+        candidates: [],
+      });
+    }
+
+    const jobById = new Map(recruiterJobs.map((job) => [String(job._id), job]));
+    const jobIds = recruiterJobs.map((job) => job._id);
+
+    const applications = await AppliedJob.find({ jobId: { $in: jobIds } })
+      .populate({
+        path: "userId",
+        select: "userName email role status",
+      })
+      .sort({ appliedAt: -1 })
+      .lean();
+
+    const candidateIds = applications
+      .map((application) => application.userId?._id)
+      .filter(Boolean);
+
+    const profiles = await Profile.find({ user: { $in: candidateIds } })
+      .select("user img atsScore skills")
+      .lean();
+
+    const profileByUserId = new Map(
+      profiles.map((profile) => [String(profile.user), profile]),
+    );
+
+    const candidates = applications
+      .filter((application) => application.userId)
+      .map((application) => {
+        const job = jobById.get(String(application.jobId));
+        const profile = profileByUserId.get(String(application.userId._id));
+
+        return {
+          applicationId: application._id,
+          jobId: application.jobId,
+          jobTitle: job?.jobTitle || null,
+          companyName: job?.companyName || null,
+          candidateId: application.userId._id,
+          userName: application.userId.userName,
+          email: application.userId.email,
+          status: application.status,
+          appliedAt: application.appliedAt,
+          profile: profile
+            ? {
+                img: profile.img,
+                atsScore: profile.atsScore,
+                skills: profile.skills,
+              }
+            : null,
+        };
+      });
+
+    return res.status(200).json({
+      message: "Candidates across recruiter jobs retrieved successfully",
+      totalJobs: recruiterJobs.length,
+      totalCandidates: candidates.length,
+      candidates,
     });
   } catch (error) {
     return res
