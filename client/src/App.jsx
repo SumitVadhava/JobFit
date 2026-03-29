@@ -27,6 +27,7 @@ import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_
 import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './pages/Unauthorized'
 import ApplyJob from './pages/User/User_ApplyJob_view'
+import ScrollToTop from './components/ScrollToTop'
 import Recruiter_History from './pages/Recruiter/Recruiter_History'
 
 
@@ -48,10 +49,10 @@ function App() {
   useEffect(() => {
     if (isLoggedIn) {
       setUserProp({
-        userName: user.userName || user.name, // Add fallback to user.name
+        userName: user.userName || user.name,
         email: user.email,
-        sub: user._id || "", // Add user ID
-        picture: user.picture || "", // Add default picture
+        sub: user._id || "",
+        picture: user.picture || "",
         role: role
       });
     }
@@ -75,10 +76,10 @@ function App() {
         theme="light"
       />
       <Navbar userData={userProp} />
+      <ScrollToTop />
       <Routes>
         <Route path='/' element={<HeroSection />} />
         <Route path='/login' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
-
 
         <Route
           path='/user/dashboard'
@@ -181,7 +182,7 @@ function App() {
 
 
         <Route
-          path="/recruiter/recruiter-analytics"
+          path="/recruiter/recruiter-dashboard"
           element={
             <ProtectedRoute
               allowedRoles={['recruiter']}

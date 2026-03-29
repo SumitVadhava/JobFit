@@ -1,77 +1,13 @@
-// import React, { useState } from "react";
-// import { HandPlatter, Menu, X } from "lucide-react"; 
-// import KeyFeatures from "./KeyFeature";
-// import UserReviewSection from "./UserReviewSection";
-// import FAQSection from "./FAQSection";
-// import { useNavigate } from "react-router-dom";
-
-// const HeroSection = () => {
-//     const role = "recruiter";
-//     const navigate = useNavigate();
-
-//     const handleGetStarted = () => {
-//         if(role === 'user'){
-//             navigate('/user/dashboard');
-//         }else if(role === 'admin'){
-//             navigate('/admin/dashboard');
-//         }
-//         else if(role === 'recruiter'){
-//             navigate('/recruiter/recruiter-analytics');
-//         }
-//     }
-
-//     return (
-//         <section className="bg-white">
-//             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-
-//                     {/* Left Side */}
-//                     <div>
-//                         <h1 className="text-4xl font-bold text-black mb-4 leading-tight">
-//                             Resonate with the <br /> visitor&apos;s problem
-//                         </h1>
-//                         <p className="text-gray-700 mb-8">
-//                             Describe exactly what your product or service does to solve this problem.
-//                             <br />
-//                             Avoid using verbose words or phrases.
-//                         </p>
-//                         <div className="flex gap-4">
-//                             <button onClick={handleGetStarted} className="bg-black text-white px-6 py-2 rounded">
-//                                 Get started
-//                             </button>
-//                             <button className="border border-black text-black px-6 py-2 rounded">
-//                                 Learn more
-//                             </button>
-//                         </div>
-//                     </div>
-
-//                     {/* Right Side - Placeholder Image */}
-//                     <div className="w-full h-64 md:h-80 bg-gray-300 flex items-center justify-center">
-//                         <span className="text-gray-500 text-sm">Image Placeholder</span>
-//                     </div>
-
-//                 </div>
-//             </div>
-//             <KeyFeatures />
-//             <UserReviewSection />
-//             <FAQSection />
-//         </section>
-//     );
-// }
-
-// export default HeroSection;
-
-
-
 import React, { useState, useEffect } from "react";
 import Skeleton from "./Skeleton";
 import KeyFeatures from "./KeyFeature";
-import UserReviewSection from "./UserReviewSection";
+// import UserReviewSection from "./UserReviewSection";
 import FAQSection from "./FAQSection";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import PortfolioGif from "../assets/Portfolio.gif";
 import { useAuth } from "../contexts/AuthContexts";
+import Testimonial from "./Testimonials";
 
 const HeroSection = () => {
     const [loading, setLoading] = useState(false); // default: not loading
@@ -99,10 +35,10 @@ const HeroSection = () => {
     const handleGetStarted = () => {
         if (role === "recruiter") {
             navigate("/recruiter/recruiter-analytics");
-        }else if(role === 'candidate') {
+        } else if (role === 'candidate') {
             navigate("/user/dashboard");
         }
-        else if(role === 'admin') {
+        else if (role === 'admin') {
             navigate("/admin/dashboard")
         }
     };
@@ -140,15 +76,15 @@ const HeroSection = () => {
                                     >
                                         Get started
                                     </button>
-                                    <button  className="border border-purple-600 text-purple-600 px-6 py-2 rounded hover:bg-purple-100"  onClick={() => window.open('http://www.youtube.com/@JobFit-1.0', '_blank')}>
+                                    <button className="border border-purple-600 text-purple-600 px-6 py-2 rounded hover:bg-purple-100" onClick={() => window.open('http://www.youtube.com/@JobFit-1.0', '_blank')}>
                                         Watch Video
-                                    </button> 
+                                    </button>
                                 </div>
                             </>
                         )}
                     </div>
 
-                    {/* Right Side - Portfolio.gif fills container */} 
+                    {/* Right Side - Portfolio.gif fills container */}
                     <div className="w-full h-full md:h-80 bg-gray-300 flex items-center justify-center rounded-lg overflow-hidden">
                         {loading ? (
                             <Skeleton className="h-48 w-48 rounded" />
@@ -256,7 +192,7 @@ const HeroSection = () => {
                     </div>
 
                     <div>
-                        <UserReviewSection />
+                        <Testimonial />
                     </div>
 
                     <div>

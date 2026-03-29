@@ -1,4 +1,4 @@
-const Profile = require("../models/profiles");
+const Profile = require("../models/candidateProfile");
 
 const validateProfileData = (body) => {
   const { img, description, experience, atsScore, education, skills } = body;

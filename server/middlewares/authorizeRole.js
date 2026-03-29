@@ -46,6 +46,8 @@ module.exports = (...allowedRoles) => {
       });
     }
 
+    req.user = decoded;
+
     return next();
   };
 };
