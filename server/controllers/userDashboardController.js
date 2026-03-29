@@ -44,6 +44,36 @@ exports.getJobData = async (req, res) => {
   }
 };
 
+exports.updateUserDashboardData = async (req, res) => {
+  try {
+    const payload = req.body || {};
+
+    if (Object.keys(payload).length === 0) {
+      return res.status(400).json({ message: "Request body cannot be empty" });
+    }
+
+    const updatedDashboard = await UserDashboard.findOneAndUpdate(
+      {},
+      { $set: payload },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      },
+    );
+
+    return res.status(200).json({
+      message: "User dashboard updated successfully",
+      data: updatedDashboard,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
 exports.getSavedJobsData = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
@@ -54,7 +84,7 @@ exports.getSavedJobsData = async (req, res) => {
       .populate({
         path: "jobId",
         select:
-          "companyName jobTitle location department workPlaceType experience jobDescription img",
+          "companyName jobTitle location department workPlaceType experience jobDescription img openings responsibilities",
       })
       .sort({ savedAt: -1 });
 
@@ -63,10 +93,12 @@ exports.getSavedJobsData = async (req, res) => {
       .map((entry) => ({
         savedId: entry._id,
         jobId: entry.jobId._id,
+        openings: entry.jobId.openings,
         companyName: entry.jobId.companyName,
         jobTitle: entry.jobId.jobTitle,
         location: entry.jobId.location,
         department: entry.jobId.department,
+        responsibilities: entry.jobId.responsibilities,
         workPlaceType: entry.jobId.workPlaceType,
         experience: entry.jobId.experience,
         jobDescription: entry.jobId.jobDescription,
@@ -94,7 +126,8 @@ exports.getAppliedCompaniesData = async (req, res) => {
     const applications = await AppliedJob.find({ userId: req.user.id })
       .populate({
         path: "jobId",
-        select: "companyName jobTitle location department workPlaceType",
+        select:
+          "companyName jobTitle location department workPlaceType img openings responsibilities",
       })
       .sort({ appliedAt: -1 });
 
@@ -109,6 +142,9 @@ exports.getAppliedCompaniesData = async (req, res) => {
         location: application.jobId.location,
         department: application.jobId.department,
         workPlaceType: application.jobId.workPlaceType,
+        responsibilities: application.jobId.responsibilities,
+        img: application.jobId.img,
+        openings: application.jobId.openings,
         status: application.status,
         appliedAt: application.appliedAt,
       }));

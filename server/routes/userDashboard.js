@@ -30,10 +30,35 @@ const { ROLES } = require("../utils/roles");
  *       401:
  *         description: Unauthorized
  */
-router.get(
+router.get("/userDashboard", userDashboardController.getUserDashboardData);
+
+/**
+ * @swagger
+ * /api/user/userDashboard:
+ *   patch:
+ *     summary: Update user dashboard fields dynamically
+ *     tags: [User Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: User dashboard updated
+ *       400:
+ *         description: Invalid payload
+ *       401:
+ *         description: Unauthorized
+ */
+router.patch(
   "/userDashboard",
   userDashboard,
-  userDashboardController.getUserDashboardData,
+  userDashboardController.updateUserDashboardData,
 );
 
 /**
@@ -54,11 +79,7 @@ router.get(
  *       401:
  *         description: Unauthorized
  */
-router.get(
-  "/resumeBuilder",
-  userDashboard,
-  userDashboardController.getResumeBuilderData,
-);
+router.get("/resumeBuilder", userDashboardController.getResumeBuilderData);
 
 /**
  * @swagger
@@ -86,7 +107,7 @@ router.get(
  *       401:
  *         description: Unauthorized
  */
-router.get("/job", userDashboard, userDashboardController.getJobData);
+router.get("/job", userDashboardController.getJobData);
 
 /**
  * @swagger
