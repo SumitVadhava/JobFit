@@ -1,5 +1,6 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const path = require("path");
 
 const options = {
   definition: {
@@ -12,12 +13,12 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:5000",
-        description: "Local Server",
-      },
-      {
         url: "https://jobfit-s5v7.onrender.com",
         description: "Render Server",
+      },
+      {
+        url: "http://localhost:5000",
+        description: "Local Server",
       },
       {
         url: "https://jobfit-delta.vercel.app",
@@ -427,7 +428,7 @@ const options = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ["./routes/*.js"],
+  apis: [path.join(__dirname, "./routes/*.js")],
 };
 
 const specs = swaggerJsdoc(options);
