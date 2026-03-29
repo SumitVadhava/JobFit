@@ -299,6 +299,44 @@ const options = {
             },
           },
         },
+        // ── Testimonial ──────────────────────────────────────────────
+        Testimonial: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            username: { type: "string", example: "Jane Doe" },
+            rating: { type: "number", example: 5 },
+            reviewmsg: {
+              type: "string",
+              example: "JobFit helped me find a job quickly and smoothly!",
+            },
+            date: {
+              type: "string",
+              format: "date-time",
+              example: "2026-03-29T17:30:00.000Z",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+            },
+          },
+        },
+        TestimonialRequest: {
+          type: "object",
+          required: ["username", "rating", "reviewmsg"],
+          properties: {
+            username: { type: "string", example: "Jane Doe" },
+            rating: { type: "number", example: 5 },
+            reviewmsg: {
+              type: "string",
+              example: "JobFit helped me find a job quickly and smoothly!",
+            },
+          },
+        },
         // ── Profile ──────────────────────────────────────────────
         Profile: {
           type: "object",
