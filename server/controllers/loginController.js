@@ -1,10 +1,9 @@
 const User = require("../models/login");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { ROLES } = require("../utils/roles");
 
 const getLoginController = async (req, res) => {
-  const { email, password, recruiterKey } = req.body;
+  const { email, password } = req.body;
   try {
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
@@ -20,16 +19,6 @@ const getLoginController = async (req, res) => {
       return res.status(400).json({ error: true, message: "Invalid password credentials", data: null });
     }
 
-    if (user.role === ROLES.RECRUITER && user.recruiterKey) {
-      if (!recruiterKey) {
-        return res.status(400).json({ error: true, message: "Recruiter key is required", data: null });
-      }
-
-      const isRecruiterKeyValid = await bcrypt.compare(recruiterKey, user.recruiterKey);
-      if (!isRecruiterKeyValid) {
-        return res.status(400).json({ error: true, message: "Invalid recruiter key", data: null });
-      }
-    }
 
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },

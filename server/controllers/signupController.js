@@ -1,10 +1,9 @@
 const User = require("../models/login");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { ROLES } = require("../utils/roles");
 
 const addSingupController = async (req, res) => {
-  const { userName, email, password, role, status, recruiterKey } = req.body;
+  const { userName, email, password, role, status } = req.body;
 
   try {
     let existingUser = await User.findOne({ email: email });
@@ -18,9 +17,6 @@ const addSingupController = async (req, res) => {
     if (!existingUser) {
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
-      const hashedRecruiterKey = recruiterKey
-        ? await bcrypt.hash(recruiterKey, saltRounds)
-        : null;
 
       const newUser = new User({
         userName,
@@ -28,7 +24,6 @@ const addSingupController = async (req, res) => {
         password: hashedPassword,
         role,
         status,
-        recruiterKey: role === ROLES.RECRUITER ? hashedRecruiterKey : null,
       });
 
       const token = jwt.sign(
