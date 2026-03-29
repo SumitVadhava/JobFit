@@ -8,8 +8,8 @@ const { ROLES } = require("../utils/roles");
 /**
  * @swagger
  * tags:
- *   name: User Dashboard
- *   description: Student/user dashboard routes (requires JWT)
+ *   name: User
+ *   description: user routes (requires JWT)
  */
 
 /**
