@@ -35,10 +35,17 @@ const JobSearch = () => {
         setError(null);
 
         // Fetch data using your custom Axios instance
-        const response = await api.get("jobs");
+        const [jobsResponse, savedJobsResponse] = await Promise.all([
+          api.get("/jobs"),
+          api.get("/user/savedJobs").catch(() => ({ data: { savedJobs: [] } }))
+        ]);
+
+        const savedJobsIds = new Set(
+          (savedJobsResponse.data.savedJobs || []).map(saved => saved.jobId)
+        );
 
         // Format the API response to match our component structure
-        const formattedJobs = response.data.jobs.map(job => ({
+        const formattedJobs = jobsResponse.data.jobs.map(job => ({
           ...job,
           _id: job._id,
           jobTitle: job.jobTitle,
@@ -53,7 +60,7 @@ const JobSearch = () => {
           responsibilities: job.responsibilities,
           qualifications: job.qualifications,
           img: job.img || "https://via.placeholder.com/150?text=Company+Logo",
-          bookmarked: job.bookmarked || false
+          bookmarked: savedJobsIds.has(job._id)
         }));
 
         setJobs(formattedJobs);
@@ -61,7 +68,7 @@ const JobSearch = () => {
         // Initialize bookmarks based on API response
         const initialBookmarks = {};
         formattedJobs.forEach((job) => {
-          initialBookmarks[job._id] = job.bookmarked || false;
+          initialBookmarks[job._id] = job.bookmarked;
         });
         setBookmarkedJobs(initialBookmarks);
 
@@ -202,22 +209,11 @@ const JobSearch = () => {
     );
 
     try {
-      // Use PUT /api/jobs/:id — send full job data with updated bookmarked flag
-      await api.put(`/jobs/${jobId}`, {
-        jobTitle: jobToUpdate.jobTitle,
-        department: jobToUpdate.department,
-        experience: jobToUpdate.experience,
-        responsibilities: jobToUpdate.responsibilities,
-        qualifications: jobToUpdate.qualifications,
-        companyName: jobToUpdate.companyName,
-        location: jobToUpdate.location,
-        workPlaceType: jobToUpdate.workPlaceType === "On-site" ? "onsite" :
-          jobToUpdate.workPlaceType === "Remote" ? "remote" :
-            jobToUpdate.workPlaceType === "Hybrid" ? "hybrid" : jobToUpdate.workPlaceType,
-        jobDescription: jobToUpdate.jobDescription,
-        img: jobToUpdate.img,
-        bookmarked: newBookmarkState,
-      });
+      if (newBookmarkState) {
+        await api.post(`/jobs/${jobId}/save`);
+      } else {
+        await api.delete(`/jobs/${jobId}/unsave`);
+      }
 
       toast.success(
         newBookmarkState
