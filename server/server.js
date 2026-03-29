@@ -108,7 +108,12 @@ app.use(
   authorizeRole(...USER_FACING_ROLES),
   userDashboardRouter,
 );
-app.use("/api/profile", auth, profileRouter);
+app.use(
+  "/api/profile",
+  auth,
+  authorizeRole(...USER_FACING_ROLES),
+  profileRouter,
+);
 app.use("/api/resume", auth, authorizeRole(...USER_FACING_ROLES), resumeRoute);
 app.use("/api/testimonials", testimonialRouter);
 

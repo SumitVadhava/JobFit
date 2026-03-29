@@ -1,11 +1,23 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({ storage });
 
 const {
   getProfile,
   createProfile,
   updateProfile,
   deleteProfile,
+  uploadResume,
 } = require("../controllers/profileController");
 
 const {
@@ -112,5 +124,33 @@ router.put("/", validateUpdateProfile, updateProfile);
  *         description: Unauthorized
  */
 router.delete("/", deleteProfile);
+
+/**
+ * @swagger
+ * /api/profile/upload-resume:
+ *   post:
+ *     summary: Upload resume PDF to Cloudinary and link it to profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               pdf:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Resume uploaded successfully
+ *       400:
+ *         description: No file provided
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/upload-resume", upload.single("pdf"), uploadResume);
 
 module.exports = router;
