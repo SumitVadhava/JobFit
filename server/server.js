@@ -7,6 +7,8 @@ const loginRouter = require("./routes/loginRouter");
 const authRouter = require("./routes/auth");
 const jobRouter = require("./routes/jobRouter");
 const adminDashboardRouter = require("./routes/adminDashboardRouter");
+const adminCandidateRouter = require("./routes/adminCandidateRouter");
+const adminRecruiterRouter = require("./routes/adminRecruiterRouter");
 const userDashboardRouter = require("./routes/userDashboard");
 const profileRouter = require("./routes/profileRouter");
 const testimonialRouter = require("./routes/testimonialRouter");
@@ -95,6 +97,8 @@ app.use("/api", loginRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/jobs", auth, jobRouter);
 app.use("/api/admin", auth, authorizeRole(ROLES.ADMIN), adminDashboardRouter);
+app.use("/api/admin/candidates", auth, authorizeRole(ROLES.ADMIN), adminCandidateRouter);
+app.use("/api/admin/recruiters", auth, authorizeRole(ROLES.ADMIN), adminRecruiterRouter);
 app.use(
   "/api/user",
   auth,
