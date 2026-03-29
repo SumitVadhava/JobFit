@@ -21,7 +21,7 @@ const NavShortcutItem = ({
         if (to.startsWith("#")) {
             e.preventDefault();
             const targetId = to.substring(1);
-            
+
             if (location.pathname !== "/") {
                 navigate("/");
                 setTimeout(() => {
@@ -45,7 +45,7 @@ const NavShortcutItem = ({
                 }
             }
         }
-        
+
         if (onClick) {
             onClick(e);
         }
