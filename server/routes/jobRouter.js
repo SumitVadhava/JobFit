@@ -160,6 +160,88 @@ router.post(
 
 /**
  * @swagger
+ * /api/jobs/{id}/save:
+ *   post:
+ *     summary: Save a job for the logged-in candidate
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Job document ID
+ *     responses:
+ *       201:
+ *         description: Job saved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SaveJobResponse'
+ *       200:
+ *         description: Job was already saved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SaveJobResponse'
+ *       400:
+ *         description: Invalid job id
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - candidate role required
+ *       404:
+ *         description: Job not found
+ */
+
+router.post(
+  "/:id/save",
+  authorizeRole(ROLES.CANDIDATE),
+  jobController.saveJob,
+);
+
+/**
+ * @swagger
+ * /api/jobs/{id}/unsave:
+ *   delete:
+ *     summary: Remove a saved job for the logged-in candidate
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Job document ID
+ *     responses:
+ *       200:
+ *         description: Job removed from saved jobs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SaveJobResponse'
+ *       400:
+ *         description: Invalid job id
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - candidate role required
+ *       404:
+ *         description: Saved job not found
+ */
+
+router.delete(
+  "/:id/unsave",
+  authorizeRole(ROLES.CANDIDATE),
+  jobController.unsaveJob,
+);
+
+/**
+ * @swagger
  * /api/jobs/{id}:
  *   get:
  *     summary: Get a specific job by ID
