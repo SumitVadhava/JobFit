@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminDashboardController');
-const adminDashboard = require('../middlewares/adminDashboardMid');
 
 /**
  * @swagger
@@ -31,7 +30,7 @@ const adminDashboard = require('../middlewares/adminDashboardMid');
  *         description: Forbidden – admin role required
  */
 
-router.get('/dashboard', adminDashboard, adminController.getDashboardData);
+router.get('/dashboard', adminController.getDashboardData);
 
 /**
  * @swagger
@@ -59,7 +58,7 @@ router.get('/dashboard', adminDashboard, adminController.getDashboardData);
  *       401:
  *         description: Unauthorized
  */
-router.get('/users', adminDashboard, adminController.getUsersData);
+router.get('/users', adminController.getUsersData);
 
 /**
  * @swagger
@@ -93,7 +92,7 @@ router.get('/users', adminDashboard, adminController.getUsersData);
  *         description: Forbidden
  */
 
-router.delete('/users', adminDashboard, adminController.deleteUser);
+router.delete('/users', adminController.deleteUser);
 
 /**
  * @swagger
@@ -114,7 +113,7 @@ router.delete('/users', adminDashboard, adminController.deleteUser);
  *         description: Unauthorized
  */
 
-router.get('/recruiters', adminDashboard, adminController.getRecruitersData);
+router.get('/recruiters', adminController.getRecruitersData);
 
 /**
  * @swagger
@@ -143,7 +142,7 @@ router.get('/recruiters', adminDashboard, adminController.getRecruitersData);
  *         description: Unauthorized
  */
 
-router.get('/jobs', adminDashboard, adminController.getJobsData);
+router.get('/jobs', adminController.getJobsData);
 
 /**
  * @swagger
@@ -164,7 +163,7 @@ router.get('/jobs', adminDashboard, adminController.getJobsData);
  *         description: Unauthorized
  */
 
-router.get('/companies', adminDashboard, adminController.getCompaniesData);
+router.get('/companies', adminController.getCompaniesData);
 
 /**
  * @swagger
@@ -321,9 +320,9 @@ router.get('/companies', adminDashboard, adminController.getCompaniesData);
  *       401:
  *         description: Unauthorized
  */
-router.post('/candidates/:userId/profile', adminDashboard, adminController.createCandidateProfile);
-router.get('/candidates/:userId/profile', adminDashboard, adminController.getCandidateProfile);
-router.put('/candidates/:userId/profile', adminDashboard, adminController.updateCandidateProfile);
-router.delete('/candidates/:userId/profile', adminDashboard, adminController.deleteCandidateProfile);
+router.post('/candidates/:userId/profile', adminController.createCandidateProfile);
+router.get('/candidates/:userId/profile', adminController.getCandidateProfile);
+router.put('/candidates/:userId/profile', adminController.updateCandidateProfile);
+router.delete('/candidates/:userId/profile', adminController.deleteCandidateProfile);
 
 module.exports = router;
