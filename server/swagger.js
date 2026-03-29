@@ -353,6 +353,44 @@ const options = {
             },
           },
         },
+        // ── Testimonial ──────────────────────────────────────────────
+        Testimonial: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            username: { type: "string", example: "Jane Doe" },
+            rating: { type: "number", example: 5 },
+            reviewmsg: {
+              type: "string",
+              example: "JobFit helped me find a job quickly and smoothly!",
+            },
+            date: {
+              type: "string",
+              format: "date-time",
+              example: "2026-03-29T17:30:00.000Z",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+            },
+          },
+        },
+        TestimonialRequest: {
+          type: "object",
+          required: ["username", "rating", "reviewmsg"],
+          properties: {
+            username: { type: "string", example: "Jane Doe" },
+            rating: { type: "number", example: 5 },
+            reviewmsg: {
+              type: "string",
+              example: "JobFit helped me find a job quickly and smoothly!",
+            },
+          },
+        },
         // ── Profile ──────────────────────────────────────────────
         Profile: {
           type: "object",
@@ -361,13 +399,14 @@ const options = {
             userName: { type: "string", example: "John Doe" },
             email: { type: "string", example: "john@example.com" },
             role: { type: "string", example: "student" },
+            atsScore: { type: "number", example: 85 },
             description: {
               type: "string",
               example: "Aspiring software developer",
             },
             skills: { type: "array", items: { type: "string" } },
             education: { type: "array", items: { type: "object" } },
-            experience: { type: "array", items: { type: "object" } },
+            experience: { type: "string", example: "0-2 years" },
             img: { type: "string", example: "https://example.com/profile.jpg" },
           },
         },

@@ -9,6 +9,7 @@ const jobRouter = require("./routes/jobRouter");
 const adminDashboardRouter = require("./routes/adminDashboardRouter");
 const userDashboardRouter = require("./routes/userDashboard");
 const profileRouter = require("./routes/profileRouter");
+const testimonialRouter = require("./routes/testimonialRouter");
 const auth = require("./middlewares/auth");
 const authorizeRole = require("./middlewares/authorizeRole");
 const { ROLES, USER_FACING_ROLES } = require("./utils/roles");
@@ -25,6 +26,7 @@ const allowedOrigins = [
   "https://jobfit-delta.vercel.app",
   "http://localhost:5173",
   "http://localhost:3000",
+  "http://localhost:5000",
   "https://jobfit-s5v7.onrender.com"
 ];
 
@@ -108,6 +110,7 @@ app.use(
 );
 app.use("/api/profile", auth, profileRouter);
 app.use("/api/resume", auth, authorizeRole(...USER_FACING_ROLES), resumeRoute);
+app.use("/api/testimonials", testimonialRouter);
 
 
 

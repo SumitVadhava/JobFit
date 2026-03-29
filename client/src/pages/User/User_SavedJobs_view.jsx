@@ -446,6 +446,10 @@ const SavedJobs = () => {
   const [expandedJob, setExpandedJob] = useState(null);
   const jobsPerPage = 3;
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
   // --- FETCH DATA ON MOUNT ---
   useEffect(() => {
     const fetchJobs = async () => {
