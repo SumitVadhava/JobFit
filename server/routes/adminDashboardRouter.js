@@ -167,26 +167,24 @@ router.get('/companies', adminController.getCompaniesData);
 
 /**
  * @swagger
- * /api/admin/candidates/{userId}/profile:
+ * /api/admin/candidates/profile:
  *   post:
  *     summary: Create a candidate profile (admin)
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         description: ID of the user
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [userId]
  *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: "64abc123def456"
+ *                 description: "Valid MongoDB ObjectId of the user"
  *               img:
  *                 type: string
  *                 example: "https://example.com/profile.jpg"
@@ -209,16 +207,23 @@ router.get('/companies', adminController.getCompaniesData);
  *               properties:
  *                 error:
  *                   type: boolean
+ *                   example: false
  *                 message:
  *                   type: string
  *                 data:
  *                   type: object
  *       400:
- *         description: Profile already exists
+ *         description: Profile already exists or invalid userId
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden
+ */
+router.post('/candidates/profile', adminController.createCandidateProfile);
+
+/**
+ * @swagger
+ * /api/admin/candidates/{userId}/profile:
  *   get:
  *     summary: Get a candidate profile (admin)
  *     tags: [Admin]
@@ -228,8 +233,10 @@ router.get('/companies', adminController.getCompaniesData);
  *       - in: path
  *         name: userId
  *         required: true
+ *         description: Valid MongoDB ObjectId of the user
  *         schema:
  *           type: string
+ *           example: "64abc123def456"
  *     responses:
  *       200:
  *         description: Operation successful
@@ -244,6 +251,8 @@ router.get('/companies', adminController.getCompaniesData);
  *                   type: string
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Invalid userId format
  *       404:
  *         description: Profile not found
  *       401:
@@ -257,8 +266,10 @@ router.get('/companies', adminController.getCompaniesData);
  *       - in: path
  *         name: userId
  *         required: true
+ *         description: Valid MongoDB ObjectId of the user
  *         schema:
  *           type: string
+ *           example: "64abc123def456"
  *     requestBody:
  *       required: true
  *       content:
@@ -286,6 +297,8 @@ router.get('/companies', adminController.getCompaniesData);
  *                   type: string
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Invalid userId format
  *       404:
  *         description: Profile not found
  *       401:
@@ -299,8 +312,10 @@ router.get('/companies', adminController.getCompaniesData);
  *       - in: path
  *         name: userId
  *         required: true
+ *         description: Valid MongoDB ObjectId of the user
  *         schema:
  *           type: string
+ *           example: "64abc123def456"
  *     responses:
  *       200:
  *         description: Profile deleted successfully
@@ -315,12 +330,13 @@ router.get('/companies', adminController.getCompaniesData);
  *                   type: string
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Invalid userId format
  *       404:
  *         description: Profile not found
  *       401:
  *         description: Unauthorized
  */
-router.post('/candidates/:userId/profile', adminController.createCandidateProfile);
 router.get('/candidates/:userId/profile', adminController.getCandidateProfile);
 router.put('/candidates/:userId/profile', adminController.updateCandidateProfile);
 router.delete('/candidates/:userId/profile', adminController.deleteCandidateProfile);
