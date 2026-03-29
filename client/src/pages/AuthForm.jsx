@@ -152,11 +152,14 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         // For signup, first send OTP
         setIsOtpLoading(true); // Start loading
         try {
+          console.log("Sending OTP to:", formValues.email);
           const response = await api.post("/auth/send-otp", {
             email: formValues.email,
           });
+          console.log("OTP Response:", response.data);
 
           if (response.data.message === "OTP sent to your email") {
+            console.log("Success! Setting isOTPOpen to true");
             setIsOTPOpen(true);
           } else if (response.data.message === "User already exists") {
             toast.error("Email already registered!", {
@@ -165,6 +168,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
               pauseOnHover: false,
               draggable: false,
             });
+            return; // Stop here
           }
         } catch (error) {
           toast.error("Failed to send OTP. Please try again.", {
@@ -174,6 +178,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
             draggable: false,
           });
           console.error("Error sending OTP:", error);
+          return; // Stop here
         } finally {
           setIsOtpLoading(false); // Stop loading regardless of outcome
         }
@@ -287,7 +292,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         navigate("/");
 
 
-        
+
 
       } catch (err) {
         console.error("Failed to fetch user info", err);

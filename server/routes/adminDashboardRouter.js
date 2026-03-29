@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminDashboardController');
-const adminDashboard = require('../middlewares/adminDashboardMid');
 
 /**
  * @swagger
@@ -31,7 +30,7 @@ const adminDashboard = require('../middlewares/adminDashboardMid');
  *         description: Forbidden – admin role required
  */
 
-router.get('/dashboard', adminDashboard, adminController.getDashboardData);
+router.get('/dashboard', adminController.getDashboardData);
 
 /**
  * @swagger
@@ -59,7 +58,7 @@ router.get('/dashboard', adminDashboard, adminController.getDashboardData);
  *       401:
  *         description: Unauthorized
  */
-router.get('/users', adminDashboard, adminController.getUsersData);
+router.get('/users', adminController.getUsersData);
 
 /**
  * @swagger
@@ -93,7 +92,7 @@ router.get('/users', adminDashboard, adminController.getUsersData);
  *         description: Forbidden
  */
 
-router.delete('/users', adminDashboard, adminController.getUsersData);
+router.delete('/users', adminController.deleteUser);
 
 /**
  * @swagger
@@ -114,7 +113,7 @@ router.delete('/users', adminDashboard, adminController.getUsersData);
  *         description: Unauthorized
  */
 
-router.get('/recruiters', adminDashboard, adminController.getUsersData);
+router.get('/recruiters', adminController.getRecruitersData);
 
 /**
  * @swagger
@@ -143,7 +142,7 @@ router.get('/recruiters', adminDashboard, adminController.getUsersData);
  *         description: Unauthorized
  */
 
-router.get('/jobs', adminDashboard, adminController.getJobsData);
+router.get('/jobs', adminController.getJobsData);
 
 /**
  * @swagger
@@ -164,6 +163,166 @@ router.get('/jobs', adminDashboard, adminController.getJobsData);
  *         description: Unauthorized
  */
 
-router.get('/companies', adminDashboard, adminController.getCompaniesData);
+router.get('/companies', adminController.getCompaniesData);
+
+/**
+ * @swagger
+ * /api/admin/candidates/{userId}/profile:
+ *   post:
+ *     summary: Create a candidate profile (admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: ID of the user
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               img:
+ *                 type: string
+ *                 example: "https://example.com/profile.jpg"
+ *               description:
+ *                 type: string
+ *                 example: "Experienced software engineer."
+ *               atsScore:
+ *                 type: number
+ *                 example: 85
+ *               experience:
+ *                 type: string
+ *                 example: "3-5 years"
+ *     responses:
+ *       201:
+ *         description: Profile created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Profile already exists
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *   get:
+ *     summary: Get a candidate profile (admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Operation successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Profile not found
+ *       401:
+ *         description: Unauthorized
+ *   put:
+ *     summary: Update a candidate profile (admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               atsScore:
+ *                 type: number
+ *                 example: 95
+ *               experience:
+ *                 type: string
+ *                 example: "5+ years"
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Profile not found
+ *       401:
+ *         description: Unauthorized
+ *   delete:
+ *     summary: Delete a candidate profile (admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profile deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Profile not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/candidates/:userId/profile', adminController.createCandidateProfile);
+router.get('/candidates/:userId/profile', adminController.getCandidateProfile);
+router.put('/candidates/:userId/profile', adminController.updateCandidateProfile);
+router.delete('/candidates/:userId/profile', adminController.deleteCandidateProfile);
 
 module.exports = router;

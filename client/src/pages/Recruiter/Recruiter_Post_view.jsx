@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useCallback } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
@@ -16,12 +15,97 @@ import {
   ListChecks,
   Send,
   Loader2,
-  Sparkles,
   ChevronDown,
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
 
+// ─── Extracted Outside to prevent remount on every render ─────────────────────
+const InputWrapper = ({
+  children,
+  label,
+  icon: Icon,
+  error,
+  isFocused,
+  isFilled,
+  required = true,
+}) => (
+  <div className="group relative">
+    <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-2">
+      <Icon
+        size={16}
+        className={`transition-colors duration-200 ${isFocused ? "text-black" : "text-gray-900"
+          }`}
+      />
+      {label}
+      {required && <span className="text-red-400 text-xs">*</span>}
+    </label>
+    {children}
+    {error && (
+      <div className="flex items-center gap-1.5 mt-1.5 animate-fadeIn">
+        <AlertCircle size={13} className="text-red-400 flex-shrink-0" />
+        <span className="text-xs text-red-500 font-medium">{error}</span>
+      </div>
+    )}
+    {isFilled && !error && (
+      <div className="absolute top-0 right-0 mt-0.5">
+        <CheckCircle2 size={14} className="text-green-400" />
+      </div>
+    )}
+  </div>
+);
+
+// ─── Helper: dynamic class builders ──────────────────────────────────────────
+const getInputClass = (hasError, isFocused, isFilled) =>
+  `w-full px-4 py-3 rounded-xl border-2 text-sm text-gray-800 placeholder-gray-300
+   bg-white transition-all duration-300 outline-none
+   ${hasError
+    ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-4 focus:ring-red-100"
+    : isFocused
+      ? "border-purple-400 ring-4 ring-purple-100 bg-white shadow-sm"
+      : isFilled
+        ? "border-purple-200 bg-purple-50/20"
+        : "border-gray-200 hover:border-purple-300"
+  }`;
+
+const getSelectClass = (hasError, isFocused, isFilled) =>
+  `w-full px-4 py-3 rounded-xl border-2 text-sm bg-white appearance-none cursor-pointer
+   transition-all duration-300 outline-none
+   ${hasError
+    ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-4 focus:ring-red-100 text-gray-800"
+    : isFocused
+      ? "border-purple-400 ring-4 ring-purple-100 shadow-sm text-gray-800"
+      : isFilled
+        ? "border-purple-200 bg-purple-50/20 text-gray-800"
+        : "border-gray-200 hover:border-purple-300 text-gray-400"
+  }`;
+
+const getTextareaClass = (hasError, isFocused, isFilled) =>
+  `w-full px-4 py-3 rounded-xl border-2 text-sm text-gray-800 placeholder-gray-300
+   bg-white transition-all duration-300 outline-none resize-none
+   ${hasError
+    ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-4 focus:ring-red-100"
+    : isFocused
+      ? "border-purple-400 ring-4 ring-purple-100 bg-white shadow-sm"
+      : isFilled
+        ? "border-purple-200 bg-purple-50/20"
+        : "border-gray-200 hover:border-purple-300"
+  }`;
+
+// ─── Section Header ──────────────────────────────────────────────────────────
+const SectionHeader = ({ step, title, subtitle }) => (
+  <div className="flex items-center gap-3 mb-6">
+    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 text-purple-600 font-bold text-sm">
+      {step}
+    </div>
+    <div>
+      <h2 className="text-lg font-bold text-gray-800">{title}</h2>
+      <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
+    </div>
+  </div>
+);
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 const Recruiter_Post_view = () => {
   const [formData, setFormData] = useState({
     jobTitle: "",
@@ -40,17 +124,19 @@ const Recruiter_Post_view = () => {
   const [errors, setErrors] = useState({});
   const [focusedField, setFocusedField] = useState(null);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-    }));
-  };
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  }, []);
+
+  const handleFocus = useCallback((name) => {
+    setFocusedField(name);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    setFocusedField(null);
+  }, []);
 
   const validate = () => {
     const newErrors = {};
@@ -105,18 +191,14 @@ const Recruiter_Post_view = () => {
           jobDescription: "",
           img: "",
           openings: "",
-          bookmarked: false,
         });
         setErrors({});
       } catch (error) {
         console.error("Error posting job:", error);
         toast.error(
           "Failed to post job. " +
-            (error.response?.data?.message || "Please try again later."),
-          {
-            position: "top-center",
-            autoClose: 3000,
-          },
+          (error.response?.data?.message || "Please try again later."),
+          { position: "top-center", autoClose: 3000 }
         );
       } finally {
         setIsSubmitting(false);
@@ -130,89 +212,16 @@ const Recruiter_Post_view = () => {
   };
 
   const filledCount = Object.values(formData).filter(
-    (v) => v && v.toString().trim() !== "",
+    (v) => v && v.toString().trim() !== ""
   ).length;
   const totalFields = Object.keys(formData).length;
   const progressPercent = Math.round((filledCount / totalFields) * 100);
-
-  const InputWrapper = ({
-    children,
-    label,
-    name,
-    icon: Icon,
-    error,
-    required = true,
-  }) => (
-    <div className="group relative">
-      <label className="flex items-center gap-2 text-sm font-semibold text-purple-700 mb-2">
-        <Icon
-          size={16}
-          className={`transition-colors duration-200 ${
-            focusedField === name ? "text-purple-500" : "text-purple-400"
-          }`}
-        />
-        {label}
-        {required && <span className="text-red-400 text-xs">*</span>}
-      </label>
-      {children}
-      {error && (
-        <div className="flex items-center gap-1.5 mt-1.5 animate-fadeIn">
-          <AlertCircle size={13} className="text-red-400 flex-shrink-0" />
-          <span className="text-xs text-red-500 font-medium">{error}</span>
-        </div>
-      )}
-      {formData[name] && !error && (
-        <div className="absolute top-0 right-0 mt-0.5">
-          <CheckCircle2 size={14} className="text-green-400" />
-        </div>
-      )}
-    </div>
-  );
-
-  const inputBaseClass = (name) =>
-    `w-full px-4 py-3 rounded-xl border-2 text-sm text-gray-800 placeholder-gray-300
-     bg-white transition-all duration-300 outline-none
-     ${
-       errors[name]
-         ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-4 focus:ring-red-100"
-         : focusedField === name
-           ? "border-purple-400 ring-4 ring-purple-100 bg-white shadow-sm"
-           : formData[name]
-             ? "border-purple-200 bg-purple-50/20"
-             : "border-gray-200 hover:border-purple-300"
-     }`;
-
-  const selectBaseClass = (name) =>
-    `w-full px-4 py-3 rounded-xl border-2 text-sm bg-white appearance-none cursor-pointer
-     transition-all duration-300 outline-none
-     ${
-       errors[name]
-         ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-4 focus:ring-red-100 text-gray-800"
-         : focusedField === name
-           ? "border-purple-400 ring-4 ring-purple-100 shadow-sm text-gray-800"
-           : formData[name]
-             ? "border-purple-200 bg-purple-50/20 text-gray-800"
-             : "border-gray-200 hover:border-purple-300 text-gray-400"
-     }`;
-
-  const textareaBaseClass = (name) =>
-    `w-full px-4 py-3 rounded-xl border-2 text-sm text-gray-800 placeholder-gray-300
-     bg-white transition-all duration-300 outline-none resize-none
-     ${
-       errors[name]
-         ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-4 focus:ring-red-100"
-         : focusedField === name
-           ? "border-purple-400 ring-4 ring-purple-100 bg-white shadow-sm"
-           : formData[name]
-             ? "border-purple-200 bg-purple-50/20"
-             : "border-gray-200 hover:border-purple-300"
-     }`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50/50">
       <ToastContainer />
 
-      {/* Decorative Background Elements */}
+      {/* Decorative Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200/20 rounded-full blur-3xl" />
         <div className="absolute top-1/2 -left-40 w-96 h-96 bg-purple-100/30 rounded-full blur-3xl" />
@@ -220,13 +229,15 @@ const Recruiter_Post_view = () => {
       </div>
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Header Section */}
+        {/* ── Header ───────────────────────────────────────────────────── */}
         <div className="text-center mb-10">
+
           <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-700 via-purple-600 to-violet-600 bg-clip-text text-transparent">
             Create a New Job Post
           </h1>
 
-          {/* Progress Bar */}
+
+          {/* Progress */}
           <div className="mt-6 max-w-xs mx-auto">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-purple-600">
@@ -245,76 +256,83 @@ const Recruiter_Post_view = () => {
           </div>
         </div>
 
-        {/* Form Card */}
+        {/* ── Form Card ────────────────────────────────────────────────── */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-purple-100/50 border border-purple-100/50 overflow-hidden">
-          {/* Section 1: Basic Information */}
+          {/* ── Section 1: Basic Info ──────────────────────────────────── */}
           <div className="p-6 sm:p-8 border-b border-purple-50">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 text-purple-600 font-bold text-sm">
-                1
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">
-                  Basic Information
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Job title, company, and location details
-                </p>
-              </div>
-            </div>
+            <SectionHeader
+              step={1}
+              title="Basic Information"
+              subtitle="Job title, company, and location details"
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Job Title */}
               <InputWrapper
                 label="Job Title"
-                name="jobTitle"
                 icon={Briefcase}
                 error={errors.jobTitle}
+                isFocused={focusedField === "jobTitle"}
+                isFilled={!!formData.jobTitle}
               >
                 <input
                   name="jobTitle"
                   value={formData.jobTitle}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("jobTitle")}
-                  onBlur={() => setFocusedField(null)}
+                  onFocus={() => handleFocus("jobTitle")}
+                  onBlur={handleBlur}
                   placeholder="e.g., Senior Software Engineer"
-                  className={inputBaseClass("jobTitle")}
+                  className={getInputClass(
+                    !!errors.jobTitle,
+                    focusedField === "jobTitle",
+                    !!formData.jobTitle
+                  )}
                 />
               </InputWrapper>
 
               {/* Company Name */}
               <InputWrapper
                 label="Company Name"
-                name="companyName"
                 icon={Building2}
                 error={errors.companyName}
+                isFocused={focusedField === "companyName"}
+                isFilled={!!formData.companyName}
               >
                 <input
                   name="companyName"
                   value={formData.companyName}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("companyName")}
-                  onBlur={() => setFocusedField(null)}
+                  onFocus={() => handleFocus("companyName")}
+                  onBlur={handleBlur}
                   placeholder="e.g., Tech Corp Inc."
-                  className={inputBaseClass("companyName")}
+                  className={getInputClass(
+                    !!errors.companyName,
+                    focusedField === "companyName",
+                    !!formData.companyName
+                  )}
                 />
               </InputWrapper>
 
               {/* Department */}
               <InputWrapper
                 label="Department"
-                name="department"
                 icon={Layers}
                 error={errors.department}
+                isFocused={focusedField === "department"}
+                isFilled={!!formData.department}
               >
                 <div className="relative">
                   <select
                     name="department"
                     value={formData.department}
                     onChange={handleChange}
-                    onFocus={() => setFocusedField("department")}
-                    onBlur={() => setFocusedField(null)}
-                    className={selectBaseClass("department")}
+                    onFocus={() => handleFocus("department")}
+                    onBlur={handleBlur}
+                    className={getSelectClass(
+                      !!errors.department,
+                      focusedField === "department",
+                      !!formData.department
+                    )}
                   >
                     <option value="">Select Department</option>
                     <option value="Engineering">Engineering</option>
@@ -333,18 +351,23 @@ const Recruiter_Post_view = () => {
               {/* Experience */}
               <InputWrapper
                 label="Experience Required"
-                name="experience"
                 icon={Clock}
                 error={errors.experience}
+                isFocused={focusedField === "experience"}
+                isFilled={!!formData.experience}
               >
                 <div className="relative">
                   <select
                     name="experience"
                     value={formData.experience}
                     onChange={handleChange}
-                    onFocus={() => setFocusedField("experience")}
-                    onBlur={() => setFocusedField(null)}
-                    className={selectBaseClass("experience")}
+                    onFocus={() => handleFocus("experience")}
+                    onBlur={handleBlur}
+                    className={getSelectClass(
+                      !!errors.experience,
+                      focusedField === "experience",
+                      !!formData.experience
+                    )}
                   >
                     <option value="">Select Experience</option>
                     <option value="0-1 years">0-1 years</option>
@@ -363,36 +386,46 @@ const Recruiter_Post_view = () => {
               {/* Location */}
               <InputWrapper
                 label="Location"
-                name="location"
                 icon={MapPin}
                 error={errors.location}
+                isFocused={focusedField === "location"}
+                isFilled={!!formData.location}
               >
                 <input
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("location")}
-                  onBlur={() => setFocusedField(null)}
+                  onFocus={() => handleFocus("location")}
+                  onBlur={handleBlur}
                   placeholder="e.g., San Francisco, CA"
-                  className={inputBaseClass("location")}
+                  className={getInputClass(
+                    !!errors.location,
+                    focusedField === "location",
+                    !!formData.location
+                  )}
                 />
               </InputWrapper>
 
               {/* Work Place Type */}
               <InputWrapper
                 label="Work Place Type"
-                name="workPlaceType"
                 icon={Building2}
                 error={errors.workPlaceType}
+                isFocused={focusedField === "workPlaceType"}
+                isFilled={!!formData.workPlaceType}
               >
                 <div className="relative">
                   <select
                     name="workPlaceType"
                     value={formData.workPlaceType}
                     onChange={handleChange}
-                    onFocus={() => setFocusedField("workPlaceType")}
-                    onBlur={() => setFocusedField(null)}
-                    className={selectBaseClass("workPlaceType")}
+                    onFocus={() => handleFocus("workPlaceType")}
+                    onBlur={handleBlur}
+                    className={getSelectClass(
+                      !!errors.workPlaceType,
+                      focusedField === "workPlaceType",
+                      !!formData.workPlaceType
+                    )}
                   >
                     <option value="">Select Work Place Type</option>
                     <option value="onsite">On-Site</option>
@@ -409,9 +442,10 @@ const Recruiter_Post_view = () => {
               {/* Openings */}
               <InputWrapper
                 label="Number of Openings"
-                name="openings"
                 icon={Users}
                 error={errors.openings}
+                isFocused={focusedField === "openings"}
+                isFilled={!!formData.openings}
               >
                 <input
                   name="openings"
@@ -419,66 +453,72 @@ const Recruiter_Post_view = () => {
                   min="1"
                   value={formData.openings}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("openings")}
-                  onBlur={() => setFocusedField(null)}
+                  onFocus={() => handleFocus("openings")}
+                  onBlur={handleBlur}
                   placeholder="e.g., 5"
-                  className={inputBaseClass("openings")}
+                  className={getInputClass(
+                    !!errors.openings,
+                    focusedField === "openings",
+                    !!formData.openings
+                  )}
                 />
               </InputWrapper>
 
               {/* Image URL */}
               <InputWrapper
                 label="Company Logo URL"
-                name="img"
                 icon={Image}
                 error={errors.img}
+                isFocused={focusedField === "img"}
+                isFilled={!!formData.img}
               >
                 <input
                   name="img"
                   value={formData.img}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("img")}
-                  onBlur={() => setFocusedField(null)}
+                  onFocus={() => handleFocus("img")}
+                  onBlur={handleBlur}
                   placeholder="https://example.com/logo.png"
-                  className={inputBaseClass("img")}
+                  className={getInputClass(
+                    !!errors.img,
+                    focusedField === "img",
+                    !!formData.img
+                  )}
                 />
               </InputWrapper>
             </div>
           </div>
 
-          {/* Section 2: Job Details */}
+          {/* ── Section 2: Job Details ─────────────────────────────────── */}
           <div className="p-6 sm:p-8 border-b border-purple-50">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 text-purple-600 font-bold text-sm">
-                2
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">
-                  Job Description
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Describe the role and what you're looking for
-                </p>
-              </div>
-            </div>
+            <SectionHeader
+              step={2}
+              title="Job Description"
+              subtitle="Describe the role and what you're looking for"
+            />
 
             <div className="space-y-5">
               {/* Job Description */}
               <InputWrapper
                 label="Job Description"
-                name="jobDescription"
                 icon={FileText}
                 error={errors.jobDescription}
+                isFocused={focusedField === "jobDescription"}
+                isFilled={!!formData.jobDescription}
               >
                 <textarea
                   name="jobDescription"
                   value={formData.jobDescription}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("jobDescription")}
-                  onBlur={() => setFocusedField(null)}
+                  onFocus={() => handleFocus("jobDescription")}
+                  onBlur={handleBlur}
                   placeholder="Provide a detailed overview of the role, team, and what a typical day looks like..."
                   rows={4}
-                  className={textareaBaseClass("jobDescription")}
+                  className={getTextareaClass(
+                    !!errors.jobDescription,
+                    focusedField === "jobDescription",
+                    !!formData.jobDescription
+                  )}
                 />
                 <div className="text-right mt-1">
                   <span className="text-xs text-gray-300">
@@ -490,19 +530,24 @@ const Recruiter_Post_view = () => {
               {/* Responsibilities */}
               <InputWrapper
                 label="Key Responsibilities"
-                name="responsibilities"
                 icon={ListChecks}
                 error={errors.responsibilities}
+                isFocused={focusedField === "responsibilities"}
+                isFilled={!!formData.responsibilities}
               >
                 <textarea
                   name="responsibilities"
                   value={formData.responsibilities}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("responsibilities")}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="• Lead development of core platform features&#10;• Collaborate with cross-functional teams&#10;• Mentor junior developers"
+                  onFocus={() => handleFocus("responsibilities")}
+                  onBlur={handleBlur}
+                  placeholder={`• Lead development of core platform features\n• Collaborate with cross-functional teams\n• Mentor junior developers`}
                   rows={4}
-                  className={textareaBaseClass("responsibilities")}
+                  className={getTextareaClass(
+                    !!errors.responsibilities,
+                    focusedField === "responsibilities",
+                    !!formData.responsibilities
+                  )}
                 />
                 <div className="text-right mt-1">
                   <span className="text-xs text-gray-300">
@@ -513,37 +558,34 @@ const Recruiter_Post_view = () => {
             </div>
           </div>
 
-          {/* Section 3: Qualifications */}
+          {/* ── Section 3: Qualifications ──────────────────────────────── */}
           <div className="p-6 sm:p-8 border-b border-purple-50">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 text-purple-600 font-bold text-sm">
-                3
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">
-                  Qualifications
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Required skills, education, and experience
-                </p>
-              </div>
-            </div>
+            <SectionHeader
+              step={3}
+              title="Qualifications"
+              subtitle="Required skills, education, and experience"
+            />
 
             <InputWrapper
               label="Required Qualifications"
-              name="qualifications"
               icon={GraduationCap}
               error={errors.qualifications}
+              isFocused={focusedField === "qualifications"}
+              isFilled={!!formData.qualifications}
             >
               <textarea
                 name="qualifications"
                 value={formData.qualifications}
                 onChange={handleChange}
-                onFocus={() => setFocusedField("qualifications")}
-                onBlur={() => setFocusedField(null)}
-                placeholder="• Bachelor's degree in Computer Science or related field&#10;• 3+ years experience with React & Node.js&#10;• Strong problem-solving skills"
+                onFocus={() => handleFocus("qualifications")}
+                onBlur={handleBlur}
+                placeholder={`• Bachelor's degree in Computer Science or related field\n• 3+ years experience with React & Node.js\n• Strong problem-solving skills`}
                 rows={4}
-                className={textareaBaseClass("qualifications")}
+                className={getTextareaClass(
+                  !!errors.qualifications,
+                  focusedField === "qualifications",
+                  !!formData.qualifications
+                )}
               />
               <div className="text-right mt-1">
                 <span className="text-xs text-gray-300">
@@ -553,10 +595,21 @@ const Recruiter_Post_view = () => {
             </InputWrapper>
           </div>
 
-          {/* Submit Section */}
+          {/* ── Submit Section ─────────────────────────────────────────── */}
           <div className="p-6 sm:p-8 bg-gradient-to-r from-purple-50/50 to-violet-50/50">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-500"></div>
+              <p className="text-sm text-gray-500">
+                {filledCount === totalFields ? (
+                  <span className="text-green-600 font-medium">
+                    ✓ All fields completed — ready to publish!
+                  </span>
+                ) : (
+                  <span>
+                    {totalFields - filledCount} field
+                    {totalFields - filledCount !== 1 ? "s" : ""} remaining
+                  </span>
+                )}
+              </p>
 
               <button
                 onClick={handleSubmit}
@@ -567,10 +620,9 @@ const Recruiter_Post_view = () => {
                   bg-gradient-to-r from-purple-600 via-purple-600 to-violet-600
                   shadow-lg shadow-purple-300/40
                   transition-all duration-300 ease-out
-                  ${
-                    isSubmitting
-                      ? "opacity-70 cursor-not-allowed"
-                      : "hover:shadow-xl hover:shadow-purple-300/50 hover:scale-[1.02] active:scale-[0.98]"
+                  ${isSubmitting
+                    ? "opacity-70 cursor-not-allowed"
+                    : "hover:shadow-xl hover:shadow-purple-300/50 hover:scale-[1.02] active:scale-[0.98]"
                   }
                 `}
               >
@@ -589,7 +641,6 @@ const Recruiter_Post_view = () => {
                   </>
                 )}
 
-                {/* Button Shine Effect */}
                 {!isSubmitting && (
                   <div className="absolute inset-0 rounded-2xl overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -600,14 +651,12 @@ const Recruiter_Post_view = () => {
           </div>
         </div>
 
-        {/* Footer Note */}
         <p className="text-center text-xs text-gray-400 mt-6">
           By publishing, this job will be visible to all candidates on the
           platform.
         </p>
       </div>
 
-      {/* Custom Animation Styles */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-4px); }

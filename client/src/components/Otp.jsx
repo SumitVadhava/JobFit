@@ -4,8 +4,6 @@ import { toast } from 'react-toastify';
 import { useAuth } from "../contexts/AuthContexts";
 import { useNavigate } from "react-router-dom";
 
-// import { useNavigate } from "react-router-dom";
-
 const OTPDemo = ({
     isOpen = false,
     onClose,
@@ -25,6 +23,7 @@ const OTPDemo = ({
     setUserData,
     setIsRegister
 }) => {
+    console.log("OTPDemo Component Mounted! isOpen is:", isOpen);
     const [otp, setOtp] = useState(Array(length).fill(""));
     const [errors, setErrors] = useState({});
     const [isResending, setIsResending] = useState(false);
@@ -65,7 +64,9 @@ const OTPDemo = ({
         return () => document.removeEventListener("keydown", escHandler);
     }, [isOpen]);
 
-    const handleClose = () => onClose && onClose();
+    const handleClose = () => {
+        if (onClose) onClose();
+    };
 
     const handleChange = (el, idx) => {
         const val = el.value;
@@ -153,7 +154,7 @@ const OTPDemo = ({
     const handleVerifyOtp = async () => {
         const enteredOtp = otp.join("");
         setIsVerifying(true); // Start loading
-        
+
         try {
             const res = await api.post("/auth/verify-otp", {
                 email,
@@ -167,7 +168,7 @@ const OTPDemo = ({
                     pauseOnHover: false,
                     draggable: false,
                 });
-                
+
                 const status = "active"
                 const response = await api.post("/signup", {
                     userName, email, password, role, status, recruiterKey
@@ -187,7 +188,14 @@ const OTPDemo = ({
                 });
 
                 setIsRegister(true);
-                navigate("/");
+
+                if (responserole === "admin") {
+                    navigate("/admin/dashboard");
+                } else if (responserole === "recruiter") {
+                    navigate("/recruiter/recruiter-dashboard");
+                } else {
+                    navigate("/user/dashboard");
+                }
             }
             onClose();
             setIsRegister(false);
@@ -235,17 +243,19 @@ const OTPDemo = ({
 
                 <div className="text-center mb-6">
                     <div className="mb-4">
-                        <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                             <svg
-                                className="w-8 h-8 text-blue-600"
+                                xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.5"
                                 stroke="currentColor"
+                                className="w-8 h-8 text-green-600"
                             >
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
                                 />
                             </svg>
                         </div>
@@ -287,22 +297,22 @@ const OTPDemo = ({
                 ))}
 
                 <div className="text-center mb-6">
-{/*                     
+                    {canResend ? (
                         <button
                             onClick={handleResend}
                             disabled={isResending}
-                            className="text-blue-600 hover:text-blue-800 font-semibold underline disabled:opacity-50 transition-colors"
+                            className="text-green-600 hover:text-green-800 font-semibold underline disabled:opacity-50 transition-colors cursor-pointer"
                         >
                             {isResending ? "Resending..." : "Resend OTP"}
-                        </button> */}
-                    
-                        {/* // <p className="text-gray-600">
-                        //     Resend OTP in{" "}
-                        //     <span className="text-blue-600 font-semibold">
-                        //         {formatTime(timeLeft)}
-                        //     </span>
-                        // </p> */}
-                
+                        </button>
+                    ) : (
+                        <p className="text-gray-600">
+                            Resend OTP in{" "}
+                            <span className="text-green-600 font-semibold">
+                                {formatTime(timeLeft)}
+                            </span>
+                        </p>
+                    )}
                 </div>
 
                 <div className="flex gap-3">
@@ -316,15 +326,15 @@ const OTPDemo = ({
                     <button
                         onClick={handleVerifyOtp}
                         disabled={disabled || isVerifying || otp.some((digit) => digit === "")}
-                        className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative"
+                        className="flex-1 py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative"
                     >
                         {isVerifying ? (
-                          <div className="flex items-center justify-center">
-                            <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
-                            Verifying...
-                          </div>
+                            <div className="flex items-center justify-center">
+                                <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                                Verifying...
+                            </div>
                         ) : (
-                          "Verify"
+                            "Verify"
                         )}
                     </button>
                 </div>

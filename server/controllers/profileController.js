@@ -1,4 +1,5 @@
-const Profile = require("../models/profiles");
+const Profile = require("../models/candidateProfile");
+const cloudinary = require("../config/cloudinary");
 const handleError = (res, error, defaultMessage = "Server error") => {
   if (error.name === "ValidationError") {
     return res.status(400).json({ message: error.message, errors: error.errors });
@@ -92,5 +93,37 @@ exports.deleteProfile = async (req, res) => {
     res.status(200).json({ message: "Profile deleted successfully" });
   } catch (error) {
     handleError(res, error, "Error deleting profile");
+  }
+};
+
+exports.uploadResume = async (req, res) => {
+  try {
+    const userId = req.user ? req.user.id : null;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file provided" });
+    }
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: "auto",
+      folder: "resumes",
+    });
+
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: userId },
+      { resumeLink: result.secure_url },
+      { new: true, upsert: true, runValidators: true },
+    );
+
+    res.status(200).json({
+      message: "Resume uploaded successfully",
+      profile: updatedProfile,
+    });
+  } catch (error) {
+    handleError(res, error, "Error uploading resume");
   }
 };

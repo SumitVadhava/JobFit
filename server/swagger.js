@@ -1,5 +1,6 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const path = require("path");
 
 const options = {
   definition: {
@@ -12,12 +13,12 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:5000",
-        description: "Local Server",
-      },
-      {
         url: "https://jobfit-s5v7.onrender.com",
         description: "Render Server",
+      },
+      {
+        url: "http://localhost:5000",
+        description: "Local Server",
       },
       {
         url: "https://jobfit-delta.vercel.app",
@@ -37,7 +38,7 @@ const options = {
       schemas: {
         LoginRequest: {
           type: "object",
-          required: ["email", "password", "role"],
+          required: ["email", "password"],
           properties: {
             email: {
               type: "string",
@@ -48,17 +49,6 @@ const options = {
               type: "string",
               format: "password",
               example: "Secret@123",
-            },
-            role: {
-              type: "string",
-              enum: ["admin", "user", "recruiter", "candidate"],
-              example: "candidate",
-            },
-            recruiterKey: {
-              type: "string",
-              nullable: true,
-              example: "RECRUITER_SECRET_KEY",
-              description: "Required only when role is recruiter",
             },
           },
         },
@@ -86,11 +76,6 @@ const options = {
               type: "string",
               enum: ["active", "inactive"],
               example: "active",
-            },
-            recruiterKey: {
-              type: "string",
-              nullable: true,
-              example: "RECRUITER_SECRET_KEY",
             },
           },
         },
@@ -353,6 +338,44 @@ const options = {
             },
           },
         },
+        // ── Testimonial ──────────────────────────────────────────────
+        Testimonial: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            username: { type: "string", example: "Jane Doe" },
+            rating: { type: "number", example: 5 },
+            reviewmsg: {
+              type: "string",
+              example: "JobFit helped me find a job quickly and smoothly!",
+            },
+            date: {
+              type: "string",
+              format: "date-time",
+              example: "2026-03-29T17:30:00.000Z",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+            },
+          },
+        },
+        TestimonialRequest: {
+          type: "object",
+          required: ["username", "rating", "reviewmsg"],
+          properties: {
+            username: { type: "string", example: "Jane Doe" },
+            rating: { type: "number", example: 5 },
+            reviewmsg: {
+              type: "string",
+              example: "JobFit helped me find a job quickly and smoothly!",
+            },
+          },
+        },
         // ── Profile ──────────────────────────────────────────────
         Profile: {
           type: "object",
@@ -361,13 +384,14 @@ const options = {
             userName: { type: "string", example: "John Doe" },
             email: { type: "string", example: "john@example.com" },
             role: { type: "string", example: "student" },
+            atsScore: { type: "number", example: 85 },
             description: {
               type: "string",
               example: "Aspiring software developer",
             },
             skills: { type: "array", items: { type: "string" } },
             education: { type: "array", items: { type: "object" } },
-            experience: { type: "array", items: { type: "object" } },
+            experience: { type: "string", example: "0-2 years" },
             img: { type: "string", example: "https://example.com/profile.jpg" },
           },
         },
@@ -392,7 +416,7 @@ const options = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ["./routes/*.js"],
+  apis: [path.join(__dirname, "./routes/*.js")],
 };
 
 const specs = swaggerJsdoc(options);

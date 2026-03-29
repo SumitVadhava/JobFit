@@ -1,49 +1,34 @@
 const User = require("../models/login");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { ROLES } = require("../utils/roles");
 
 const getLoginController = async (req, res) => {
-  const { email, password, role, recruiterKey } = req.body;
+  const { email, password } = req.body;
   try {
     const user = await User.findOne({ email }).select("+password");
-    if (!user)
-      return res.status(400).json({ message: "Invalid email credentials" });
+    if (!user) {
+      return res.status(400).json({ error: true, message: "Invalid email credentials", data: null });
+    }
 
     if (!user.password) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ error: true, message: "Invalid credentials", data: null });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid password credentials" });
-
-    if (role && user.role !== role) {
-      return res.status(400).json({ message: "Invalid role for this account" });
+    if (!isMatch) {
+      return res.status(400).json({ error: true, message: "Invalid password credentials", data: null });
     }
 
-    if (user.role === ROLES.RECRUITER && user.recruiterKey) {
-      if (!recruiterKey) {
-        return res.status(400).json({ message: "Recruiter key is required" });
-      }
-
-      const isRecruiterKeyValid = await bcrypt.compare(
-        recruiterKey,
-        user.recruiterKey,
-      );
-      if (!isRecruiterKeyValid) {
-        return res.status(400).json({ message: "Invalid recruiter key" });
-      }
-    }
 
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN },
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" },
     );
 
-    if (!token)
-      return res.status(500).json({ message: "Error generating token" });
+    if (!token) {
+      return res.status(500).json({ error: true, message: "Error generating token", data: null });
+    }
 
     const safeUser = {
       _id: user._id,
@@ -53,10 +38,14 @@ const getLoginController = async (req, res) => {
       status: user.status,
     };
 
-    res.json({ message: "Login successful", token, user: safeUser });
+    res.json({
+      error: false,
+      message: "Login successful",
+      data: { token, user: safeUser }
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Login Server Error:", err);
+    res.status(500).json({ error: true, message: "Server error: " + err.message, data: null });
   }
 };
 
