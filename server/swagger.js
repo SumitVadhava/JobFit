@@ -5,15 +5,12 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "JobFit API",
+      title: "API",
       version: "1.0.0",
       description:
         "REST API documentation for the JobFit platform — a job matching and resume analysis system built by Code Conquerors.",
-      contact: {
-        name: "Code Conquerors",
-      },
-        },
-        servers: [
+    },
+    servers: [
       {
         url: "http://localhost:5000",
         description: "Local Server",
@@ -38,10 +35,9 @@ const options = {
         },
       },
       schemas: {
-        // ── Auth ─────────────────────────────────────────────────
         LoginRequest: {
           type: "object",
-          required: ["email", "password"],
+          required: ["email", "password", "role"],
           properties: {
             email: {
               type: "string",
@@ -52,6 +48,17 @@ const options = {
               type: "string",
               format: "password",
               example: "Secret@123",
+            },
+            role: {
+              type: "string",
+              enum: ["admin", "user", "recruiter", "candidate"],
+              example: "candidate",
+            },
+            recruiterKey: {
+              type: "string",
+              nullable: true,
+              example: "RECRUITER_SECRET_KEY",
+              description: "Required only when role is recruiter",
             },
           },
         },
@@ -72,16 +79,36 @@ const options = {
             },
             role: {
               type: "string",
-              enum: ['admin', 'user','recruiter', 'candidate'],
+              enum: ["admin", "user", "recruiter", "candidate"],
               example: "user",
+            },
+            status: {
+              type: "string",
+              enum: ["active", "inactive"],
+              example: "active",
+            },
+            recruiterKey: {
+              type: "string",
+              nullable: true,
+              example: "RECRUITER_SECRET_KEY",
             },
           },
         },
         GoogleLoginRequest: {
           type: "object",
-          required: ["token"],
+          required: ["name", "email", "picture", "google_id"],
           properties: {
-            token: { type: "string", example: "google-oauth2-token" },
+            name: { type: "string", example: "John Doe" },
+            email: {
+              type: "string",
+              format: "email",
+              example: "john@example.com",
+            },
+            picture: {
+              type: "string",
+              example: "https://lh3.googleusercontent.com/a/profile-photo",
+            },
+            google_id: { type: "string", example: "1029384756" },
           },
         },
         AuthResponse: {
@@ -132,7 +159,16 @@ const options = {
             _id: { type: "string", example: "64abc123def456" },
             userName: { type: "string", example: "John Doe" },
             email: { type: "string", example: "john@example.com" },
-            role: { type: "string", example: "student" },
+            role: {
+              type: "string",
+              enum: ["admin", "user", "recruiter", "candidate"],
+              example: "candidate",
+            },
+            status: {
+              type: "string",
+              enum: ["active", "inactive"],
+              example: "active",
+            },
           },
         },
         // ── Job ──────────────────────────────────────────────────
@@ -140,41 +176,127 @@ const options = {
           type: "object",
           properties: {
             _id: { type: "string", example: "64abc123def456" },
+            recruiterId: {
+              type: "string",
+              example: "687c5aac240f88425de5edb1",
+              description: "Recruiter owner id",
+            },
             jobTitle: { type: "string", example: "Software Engineer" },
             department: { type: "string", example: "Engineering" },
+            openings: { type: "number", example: 3 },
             experience: { type: "string", example: "1-2 years" },
-            responsibilities:{type: "string", example: "Develop and maintain software applications."},
-            qualifications:{type: "string", example: "Bachelor's degree in Computer Science or related field."},
+            responsibilities: {
+              type: "string",
+              example: "Develop and maintain software applications.",
+            },
+            qualifications: {
+              type: "string",
+              example:
+                "Bachelor's degree in Computer Science or related field.",
+            },
             companyName: { type: "string", example: "TechCorp" },
             location: { type: "string", example: "Bangalore, India" },
-            workPlaceType: { type: "string", example: "Remote",enum: ['Remote', 'On-site', 'Hybrid'] },
+            workPlaceType: {
+              type: "string",
+              enum: ["remote", "onsite", "hybrid"],
+              example: "remote",
+            },
             jobDescription: {
               type: "string",
               example: "Looking for a skilled SE...",
             },
-            img: { type: "string", example: "https://example.com/company-logo.jpg" },
+            img: {
+              type: "string",
+              example: "https://example.com/company-logo.jpg",
+            },
             bookmarked: { type: "boolean", example: false },
+            adminReview: {
+              type: "string",
+              enum: ["pending", "reviewed", "risky"],
+              example: "pending",
+            },
           },
         },
         JobRequest: {
           type: "object",
-          required: ["title", "company", "location", "description"],
+          required: [
+            "jobTitle",
+            "department",
+            "openings",
+            "experience",
+            "responsibilities",
+            "qualifications",
+            "companyName",
+            "location",
+            "workPlaceType",
+            "jobDescription",
+          ],
           properties: {
-            _id: { type: "string", example: "64abc123def456" },
             jobTitle: { type: "string", example: "Software Engineer" },
             department: { type: "string", example: "Engineering" },
+            openings: { type: "number", example: 3 },
             experience: { type: "string", example: "1-2 years" },
-            responsibilities:{type: "string", example: "Develop and maintain software applications."},
-            qualifications:{type: "string", example: "Bachelor's degree in Computer Science or related field."},
+            responsibilities: {
+              type: "string",
+              example: "Develop and maintain software applications.",
+            },
+            qualifications: {
+              type: "string",
+              example:
+                "Bachelor's degree in Computer Science or related field.",
+            },
             companyName: { type: "string", example: "TechCorp" },
             location: { type: "string", example: "Bangalore, India" },
-            workPlaceType: { type: "string", example: "Remote",enum: ['Remote', 'On-site', 'Hybrid'] },
+            workPlaceType: {
+              type: "string",
+              enum: ["remote", "onsite", "hybrid"],
+              example: "remote",
+            },
             jobDescription: {
               type: "string",
               example: "Looking for a skilled SE...",
             },
-            img: { type: "string", example: "https://example.com/company-logo.jpg" },
+            img: {
+              type: "string",
+              example: "https://example.com/company-logo.jpg",
+            },
             bookmarked: { type: "boolean", example: false },
+          },
+        },
+        AppliedJob: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "689f1d7b2c9b4f0012a34567" },
+            userId: { type: "string", example: "687c5aac240f88425de5edb1" },
+            jobId: { type: "string", example: "689f13f42c9b4f0012a34321" },
+            status: {
+              type: "string",
+              enum: ["applied", "shortlisted", "rejected", "accepted"],
+              example: "applied",
+            },
+            appliedAt: {
+              type: "string",
+              format: "date-time",
+              example: "2026-03-28T12:30:00.000Z",
+            },
+          },
+        },
+        ApplyJobResponse: {
+          type: "object",
+          properties: {
+            message: { type: "string", example: "Job applied successfully" },
+            application: { $ref: "#/components/schemas/AppliedJob" },
+          },
+        },
+        AdminReviewUpdateRequest: {
+          type: "object",
+          required: ["adminReview"],
+          properties: {
+            adminReview: {
+              type: "string",
+              enum: ["pending", "reviewed", "risky"],
+              example: "reviewed",
+            },
           },
         },
         // ── Profile ──────────────────────────────────────────────
@@ -185,7 +307,10 @@ const options = {
             userName: { type: "string", example: "John Doe" },
             email: { type: "string", example: "john@example.com" },
             role: { type: "string", example: "student" },
-            description: { type: "string", example: "Aspiring software developer" },
+            description: {
+              type: "string",
+              example: "Aspiring software developer",
+            },
             skills: { type: "array", items: { type: "string" } },
             education: { type: "array", items: { type: "object" } },
             experience: { type: "array", items: { type: "object" } },

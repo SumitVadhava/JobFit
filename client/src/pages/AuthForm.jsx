@@ -184,6 +184,7 @@ const AuthForm = ({ role, setUserData }) => {
         console.log(userName, email, password, status, role, recruiterKey);
 
         const response = await api.post("/login", { email, password, role, recruiterKey });
+        console.log(response.data);
 
         if (response.data.message === "Invalid credentials") {
           toast.error("Login Failed!", {
@@ -285,7 +286,7 @@ const AuthForm = ({ role, setUserData }) => {
         navigate("/");
 
 
-
+        
 
       } catch (err) {
         console.error("Failed to fetch user info", err);

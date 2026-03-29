@@ -1,6 +1,7 @@
 const User = require("../models/login");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { ROLES } = require("../utils/roles");
 
 const addSingupController = async (req, res) => {
   const { userName, email, password, role, status, recruiterKey } = req.body;
@@ -27,7 +28,7 @@ const addSingupController = async (req, res) => {
         password: hashedPassword,
         role,
         status,
-        recruiterKey: role === "recruiter" ? hashedRecruiterKey : null,
+        recruiterKey: role === ROLES.RECRUITER ? hashedRecruiterKey : null,
       });
 
       const token = jwt.sign(

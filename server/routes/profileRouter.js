@@ -3,8 +3,15 @@ const router = express.Router();
 
 const {
   getProfile,
+  createProfile,
   updateProfile,
+  deleteProfile,
 } = require("../controllers/profileController");
+
+const {
+  validateCreateProfile,
+  validateUpdateProfile,
+} = require("../middlewares/profileMid");
 
 /**
  * @swagger
@@ -29,10 +36,9 @@ const {
  *             schema:
  *               type: object
  *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 data:
+ *                 message:
+ *                   type: string
+ *                 profile:
  *                   $ref: '#/components/schemas/Profile'
  *       401:
  *         description: Unauthorized
@@ -40,6 +46,30 @@ const {
  *         description: Profile not found
  */
 router.get("/", getProfile);
+
+/**
+ * @swagger
+ * /api/profile:
+ *   post:
+ *     summary: Create a new profile for the current user
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Profile'
+ *     responses:
+ *       201:
+ *         description: Profile created successfully
+ *       409:
+ *         description: Profile already exists
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/", validateCreateProfile, createProfile);
 
 /**
  * @swagger
@@ -58,19 +88,29 @@ router.get("/", getProfile);
  *     responses:
  *       200:
  *         description: Profile updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
  *       400:
- *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         description: Validation error — no updatable fields provided
  *       401:
  *         description: Unauthorized
  */
-router.put("/", updateProfile);
+router.put("/", validateUpdateProfile, updateProfile);
+
+/**
+ * @swagger
+ * /api/profile:
+ *   delete:
+ *     summary: Delete the current user's profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile deleted successfully
+ *       404:
+ *         description: Profile not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.delete("/", deleteProfile);
 
 module.exports = router;

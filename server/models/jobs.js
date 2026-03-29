@@ -1,6 +1,15 @@
 const mongoose = require("mongoose");
 
 const jobSchema = new mongoose.Schema({
+  recruiterId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "logins",
+    required: true,
+  },
+  openings: {
+    type: Number,
+    required: true,
+  },
   jobTitle: {
     type: String,
     required: true,
@@ -46,6 +55,11 @@ const jobSchema = new mongoose.Schema({
   bookmarked: {
     type: Boolean,
     default: false,
+  },
+  adminReview: {
+    type: String,
+    enum: ["pending", "reviewed", "risky"],
+    default: "pending",
   },
 });
 

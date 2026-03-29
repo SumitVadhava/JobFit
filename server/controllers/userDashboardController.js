@@ -104,10 +104,3 @@ exports.getAppliedCompaniesData = async (req, res) => {
       .json({ message: "Server error", error: error.message });
   }
 };
-
-// {
-//  "userId" : "687c2c6b44b46115ec5eb06d",
-//   "jobId": "687c5aac240f88425de5edad",
-//   "status":"applied",
-
-// }
