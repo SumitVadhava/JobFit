@@ -243,7 +243,8 @@
 // export default UserAnalytics;
 
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import api from "../../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -268,6 +269,60 @@ function StatsCard({ title, value }) {
 }
 
 function UserAnalytics() {
+  const [metrics, setMetrics] = useState({
+    profileCompletion: 0,
+    savedJobsCount: 0,
+    totalSkillsCount: 0,
+    bestAtsScore: 0,
+    jobsApplied: 0,
+    lastActive: "Today",
+  });
+
+  const user = JSON.parse(localStorage.getItem('user')) || {};
+
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      try {
+        const [profileRes, savedJobsRes, appliedRes, resumeBuilderRes] = await Promise.all([
+          api.get("/profile").catch(() => null),
+          api.get("/user/savedJobs").catch(() => null),
+          api.get("/user/applied-companies").catch(() => null),
+          api.get("/user/resumeBuilder").catch(() => null),
+        ]);
+
+        const profile = profileRes?.data?.profile || {};
+        
+        // Calculate profile completion
+        const fieldsToCheck = [
+          user?.userName,
+          user?.email,
+          profile.skills?.length > 0,
+          profile.resumeLink || profile.resumelink,
+          profile.img,
+          profile.experience && profile.experience !== "0-2 years",
+          profile.education?.length > 0,
+          profile.description,
+        ];
+        
+        const filledFields = fieldsToCheck.filter(Boolean).length;
+        const completionPercentage = Math.round((filledFields / fieldsToCheck.length) * 100);
+
+        setMetrics({
+          profileCompletion: completionPercentage || 0,
+          savedJobsCount: savedJobsRes?.data?.totalSavedJobs || 0,
+          totalSkillsCount: profile.skills?.length || 0,
+          bestAtsScore: resumeBuilderRes?.data?.bestScore || profile.atsScore || 0,
+          jobsApplied: appliedRes?.data?.totalApplications || 0,
+          lastActive: "Today",
+        });
+
+      } catch (error) {
+        console.error("Error fetching analytics data", error);
+      }
+    };
+
+    fetchAnalyticsData();
+  }, []);
   const websiteVisitData = [
     { month: "Jan", visits: 150 },
     { month: "Feb", visits: 170 },
@@ -317,18 +372,34 @@ function UserAnalytics() {
         <div className="flex flex-wrap justify-between gap-3 p-4">
           <div className="flex min-w-[280px] flex-col gap-3">
             <p className="text-[#6B46C1] text-2xl sm:text-[32px] font-bold tracking-tight">
-              Welcome back, Emily!
+              Welcome back, {user?.userName || "User"}!
             </p>
             <p className="text-[#A78BFA] text-sm font-normal">
-              Here's a summary of your resume performance.
+              Here's a summary of your candidate profile performance.
             </p>
+          </div>
+        </div>
+        <div className="px-4 py-2 mt-2">
+          <div className="bg-white rounded-xl border border-purple-200 p-6 shadow-sm mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-[#6B46C1] text-lg font-semibold">Profile Completion</h3>
+              <span className="text-[#6B46C1] font-bold">{metrics.profileCompletion}%</span>
+            </div>
+            <div className="w-full bg-purple-100 rounded-full h-2.5">
+              <div 
+                className="bg-[#6B46C1] h-2.5 rounded-full transition-all duration-1000 ease-out" 
+                style={{ width: `${metrics.profileCompletion}%` }}
+              ></div>
+            </div>
           </div>
         </div>
         <Divider className="my-4" />
         <div className="flex flex-wrap gap-4 p-4">
-          <StatsCard title="Latest Score" value="78%" />
-          <StatsCard title="Best Score" value="85%" />
-          <StatsCard title="Total Uploads" value="12" />
+          <StatsCard title="Saved Jobs" value={metrics.savedJobsCount} />
+          <StatsCard title="Jobs Applied" value={metrics.jobsApplied} />
+          <StatsCard title="Total Skills" value={metrics.totalSkillsCount} />
+          <StatsCard title="Best ATS Score" value={`${metrics.bestAtsScore}%`} />
+          <StatsCard title="Last Active" value={metrics.lastActive} />
         </div>
         <Divider className="my-4" />
         <div className="flex flex-wrap gap-4 px-4 py-6">
@@ -403,10 +474,10 @@ function UserAnalytics() {
           </div>
           <div className="flex min-w-[280px] flex-1 flex-col gap-2 rounded-xl border border-purple-200 p-4 sm:p-6 bg-gradient-to-br from-white to-[#E9D5FF] shadow-lg hover:shadow-[0_8px_24px_rgba(107,70,193,0.3)] hover:-translate-y-1 transition-all duration-300">
             <p className="text-[#6B46C1] text-base font-medium">
-              Jobs Applied
+              Jobs Applied History
             </p>
             <p className="text-[#6B46C1] text-2xl sm:text-[32px] font-bold tracking-tight truncate">
-              8
+              {metrics.jobsApplied}
             </p>
             <div className="flex gap-1">
               {/* <p className="text-[#A78BFA] text-base font-normal">
