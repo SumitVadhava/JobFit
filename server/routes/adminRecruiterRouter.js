@@ -6,18 +6,14 @@ const adminController = require('../controllers/adminDashboardController');
  * @swagger
  * tags:
  *   name: Admin - Recruiters
- *   description: Admin CRUD operations for recruiter accounts
+ *   description: Admin CRUD for recruiter accounts
  */
-
-// ─────────────────────────────────────────────────────────
-// RECRUITER ACCOUNT CRUD
-// ─────────────────────────────────────────────────────────
 
 /**
  * @swagger
  * /api/admin/recruiters:
  *   get:
- *     summary: Get all recruiter accounts
+ *     summary: Get all recruiters
  *     tags: [Admin - Recruiters]
  *     security:
  *       - bearerAuth: []
@@ -58,7 +54,7 @@ const adminController = require('../controllers/adminDashboardController');
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – admin role required
+ *         description: Forbidden – admin only
  *       500:
  *         description: Internal server error
  *   post:
@@ -94,97 +90,26 @@ const adminController = require('../controllers/adminDashboardController');
  *                 example: "active"
  *     responses:
  *       201:
- *         description: Recruiter account created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "recruiter account created successfully"
- *                 data:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     userName:
- *                       type: string
- *                     email:
- *                       type: string
- *                     role:
- *                       type: string
- *                       example: "recruiter"
- *                     status:
- *                       type: string
+ *         description: Recruiter created successfully
  *       400:
  *         description: Missing required fields
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – admin role required
  *       409:
  *         description: Email already registered
- *       500:
- *         description: Internal server error
- *   delete:
- *     summary: Delete a recruiter account by userId
- *     tags: [Admin - Recruiters]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - userId
- *             properties:
- *               userId:
- *                 type: string
- *                 example: "64abc123def456"
- *                 description: Valid MongoDB ObjectId of the recruiter to delete
- *     responses:
- *       200:
- *         description: Recruiter deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "recruiter deleted successfully"
- *                 data:
- *                   type: object
- *                   example: {}
- *       400:
- *         description: userId missing or invalid format
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – user is not a recruiter or admin role required
- *       404:
- *         description: Account not found
+ *         description: Forbidden – admin only
  *       500:
  *         description: Internal server error
  */
 router.get('/', adminController.getRecruitersData);
 router.post('/', adminController.createRecruiter);
-router.delete('/', adminController.deleteRecruiter);
 
 /**
  * @swagger
  * /api/admin/recruiters/{userId}:
  *   put:
- *     summary: Update a recruiter account by userId
+ *     summary: Update a recruiter by userId
  *     tags: [Admin - Recruiters]
  *     security:
  *       - bearerAuth: []
@@ -192,7 +117,6 @@ router.delete('/', adminController.deleteRecruiter);
  *       - in: path
  *         name: userId
  *         required: true
- *         description: Valid MongoDB ObjectId of the recruiter
  *         schema:
  *           type: string
  *           example: "64abc123def456"
@@ -216,41 +140,43 @@ router.delete('/', adminController.deleteRecruiter);
  *     responses:
  *       200:
  *         description: Recruiter updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "recruiter updated successfully"
- *                 data:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     userName:
- *                       type: string
- *                     email:
- *                       type: string
- *                     role:
- *                       type: string
- *                     status:
- *                       type: string
  *       400:
- *         description: Invalid userId format or no valid fields to update
+ *         description: Invalid userId or no fields to update
+ *       404:
+ *         description: Recruiter not found
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – user is not a recruiter or admin role required
+ *         description: Forbidden – admin only
+ *       500:
+ *         description: Internal server error
+ *   delete:
+ *     summary: Delete a recruiter by userId
+ *     tags: [Admin - Recruiters]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "64abc123def456"
+ *     responses:
+ *       200:
+ *         description: Recruiter deleted successfully
+ *       400:
+ *         description: Invalid userId format
  *       404:
- *         description: Account not found
+ *         description: Recruiter not found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – admin only
  *       500:
  *         description: Internal server error
  */
 router.put('/:userId', adminController.updateRecruiter);
+router.delete('/:userId', adminController.deleteRecruiter);
 
 module.exports = router;
