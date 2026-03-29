@@ -141,7 +141,7 @@ function App() {
           path='/user/profile/:id?'
           element={
             <ProtectedRoute
-              allowedRoles={['candidate']}
+              allowedRoles={['candidate', 'recruiter']}
             >
               <Recruiter_CandidateProfile_view userProp={userProp} />
             </ProtectedRoute>} />
