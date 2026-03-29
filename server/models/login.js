@@ -28,11 +28,6 @@ const userSchema = new mongoose.Schema({
     default: "active",
     required: true,
   },
-  recruiterKey: {
-    type: String,
-    required: false,
-    default: null,
-  },
 });
 
 module.exports = mongoose.model("logins", userSchema);
