@@ -28,6 +28,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './pages/Unauthorized'
 import ApplyJob from './pages/User/User_ApplyJob_view'
 import ScrollToTop from './components/ScrollToTop'
+import Recruiter_History from './pages/Recruiter/Recruiter_History'
 
 
 
@@ -205,6 +206,16 @@ function App() {
             >
               <Recruiter_Candidates_view />
             </ProtectedRoute>} />
+
+        <Route
+          path="/recruiter/recruiter-history"
+          element={
+            <ProtectedRoute
+              allowedRoles={['recruiter']}
+            >
+              <Recruiter_History />
+            </ProtectedRoute>} />
+
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route
           path="/recruiter/recruiter-postedjobs"
@@ -215,7 +226,7 @@ function App() {
               <Recruiter_Posted_Jobs_view />
             </ProtectedRoute>} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        
+
       </Routes>
       {/* <GoogleOneTapLogin /> */}
     </>
