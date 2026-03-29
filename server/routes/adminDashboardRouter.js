@@ -54,13 +54,13 @@ router.get('/dashboard', adminController.getDashboardData);
  * @swagger
  * /api/admin/users:
  *   get:
- *     summary: Get all registered users (candidates & users)
+ *     summary: Get all registered accounts (candidates, recruiters, users)
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of all users
+ *         description: List of all accounts across all roles
  *         content:
  *           application/json:
  *             schema:
@@ -85,9 +85,11 @@ router.get('/dashboard', adminController.getDashboardData);
  *                         example: "john@example.com"
  *                       role:
  *                         type: string
+ *                         enum: [admin, candidate, user, recruiter]
  *                         example: "candidate"
  *                       status:
  *                         type: string
+ *                         enum: [active, inactive]
  *                         example: "active"
  *       401:
  *         description: Unauthorized
@@ -95,14 +97,81 @@ router.get('/dashboard', adminController.getDashboardData);
  *         description: Forbidden – admin role required
  *       500:
  *         description: Internal server error
- */
-router.get('/users', adminController.getUsersData);
-
-/**
- * @swagger
- * /api/admin/users:
+ *   post:
+ *     summary: Create a new user account (candidate or recruiter — admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userName
+ *               - email
+ *               - password
+ *               - role
+ *             properties:
+ *               userName:
+ *                 type: string
+ *                 example: "Jane Smith"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "jane@example.com"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: "Secret@123"
+ *               role:
+ *                 type: string
+ *                 enum: [candidate, user, recruiter, admin]
+ *                 example: "recruiter"
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 example: "active"
+ *     responses:
+ *       201:
+ *         description: User account created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User created successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     userName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – admin role required
+ *       409:
+ *         description: Email already registered
+ *       500:
+ *         description: Internal server error
  *   delete:
- *     summary: Delete a user by ID (admin only)
+ *     summary: Delete any user account by ID (candidate or recruiter)
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -147,7 +216,86 @@ router.get('/users', adminController.getUsersData);
  *       500:
  *         description: Internal server error
  */
+router.get('/users', adminController.getUsersData);
+router.post('/users', adminController.createUser);
 router.delete('/users', adminController.deleteUser);
+
+/**
+ * @swagger
+ * /api/admin/users/{userId}:
+ *   put:
+ *     summary: Update any user account by ID (candidate or recruiter)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: Valid MongoDB ObjectId of the user to update
+ *         schema:
+ *           type: string
+ *           example: "64abc123def456"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userName:
+ *                 type: string
+ *                 example: "Updated Name"
+ *               email:
+ *                 type: string
+ *                 example: "updated@example.com"
+ *               role:
+ *                 type: string
+ *                 enum: [candidate, user, recruiter, admin]
+ *                 example: "recruiter"
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 example: "inactive"
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User updated successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     userName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *       400:
+ *         description: Invalid userId or no valid fields to update
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – admin role required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/users/:userId', adminController.updateUser);
 
 // ─────────────────────────────────────────────────────────
 // RECRUITERS
