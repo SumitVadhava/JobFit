@@ -1,4 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
+import {
+  Eye,
+  Briefcase,
+  MapPin,
+  Building2,
+  Clock,
+  Users,
+  BookmarkIcon,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  Monitor,
+} from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
@@ -119,6 +132,160 @@ const StatCard = ({ icon, label, value, sub, iconBorder = false }) => (
   </div>
 );
 
+/* ───────────── Recruiter History Style Job Cards ───────────── */
+const StatusBadge = ({ status }) => {
+  const config = {
+    pending: {
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      border: "border-amber-200",
+      icon: <AlertCircle className="w-3.5 h-3.5" />,
+      label: "Pending Review",
+    },
+    reviewed: {
+      bg: "bg-green-50",
+      text: "text-green-700",
+      border: "border-green-200",
+      icon: <CheckCircle className="w-3.5 h-3.5" />,
+      label: "Reviewed",
+    },
+    rejected: {
+      bg: "bg-red-50",
+      text: "text-red-700",
+      border: "border-red-200",
+      icon: <XCircle className="w-3.5 h-3.5" />,
+      label: "Rejected",
+    },
+  };
+
+  const style = config[status] || config.pending;
+
+  return (
+    <span
+      className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}
+    >
+      {style.icon}
+      <span>{style.label}</span>
+    </span>
+  );
+};
+
+const WorkplaceBadge = ({ type }) => {
+  const config = {
+    remote: {
+      bg: "bg-purple-50",
+      text: "text-purple-700",
+      border: "border-purple-200",
+      label: "Remote",
+    },
+    hybrid: {
+      bg: "bg-blue-50",
+      text: "text-blue-700",
+      border: "border-blue-200",
+      label: "Hybrid",
+    },
+    onsite: {
+      bg: "bg-gray-50",
+      text: "text-gray-700",
+      border: "border-gray-200",
+      label: "On-site",
+    },
+  };
+
+  const style = config[type] || config.onsite;
+
+  return (
+    <span
+      className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-medium border ${style.bg} ${style.text} ${style.border}`}
+    >
+      <Monitor className="w-3 h-3" />
+      <span>{style.label}</span>
+    </span>
+  );
+};
+
+const RecruiterJobCard = ({ job, onViewApplicants }) => {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 transition-all duration-300 group">
+      <div className="p-5 pb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-4">
+            <div className="w-12 h-12 rounded-xl bg-purple-100 border border-purple-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {job.img && !job.img.includes("example.com") ? (
+                <img
+                  src={job.img}
+                  alt={job.companyName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Building2 className="w-6 h-6 text-purple-600" />
+              )}
+            </div>
+
+            <div className="min-w-0">
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-700 transition-colors truncate">
+                {job.jobTitle}
+              </h3>
+              <p className="text-sm text-gray-500 font-medium mt-0.5">
+                {job.companyName}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center flex-wrap gap-2 mt-4">
+          <StatusBadge status={job.adminReview} />
+          <WorkplaceBadge type={job.workPlaceType} />
+          {job.bookmarked && (
+            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+              <BookmarkIcon className="w-3 h-3 fill-current" />
+              <span>Bookmarked</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="border-t border-gray-100 mx-5" />
+
+      <div className="p-5 pt-4 space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <MapPin className="w-4 h-4 text-purple-500 flex-shrink-0" />
+            <span className="truncate">{job.location}</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Briefcase className="w-4 h-4 text-purple-500 flex-shrink-0" />
+            <span className="truncate">{job.department}</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Clock className="w-4 h-4 text-purple-500 flex-shrink-0" />
+            <span>{job.experience}</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
+            <span>{job.openings || "N/A"} Openings</span>
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mt-2">
+          {job.jobDescription}
+        </p>
+      </div>
+
+      <div className="px-5 pb-5">
+        <button
+          type="button"
+          onClick={() => onViewApplicants?.(job)}
+          className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 transition-all duration-200 font-medium text-sm"
+        >
+          <Eye className="w-4 h-4" />
+          <span>View Applicants</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 /* ─────────────────── Main Component ─────────────────── */
 const CandidatesView = () => {
   const [jobs, setJobs] = useState([]);
@@ -138,7 +305,24 @@ const CandidatesView = () => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const res = await api.get("/jobs");
+
+        const userData = localStorage.getItem("user");
+        if (!userData) {
+          console.log("No user found");
+          setJobs([]);
+          return;
+        }
+
+        const user = JSON.parse(userData);
+        const userId = user._id || user.id;
+
+        if (!userId) {
+          console.error("Could not find a valid user ID in:", user);
+          setJobs([]);
+          return;
+        }
+
+        const res = await api.get(`/jobs/recruiter/${userId}`);
         setJobs(res.data.jobs || []);
       } catch (err) {
         console.error("Error fetching jobs:", err);
@@ -878,133 +1062,13 @@ const CandidatesView = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredJobs.map((job, index) => {
-              const wpLabel =
-                job.workPlaceType === "onsite"
-                  ? "On-site"
-                  : job.workPlaceType === "remote"
-                    ? "Remote"
-                    : job.workPlaceType === "hybrid"
-                      ? "Hybrid"
-                      : job.workPlaceType;
-
-              return (
-                <div
-                  key={job._id || index}
-                  onClick={() => handleJobClick(job)}
-                  className="group bg-white rounded-2xl border border-[#9c44fe]/10 p-6 cursor-pointer transition-all duration-400 hover:shadow-2xl hover:shadow-[#9c44fe]/10 hover:-translate-y-1.5 hover:border-[#9c44fe]/30"
-                >
-                  {/* Logo + Title */}
-                  <div className="flex items-start gap-4">
-                    <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 border-[#9c44fe]/15 transition-all duration-300 group-hover:border-[#9c44fe]/30 group-hover:shadow-lg">
-                      <img
-                        src={job.img}
-                        alt={job.companyName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white font-bold text-xl" style="background:linear-gradient(135deg,${ACCENT},#7c3aed)">${job.companyName?.charAt(0) || "J"}</div>`;
-                        }}
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-base font-bold text-gray-900 truncate transition-colors group-hover:text-[#9c44fe]">
-                        {job.jobTitle}
-                      </h3>
-                      <p className="text-sm text-gray-400 mt-0.5 truncate">
-                        {job.companyName}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Meta */}
-                  <div className="mt-4 space-y-2.5">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        fill="currentColor"
-                        viewBox="0 0 256 256"
-                        className="text-gray-300 shrink-0"
-                      >
-                        <path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,75.3,80,132.17,83.41,134.55a8,8,0,0,0,9.18,0C136,236.17,216,179.3,216,104A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z" />
-                      </svg>
-                      <span className="truncate">{job.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        fill="currentColor"
-                        viewBox="0 0 256 256"
-                        className="text-gray-300 shrink-0"
-                      >
-                        <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />
-                      </svg>
-                      <span>{job.department}</span>
-                    </div>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {wpLabel && (
-                        <span
-                          className="text-xs font-semibold px-2.5 py-1 rounded-full border"
-                          style={{
-                            color: ACCENT,
-                            backgroundColor: `${ACCENT}08`,
-                            borderColor: `${ACCENT}18`,
-                          }}
-                        >
-                          {wpLabel}
-                        </span>
-                      )}
-                      {job.experience && (
-                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
-                          {job.experience}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between mt-5 pt-4 border-t border-[#9c44fe]/8">
-                    <div className="flex items-center gap-1.5">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        fill={ACCENT}
-                        viewBox="0 0 256 256"
-                      >
-                        <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.07,195.63a8,8,0,1,0,13.86,8C27.21,186.38,50.44,172,84,172s56.79,14.38,67.07,31.63a8,8,0,1,0,13.86-8A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Z" />
-                      </svg>
-                      <span
-                        className="text-xs font-semibold"
-                        style={{ color: ACCENT }}
-                      >
-                        {job.openings || 0} Opening
-                        {(job.openings || 0) !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <span className="flex items-center gap-1 text-xs font-medium text-gray-300 group-hover:text-[#9c44fe] transition-colors">
-                      View Applicants
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        fill="currentColor"
-                        viewBox="0 0 256 256"
-                        className="transition-transform group-hover:translate-x-1"
-                      >
-                        <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
-                      </svg>
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+            {filteredJobs.map((job) => (
+              <RecruiterJobCard
+                key={job._id}
+                job={job}
+                onViewApplicants={handleJobClick}
+              />
+            ))}
           </div>
         )}
       </div>

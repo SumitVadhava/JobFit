@@ -158,7 +158,7 @@ const Navbar = ({ userData }) => {
         recruiter: [
             {
                 label: "Dashboard",
-                href: "/recruiter/recruiter-analytics",
+                href: "/recruiter/recruiter-dashboard",
                 shortcut: "Ctrl + D",
             },
             {
