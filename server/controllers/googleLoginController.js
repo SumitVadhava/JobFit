@@ -1,5 +1,8 @@
 const User = require("./../models/google_login");
+const CandidateProfile = require("../models/candidateProfile");
+const RecruiterProfile = require("../models/recruiterProfile");
 const jwt = require("jsonwebtoken");
+const { ROLES } = require("../utils/roles");
 require("dotenv").config();
 
 const googleAddLoginController = async (req, res) => {
@@ -7,6 +10,7 @@ const googleAddLoginController = async (req, res) => {
 
   try {
     let existingUser = await User.findOne({ google_id: google_id });
+    let isNewUser = false;
 
     if (!existingUser) {
       const newUser = new User({
@@ -19,8 +23,34 @@ const googleAddLoginController = async (req, res) => {
 
       await newUser.save();
       userToUse = newUser;
+      isNewUser = true;
     } else {
       userToUse = existingUser;
+    }
+
+    // Auto-create profile with name & email on first Google login
+    if (isNewUser) {
+      if (role === ROLES.RECRUITER) {
+        const existingProfile = await RecruiterProfile.findOne({ user: userToUse._id });
+        if (!existingProfile) {
+          await RecruiterProfile.create({
+            user: userToUse._id,
+            name: name,
+            email: email,
+            userName: name,
+          });
+        }
+      } else {
+        const existingProfile = await CandidateProfile.findOne({ user: userToUse._id });
+        if (!existingProfile) {
+          await CandidateProfile.create({
+            user: userToUse._id,
+            name: name,
+            email: email,
+            userName: name,
+          });
+        }
+      }
     }
 
     const token = jwt.sign(
@@ -58,3 +88,4 @@ const googleAddLoginController = async (req, res) => {
 };
 
 module.exports = { googleAddLoginController };
+
