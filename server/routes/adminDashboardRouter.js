@@ -181,9 +181,45 @@ router.get('/companies', adminDashboard, adminController.getCompaniesData);
  *         description: ID of the user
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               img:
+ *                 type: string
+ *                 example: "https://example.com/profile.jpg"
+ *               description:
+ *                 type: string
+ *                 example: "Experienced software engineer."
+ *               atsScore:
+ *                 type: number
+ *                 example: 85
+ *               experience:
+ *                 type: string
+ *                 example: "3-5 years"
  *     responses:
  *       201:
- *         description: Profile created
+ *         description: Profile created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Profile already exists
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
  *   get:
  *     summary: Get a candidate profile (admin)
  *     tags: [Admin]
@@ -197,7 +233,22 @@ router.get('/companies', adminDashboard, adminController.getCompaniesData);
  *           type: string
  *     responses:
  *       200:
- *         description: Profile details
+ *         description: Operation successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Profile not found
+ *       401:
+ *         description: Unauthorized
  *   put:
  *     summary: Update a candidate profile (admin)
  *     tags: [Admin]
@@ -209,9 +260,37 @@ router.get('/companies', adminDashboard, adminController.getCompaniesData);
  *         required: true
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               atsScore:
+ *                 type: number
+ *                 example: 95
+ *               experience:
+ *                 type: string
+ *                 example: "5+ years"
  *     responses:
  *       200:
- *         description: Profile updated
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Profile not found
+ *       401:
+ *         description: Unauthorized
  *   delete:
  *     summary: Delete a candidate profile (admin)
  *     tags: [Admin]
@@ -225,7 +304,22 @@ router.get('/companies', adminDashboard, adminController.getCompaniesData);
  *           type: string
  *     responses:
  *       200:
- *         description: Profile deleted
+ *         description: Profile deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Profile not found
+ *       401:
+ *         description: Unauthorized
  */
 router.post('/candidates/:userId/profile', adminDashboard, adminController.createCandidateProfile);
 router.get('/candidates/:userId/profile', adminDashboard, adminController.getCandidateProfile);
