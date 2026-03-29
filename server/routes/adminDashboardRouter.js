@@ -93,7 +93,7 @@ router.get('/users', adminDashboard, adminController.getUsersData);
  *         description: Forbidden
  */
 
-router.delete('/users', adminDashboard, adminController.getUsersData);
+router.delete('/users', adminDashboard, adminController.deleteUser);
 
 /**
  * @swagger
@@ -114,7 +114,7 @@ router.delete('/users', adminDashboard, adminController.getUsersData);
  *         description: Unauthorized
  */
 
-router.get('/recruiters', adminDashboard, adminController.getUsersData);
+router.get('/recruiters', adminDashboard, adminController.getRecruitersData);
 
 /**
  * @swagger
@@ -165,5 +165,71 @@ router.get('/jobs', adminDashboard, adminController.getJobsData);
  */
 
 router.get('/companies', adminDashboard, adminController.getCompaniesData);
+
+/**
+ * @swagger
+ * /api/admin/candidates/{userId}/profile:
+ *   post:
+ *     summary: Create a candidate profile (admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: ID of the user
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Profile created
+ *   get:
+ *     summary: Get a candidate profile (admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profile details
+ *   put:
+ *     summary: Update a candidate profile (admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ *   delete:
+ *     summary: Delete a candidate profile (admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profile deleted
+ */
+router.post('/candidates/:userId/profile', adminDashboard, adminController.createCandidateProfile);
+router.get('/candidates/:userId/profile', adminDashboard, adminController.getCandidateProfile);
+router.put('/candidates/:userId/profile', adminDashboard, adminController.updateCandidateProfile);
+router.delete('/candidates/:userId/profile', adminDashboard, adminController.deleteCandidateProfile);
 
 module.exports = router;
