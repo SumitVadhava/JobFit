@@ -298,14 +298,222 @@ router.delete('/users', adminController.deleteUser);
 router.put('/users/:userId', adminController.updateUser);
 
 // ─────────────────────────────────────────────────────────
-// RECRUITERS
+// CANDIDATES (role-scoped account CRUD)
+// ─────────────────────────────────────────────────────────
+
+/**
+ * @swagger
+ * /api/admin/candidates:
+ *   get:
+ *     summary: Get all candidate accounts
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all candidates
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "64abc123def456"
+ *                       userName:
+ *                         type: string
+ *                         example: "John Doe"
+ *                       email:
+ *                         type: string
+ *                         example: "john@example.com"
+ *                       role:
+ *                         type: string
+ *                         example: "candidate"
+ *                       status:
+ *                         type: string
+ *                         example: "active"
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – admin role required
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     summary: Create a new candidate account
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userName, email, password]
+ *             properties:
+ *               userName:
+ *                 type: string
+ *                 example: "Jane Smith"
+ *               email:
+ *                 type: string
+ *                 example: "jane@example.com"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: "Secret@123"
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 example: "active"
+ *     responses:
+ *       201:
+ *         description: Candidate created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – admin role required
+ *       409:
+ *         description: Email already registered
+ *       500:
+ *         description: Internal server error
+ *   delete:
+ *     summary: Delete a candidate account by userId
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userId]
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: "64abc123def456"
+ *     responses:
+ *       200:
+ *         description: Candidate deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: userId missing or invalid
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – not a candidate or admin role required
+ *       404:
+ *         description: Account not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/candidates', adminController.getCandidatesData);
+router.post('/candidates', adminController.createCandidate);
+router.delete('/candidates', adminController.deleteCandidate);
+
+/**
+ * @swagger
+ * /api/admin/candidates/{userId}:
+ *   put:
+ *     summary: Update a candidate account by userId
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "64abc123def456"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userName:
+ *                 type: string
+ *                 example: "Updated Name"
+ *               email:
+ *                 type: string
+ *                 example: "updated@example.com"
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 example: "inactive"
+ *     responses:
+ *       200:
+ *         description: Candidate updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Invalid userId or no valid fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – not a candidate or admin role required
+ *       404:
+ *         description: Account not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/candidates/:userId', adminController.updateCandidate);
+
+// ─────────────────────────────────────────────────────────
+// RECRUITERS (role-scoped account CRUD)
 // ─────────────────────────────────────────────────────────
 
 /**
  * @swagger
  * /api/admin/recruiters:
  *   get:
- *     summary: Get all recruiters
+ *     summary: Get all recruiter accounts
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -349,8 +557,164 @@ router.put('/users/:userId', adminController.updateUser);
  *         description: Forbidden – admin role required
  *       500:
  *         description: Internal server error
+ *   post:
+ *     summary: Create a new recruiter account
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userName, email, password]
+ *             properties:
+ *               userName:
+ *                 type: string
+ *                 example: "HR Manager"
+ *               email:
+ *                 type: string
+ *                 example: "hr@techcorp.com"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: "Secret@123"
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 example: "active"
+ *     responses:
+ *       201:
+ *         description: Recruiter created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – admin role required
+ *       409:
+ *         description: Email already registered
+ *       500:
+ *         description: Internal server error
+ *   delete:
+ *     summary: Delete a recruiter account by userId
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userId]
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: "64abc123def456"
+ *     responses:
+ *       200:
+ *         description: Recruiter deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   example: {}
+ *       400:
+ *         description: userId missing or invalid
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – not a recruiter or admin role required
+ *       404:
+ *         description: Account not found
+ *       500:
+ *         description: Internal server error
  */
 router.get('/recruiters', adminController.getRecruitersData);
+router.post('/recruiters', adminController.createRecruiter);
+router.delete('/recruiters', adminController.deleteRecruiter);
+
+/**
+ * @swagger
+ * /api/admin/recruiters/{userId}:
+ *   put:
+ *     summary: Update a recruiter account by userId
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "64abc123def456"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userName:
+ *                 type: string
+ *                 example: "Updated HR Name"
+ *               email:
+ *                 type: string
+ *                 example: "updated@techcorp.com"
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 example: "inactive"
+ *     responses:
+ *       200:
+ *         description: Recruiter updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Invalid userId or no valid fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – not a recruiter or admin role required
+ *       404:
+ *         description: Account not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/recruiters/:userId', adminController.updateRecruiter);
 
 // ─────────────────────────────────────────────────────────
 // JOBS
