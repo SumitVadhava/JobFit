@@ -1,7 +1,7 @@
 const Job = require("../models/jobs");
 const AppliedJob = require("../models/appliedJobs");
 const SavedJob = require("../models/savedJobs");
-const Profile = require("../models/profiles");
+const Profile = require("../models/candidateProfile");
 const mongoose = require("mongoose");
 const { ROLES } = require("../utils/roles");
 
