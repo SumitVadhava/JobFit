@@ -31,10 +31,10 @@ const InputWrapper = ({
   required = true,
 }) => (
   <div className="group relative">
-    <label className="flex items-center gap-2 text-sm font-semibold text-purple-700 mb-2">
+    <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-2">
       <Icon
         size={16}
-        className={`transition-colors duration-200 ${isFocused ? "text-purple-500" : "text-purple-400"
+        className={`transition-colors duration-200 ${isFocused ? "text-black" : "text-gray-900"
           }`}
       />
       {label}
@@ -231,16 +231,11 @@ const Recruiter_Post_view = () => {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* ── Header ───────────────────────────────────────────────────── */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-violet-600 shadow-lg shadow-purple-200 mb-5">
-            <Briefcase size={28} className="text-white" />
-          </div>
+
           <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-700 via-purple-600 to-violet-600 bg-clip-text text-transparent">
             Create a New Job Post
           </h1>
-          <p className="text-gray-500 mt-3 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
-            Fill in the details below to publish a new opportunity and attract
-            top talent.
-          </p>
+
 
           {/* Progress */}
           <div className="mt-6 max-w-xs mx-auto">
