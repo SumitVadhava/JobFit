@@ -358,9 +358,12 @@
 
 import { Divider } from "@mui/material";
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api"; // Ensure this path is correct
+import ButtonLogo from "../../assets/button_logo.png";
+import { Briefcase } from "lucide-react";
 
 // Helper functions for styling - Updated to handle lowercase backend data
 const getWorkplaceConfig = (workplace) => {
@@ -430,6 +433,7 @@ const getDepartmentBadge = (department) => {
 };
 
 const SavedJobs = () => {
+  const navigate = useNavigate();
   // --- STATE ---
   const [savedJobs, setSavedJobs] = useState([]);
   const [bookmarkedJobs, setBookmarkedJobs] = useState({});
@@ -455,15 +459,21 @@ const SavedJobs = () => {
     const fetchJobs = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get("/jobs");
+        const response = await api.get(`/user/savedJobs`);
 
-        // Only show jobs where bookmarked === true
-        const allJobs = response.data.jobs || [];
-        const bookmarkedOnly = allJobs.filter((job) => job.bookmarked === true);
-        setSavedJobs(bookmarkedOnly);
+        // Data comes in response.data.savedJobs where each entry has jobId inside it
+        const savedJobsList = response.data.savedJobs || [];
 
-        // All jobs shown here are bookmarked
-        const initialBookmarks = bookmarkedOnly.reduce((acc, job) => {
+        // Map jobId to _id so the rest of the component works as expected
+        const mappedJobs = savedJobsList.map(job => ({
+          ...job,
+          _id: job.jobId,
+          bookmarked: true
+        }));
+
+        setSavedJobs(mappedJobs);
+
+        const initialBookmarks = mappedJobs.reduce((acc, job) => {
           acc[job._id] = true;
           return acc;
         }, {});
@@ -493,20 +503,8 @@ const SavedJobs = () => {
     setSavedJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
 
     try {
-      // Persist to backend using PUT /api/jobs/:id with bookmarked: false
-      await api.put(`/jobs/${jobId}`, {
-        jobTitle: jobToUpdate.jobTitle,
-        department: jobToUpdate.department,
-        experience: jobToUpdate.experience,
-        responsibilities: jobToUpdate.responsibilities,
-        qualifications: jobToUpdate.qualifications,
-        companyName: jobToUpdate.companyName,
-        location: jobToUpdate.location,
-        workPlaceType: jobToUpdate.workPlaceType,
-        jobDescription: jobToUpdate.jobDescription,
-        img: jobToUpdate.img,
-        bookmarked: false,
-      });
+      // Persist to backend using DELETE /api/jobs/:id/unsave
+      await api.delete(`/jobs/${jobId}/unsave`);
 
       toast.success("Job removed from saved jobs", {
         position: "top-center",
@@ -620,11 +618,10 @@ const SavedJobs = () => {
                   </svg>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  No matching jobs
+                  No bookmarked jobs found
                 </h3>
                 <p className="text-sm text-gray-500 mb-8 max-w-md mx-auto leading-relaxed">
-                  We couldn't find any jobs matching your criteria. Try broadening
-                  your search or removing some filters.
+                  You haven't explicitly saved any jobs yet. Browse around and click the bookmark icon to save jobs here!
                 </p>
                 <button
                   onClick={clearFilters}
@@ -680,11 +677,11 @@ const SavedJobs = () => {
                                 onError={(e) => {
                                   e.target.style.display = "none";
                                   e.target.parentElement.innerHTML = `
-                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${getDepartmentColor(
+                                                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br ${getDepartmentColor(
                                     job.department
                                   )} text-white font-bold text-2xl sm:text-3xl">
-                          ${job.companyName.charAt(0)}
-                        </div>`;
+                                                          ${job.companyName.charAt(0)}
+                                                        </div>`;
                                 }}
                               />
                               {/* Status dot */}
@@ -743,16 +740,17 @@ const SavedJobs = () => {
 
                                   {/* Experience Badge */}
                                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full">
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      width="14"
-                                      height="14"
-                                      fill="currentColor"
-                                      viewBox="0 0 256 256"
-                                      className="text-gray-400"
-                                    >
-                                      <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z" />
-                                    </svg>
+                                    {/* <svg
+                                                          xmlns="http://www.w3.org/2000/svg"
+                                                          width="14"
+                                                          height="14"
+                                                          fill="currentColor"
+                                                          viewBox="0 0 256 256"
+                                                          className="text-gray-400"
+                                                        >
+                                                          <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z" />
+                                                        </svg> */}
+                                    <Briefcase size={15} />
                                     {job.experience}
                                   </span>
 
@@ -870,19 +868,21 @@ const SavedJobs = () => {
                           <div className="flex items-center gap-3">
                             {/* Apply Button */}
                             <button
-                            className="group/btn relative inline-flex items-center gap-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-7 py-3 rounded-2xl transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-gray-900/25 active:scale-[0.97]">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="17"
-                              height="17"
-                              fill="currentColor"
-                              viewBox="0 0 256 256"
-                              className="transition-transform duration-300 group-hover/btn:translate-x-0.5"
-                            >
-                              <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,13-9.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14L118.42,148.9l47.24-47.25a8,8,0,0,0-11.32-11.32L107.1,137.58,23.91,98.12l.14,0L215.94,40Z" />
-                            </svg>
-                            Apply Now
-                          </button>
+                              onClick={() => navigate(`/user/apply/${job._id}`)}
+                              className="group/btn relative inline-flex items-center gap-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-7 py-3 rounded-2xl transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-gray-900/25 active:scale-[0.97]">
+                              {/* <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="17"
+                                                    height="17"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 256 256"
+                                                    className="transition-transform duration-300 mt-1 group-hover/btn:-translate-y-0.5 -rotate-45"
+                                                  >
+                                                    <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,13-9.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14L118.42,148.9l47.24-47.25a8,8,0,0,0-11.32-11.32L107.1,137.58,23.91,98.12l.14,0L215.94,40Z" />
+                                                  </svg> */}
+                              <img src={ButtonLogo} className="w-6" alt="" />
+                              Apply Now
+                            </button>
 
                             {/* View Details Toggle */}
                             <button
@@ -909,23 +909,8 @@ const SavedJobs = () => {
                             </button>
                           </div>
 
-                          {/* Time posted */}
-                          <span className="hidden sm:inline-flex items-center gap-2 text-xs text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="14"
-                              height="14"
-                              fill="currentColor"
-                              viewBox="0 0 256 256"
-                              className="text-gray-300"
-                            >
-                              <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z" />
-                            </svg>
-                            Posted recently
-                          </span>
                         </div>
-                      </div>
-                    </div>
+                      </div>        </div>
                   );
                 })}
               </div>
