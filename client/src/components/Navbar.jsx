@@ -285,8 +285,8 @@ const Navbar = ({ userData }) => {
                                 </div>
                             </div>
                             :
-                            <button onClick={() => navigate('/login')} className="relative z-10 w-full md:w-[6.5em] h-[2.3em] m-2 px-4 py-2 bg-black text-white border-none rounded-[0.625em] text-[16px] md:text-[20px] font-bold cursor-pointer overflow-hidden group transition-all duration-300 ease-in-out hover:bg-gray-900 hover:text-black">
-                                Login
+                            <button onClick={() => navigate('/login')} className="relative z-10 w-full md:w-[9em] h-[2.3em] m-2 px-4 py-2 bg-black text-white border-none rounded-[0.625em] text-[16px] md:text-[20px] font-bold cursor-pointer overflow-hidden group transition-all duration-300 ease-in-out hover:bg-gray-900 hover:text-black">
+                                Get Started
                                 <span className="absolute inset-0 -z-10 transition-transform duration-500 ease-out transform skew-x-[-45deg] scale-x-0 bg-white group-hover:scale-x-100"></span>
                             </button>
                     }
