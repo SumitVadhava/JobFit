@@ -127,6 +127,7 @@ const JobFitUserTable = () => {
     const [editStatus, setEditStatus] = useState('active');
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [page, setPage] = useState(0);
@@ -194,8 +195,12 @@ const JobFitUserTable = () => {
         if (!userToDelete) return;
 
         try {
-            // Note: If backend provides a DELETE endpoint like /admin/users/:id, call it here.
-            // await api.delete(`/admin/users/${userToDelete.id}`);
+            setIsDeleting(true);
+            const endpoint = userToDelete.role === 'Candidate'
+                ? `/admin/candidates/${userToDelete.id}`
+                : `/admin/recruiters/${userToDelete.id}`;
+
+            await api.delete(endpoint);
 
             setUsers(users.filter(u => u.id !== userToDelete.id));
             setSuccess(`Successfully deleted ${userToDelete.name}`);
@@ -203,7 +208,9 @@ const JobFitUserTable = () => {
             setUserToDelete(null);
         } catch (err) {
             console.error('Error deleting user:', err);
-            setError('Failed to delete user. Please try again.');
+            setError(err.response?.data?.message || 'Failed to delete user. Please try again.');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -712,7 +719,7 @@ const JobFitUserTable = () => {
                                                             <Tooltip title="Delete user" arrow>
                                                                 <IconButton
                                                                     size="small"
-                                                                    onClick={() => handleDeleteUser(user.id)}
+                                                                    onClick={() => handleDeleteUser(user)}
                                                                     sx={{
                                                                         color: '#EF4444', bgcolor: '#FEF2F2',
                                                                         '&:hover': { bgcolor: '#FEE2E2', transform: 'scale(1.05)' },
@@ -873,6 +880,7 @@ const JobFitUserTable = () => {
                 <DialogActions sx={{ p: 2, gap: 1.5 }}>
                     <Button
                         onClick={() => setIsDeleteModalOpen(false)}
+                        disabled={isDeleting}
                         sx={{
                             textTransform: 'none', fontWeight: 600, px: 2.5, borderRadius: 2,
                             color: '#64748B', '&:hover': { bgcolor: '#F8FAFC' }
@@ -883,13 +891,15 @@ const JobFitUserTable = () => {
                     <Button
                         onClick={confirmDelete}
                         variant="contained"
+                        disabled={isDeleting}
+                        startIcon={isDeleting ? <CircularProgress size={16} color="inherit" /> : null}
                         sx={{
                             textTransform: 'none', fontWeight: 600, px: 3, borderRadius: 2,
                             bgcolor: '#EF4444', '&:hover': { bgcolor: '#DC2626' },
-                            boxShadow: 'none'
+                            boxShadow: 'none', minWidth: 140,
                         }}
                     >
-                        Confirm Delete
+                        {isDeleting ? 'Deleting...' : 'Confirm Delete'}
                     </Button>
                 </DialogActions>
             </Dialog>
