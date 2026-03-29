@@ -15,7 +15,7 @@ function generateOtp() {
 async function sendOtp(email) {
   const otp = generateOtp();
 
-  const htmlContent = `  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f6f8; padding: 40px 0;">
+  const htmlContent = `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f6f8; padding: 40px 0;">
       <tr>
         <td align="center">
 
