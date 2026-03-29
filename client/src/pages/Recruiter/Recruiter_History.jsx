@@ -26,6 +26,8 @@ import {
   TrendingUp,
   Loader2,
 } from "lucide-react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
 
 // ─── Status Badge Component ─────────────────────────────────────────────────
@@ -253,7 +255,7 @@ const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
 };
 
 // ─── Job Detail Modal ────────────────────────────────────────────────────────
-const JobDetailModal = ({ job, isOpen, onClose }) => {
+const JobDetailModal = ({ job, isOpen, onClose, onEdit, onDelete }) => {
   if (!isOpen || !job) return null;
 
   return (
@@ -380,9 +382,158 @@ const JobDetailModal = ({ job, isOpen, onClose }) => {
           >
             Close
           </button>
-          <button className="px-5 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
+          <button
+            onClick={() => {
+              onClose();
+              onDelete?.(job._id);
+            }}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Delete Job</span>
+          </button>
+          <button onClick={() => { onClose(); onEdit?.(job); }} className="px-5 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
             <Edit className="w-4 h-4" />
             <span>Edit Job</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Edit Job Modal ────────────────────────────────────────────────────────────
+const EditJobModal = ({ job, isOpen, onClose, onUpdate }) => {
+  const [formData, setFormData] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (job) {
+      setFormData({
+        jobTitle: job.jobTitle || "",
+        department: job.department || "",
+        openings: job.openings || "",
+        experience: job.experience || "",
+        responsibilities: job.responsibilities || "",
+        qualifications: job.qualifications || "",
+        companyName: job.companyName || "",
+        location: job.location || "",
+        workPlaceType: job.workPlaceType || "",
+        jobDescription: job.jobDescription || "",
+        img: job.img || "",
+        bookmarked: job.bookmarked || false,
+      });
+    }
+  }, [job]);
+
+  if (!isOpen || !job) return null;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const payload = { ...formData, openings: Number(formData.openings) };
+      const res = await api.put(`/jobs/${job._id}`, payload);
+      onUpdate(res.data.job);
+      onClose();
+    } catch (error) {
+      console.error("Update failed", error);
+      toast.error("Failed to update job");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 flex flex-col">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center space-x-2">
+            <Edit className="w-5 h-5 text-purple-600" />
+            <span>Edit Job Posting</span>
+          </h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto p-6 space-y-4 flex-1">
+          <form id="edit-job-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Job Title</label>
+              <input required name="jobTitle" value={formData.jobTitle} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Company Info</label>
+              <input required name="companyName" value={formData.companyName} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Location</label>
+              <input required name="location" value={formData.location} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Openings</label>
+              <input required type="number" name="openings" value={formData.openings} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Workplace Type</label>
+              <select required name="workPlaceType" value={formData.workPlaceType} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white">
+                <option value="onsite">On-Site</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+              </select>
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Department</label>
+              <select name="department" value={formData.department} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white">
+                <option value="Engineering">Engineering</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Design">Design</option>
+                <option value="HR">HR</option>
+                <option value="Sales">Sales</option>
+              </select>
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Experience</label>
+              <select name="experience" value={formData.experience} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white">
+                <option value="0-1 years">0-1 years</option>
+                <option value="2-4 years">2-4 years</option>
+                <option value="5-6 years">5-6 years</option>
+                <option value="7-8 years">7-8 years</option>
+                <option value="9-10 years">9-10 years</option>
+              </select>
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Image URL</label>
+              <input name="img" value={formData.img} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Job Description</label>
+              <textarea required name="jobDescription" value={formData.jobDescription} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg min-h-[80px]" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Responsibilities</label>
+              <textarea required name="responsibilities" value={formData.responsibilities} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg min-h-[80px]" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Qualifications</label>
+              <textarea required name="qualifications" value={formData.qualifications} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg min-h-[80px]" />
+            </div>
+          </form>
+        </div>
+
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end space-x-3">
+          <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button form="edit-job-form" type="submit" disabled={isSubmitting} className="px-5 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors min-w-[120px]">
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Save Changes"}
           </button>
         </div>
       </div>
@@ -407,6 +558,57 @@ const EmptyState = () => (
   </div>
 );
 
+// ─── Delete Confirmation Modal ─────────────────────────────────────────────
+const DeleteConfirmModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={onCancel} />
+
+      <div className="relative w-full max-w-md rounded-2xl border border-red-100 bg-white shadow-2xl animate-in fade-in zoom-in-95">
+        <div className="p-6">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 border border-red-100">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+          </div>
+
+          <h3 className="text-center text-lg font-bold text-gray-900">
+            Delete this job posting?
+          </h3>
+          <p className="mt-2 text-center text-sm text-gray-500">
+            This action is permanent and cannot be undone.
+          </p>
+
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isDeleting}
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={isDeleting}
+              className="min-w-[120px] px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isDeleting ? (
+                <span className="inline-flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </span>
+              ) : (
+                "Yes, Delete"
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Recruiter Panel Component ─────────────────────────────────────────
 const Recruiter_History = () => {
   const [jobs, setJobs] = useState([]);
@@ -417,6 +619,11 @@ const Recruiter_History = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -488,14 +695,42 @@ const Recruiter_History = () => {
   };
 
   const handleEdit = (job) => {
-    console.log("Edit job:", job._id);
-    // Add your edit logic / navigation
+    setSelectedJob(job);
+    setEditModalOpen(true);
   };
 
-  const handleDelete = (jobId) => {
-    if (window.confirm("Are you sure you want to delete this job?")) {
+  const openDeleteModal = (jobId) => {
+    setJobToDelete(jobId);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    if (isDeleting) return;
+    setDeleteModalOpen(false);
+    setJobToDelete(null);
+  };
+
+  const handleDelete = async (jobId) => {
+    setIsDeleting(true);
+    try {
+      await api.delete(`/jobs/${jobId}`);
       setJobs((prev) => prev.filter((j) => j._id !== jobId));
+      setSelectedJob((prev) => (prev?._id === jobId ? null : prev));
+      setDeleteModalOpen(false);
+      setJobToDelete(null);
+      toast.success("Job deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete job:", error);
+      toast.error("Failed to delete job");
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleUpdateJob = (updatedJob) => {
+    setJobs((prev) =>
+      prev.map((j) => (j._id === updatedJob._id ? updatedJob : j))
+    );
   };
 
   return (
@@ -650,7 +885,7 @@ const Recruiter_History = () => {
                 job={job}
                 onViewDetails={handleViewDetails}
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={openDeleteModal}
               />
             ))}
           </div>
@@ -662,7 +897,25 @@ const Recruiter_History = () => {
         job={selectedJob}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
+        onEdit={handleEdit}
+        onDelete={openDeleteModal}
       />
+
+      <EditJobModal
+        job={selectedJob}
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onUpdate={handleUpdateJob}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onCancel={closeDeleteModal}
+        onConfirm={() => jobToDelete && handleDelete(jobToDelete)}
+        isDeleting={isDeleting}
+      />
+
+      <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );
 };
