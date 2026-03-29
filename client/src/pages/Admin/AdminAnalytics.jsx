@@ -1,400 +1,212 @@
-// import React from "react";
-// import { toast, ToastContainer } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
-// import {
-//   LineChart,
-//   Line,
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   Tooltip,
-//   ResponsiveContainer,
-//   LabelList,
-// } from "recharts";
-
-// const AdminAnalytics = () => {
-//   // Sample data for charts
-//   const userActivityData = [
-//     { month: "Jan", activity: 50 },
-//     { month: "Feb", activity: 70 },
-//     { month: "Mar", activity: 60 },
-//     { month: "Apr", activity: 90 },
-//     { month: "May", activity: 80 },
-//     { month: "Jun", activity: 110 },
-//     { month: "Jul", activity: 120 },
-//   ];
-
-//   const jobPostingsData = [
-//     { industry: "Tech", count: 10 },
-//     { industry: "Healthcare", count: 30 },
-//     { industry: "Finance", count: 80 },
-//     { industry: "Retail", count: 50 },
-//     { industry: "Education", count: 90 },
-//     { industry: "Manufacturing", count: 40 },
-//     { industry: "Other", count: 20 },
-//   ];
-
-//   return (
-//     <div
-//       className="min-h-screen bg-white flex flex-col font-inter"
-//       style={{ fontFamily: '"Inter", "Noto Sans", sans-serif' }}
-//     >
-//       <ToastContainer />
-
-//       <div className="flex flex-1 justify-center py-5 px-4 sm:px-10 lg:px-40">
-//         <div className="flex flex-col max-w-[960px] w-full animate-fadeIn">
-//           <div className="flex flex-wrap justify-between gap-3 p-4">
-//             <h2 className="text-[#4a3c6e] text-3xl sm:text-4xl font-bold tracking-tight">
-//               Analytics
-//             </h2>
-//           </div>
-//           <div className="flex flex-wrap gap-4 p-4">
-//             {[
-//               { label: "Total Job Seekers", value: "12,345" },
-//               { label: "Total Recruiters", value: "678" },
-//               { label: "Total Jobs", value: "9,012" },
-//               { label: "Resumes Evaluated", value: "5,678" },
-//             ].map((item, index) => (
-//               <div
-//                 key={index}
-//                 className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-gradient-to-br from-white to-[#e8eaf6] shadow-lg hover:shadow-[0_8px_24px_rgba(74,60,110,0.3)] hover:-translate-y-1 transition-all duration-300"
-//               >
-//                 <p className="text-[#4a3c6e] text-base font-medium">
-//                   {item.label}
-//                 </p>
-//                 <p className="text-[#4a3c6e] text-2xl font-bold tracking-tight">
-//                   {item.value}
-//                 </p>
-//               </div>
-//             ))}
-//           </div>
-//           <h2 className="text-[#4a3c6e] text-xl sm:text-2xl font-bold tracking-tight px-4 py-3">
-//             Platform Usage
-//           </h2>
-//           <div className="flex flex-wrap gap-4 px-4 py-6">
-//             {/* User Activity Over Time */}
-//             <div className="flex min-w-[280px] flex-1 flex-col gap-2 rounded-xl border border-[#d1c4e9] p-6 bg-gradient-to-br from-white to-[#e8eaf6] shadow-lg hover:shadow-[0_8px_24px_rgba(74,60,110,0.3)] hover:-translate-y-1 transition-all duration-300">
-//               <p className="text-[#4a3c6e] text-base font-medium">
-//                 User Activity Over Time
-//               </p>
-//               <p className="text-[#4a3c6e] text-3xl font-bold tracking-tight">
-//                 +15%
-//               </p>
-//               <div className="flex gap-2">
-//                 <p className="text-[#6e6388] text-base">Last 30 Days</p>
-//                 <p className="text-[#078838] text-base font-medium">+15%</p>
-//               </div>
-//               <div className="min-h-[180px] sm:min-h-[200px] mt-4">
-//                 <ResponsiveContainer width="100%" height="100%">
-//                   <LineChart
-//                     data={userActivityData}
-//                     margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-//                   >
-//                     <XAxis dataKey="month" stroke="#6e6388" fontSize={12} />
-//                     <YAxis stroke="#6e6388" fontSize={12} />
-//                     <Tooltip
-//                       contentStyle={{
-//                         backgroundColor: "#ffffff",
-//                         borderColor: "#d1c4e9",
-//                         color: "#4a3c6e",
-//                       }}
-//                       cursor={{ fill: "#e8eaf6" }}
-//                     />
-//                     <Line
-//                       type="monotone"
-//                       dataKey="activity"
-//                       stroke="#6e6388"
-//                       strokeWidth={3}
-//                       fill="url(#lineGradient)"
-//                       dot={false}
-//                     />
-//                     <defs>
-//                       <linearGradient
-//                         id="lineGradient"
-//                         x1="0"
-//                         y1="0"
-//                         x2="0"
-//                         y2="1"
-//                       >
-//                         <stop offset="0%" stopColor="#e8eaf6" />
-//                         <stop
-//                           offset="100%"
-//                           stopColor="#e8eaf6"
-//                           stopOpacity={0}
-//                         />
-//                       </linearGradient>
-//                     </defs>
-//                   </LineChart>
-//                 </ResponsiveContainer>
-//               </div>
-//             </div>
-//             {/* Job Postings by Industry */}
-//             <div className="flex min-w-[280px] flex-1 flex-col gap-2 rounded-xl border border-[#d1c4e9] p-6 bg-gradient-to-br from-white to-[#e8eaf6] shadow-lg hover:shadow-[0_8px_24px_rgba(74,60,110,0.3)] hover:-translate-y-1 transition-all duration-300">
-//               <p className="text-[#4a3c6e] text-base font-medium">
-//                 Job Postings by Industry
-//               </p>
-//               <p className="text-[#4a3c6e] text-3xl font-bold tracking-tight">
-//                 +8%
-//               </p>
-//               <div className="flex gap-2">
-//                 <p className="text-[#6e6388] text-base">Last Quarter</p>
-//                 <p className="text-[#078838] text-base font-medium">+8%</p>
-//               </div>
-//               <div className="min-h-[180px] sm:min-h-[200px] mt-4">
-//                 <ResponsiveContainer width="100%" height="100%">
-//                   <BarChart
-//                     data={jobPostingsData}
-//                     margin={{ top: 20, right: 10, left: -20, bottom: 5 }}
-//                   >
-//                     <XAxis dataKey="industry" stroke="#6e6388" fontSize={12} />
-//                     <YAxis stroke="#6e6388" fontSize={12} />
-//                     <Tooltip
-//                       contentStyle={{
-//                         backgroundColor: "#ffffff",
-//                         borderColor: "#d1c4e9",
-//                         color: "#4a3c6e",
-//                       }}
-//                       cursor={{ fill: "#e8eaf6" }}
-//                     />
-//                     <Bar dataKey="count" fill="#6e6388" radius={[4, 4, 0, 0]}>
-//                       <LabelList
-//                         dataKey="count"
-//                         position="top"
-//                         formatter={(value) => `${value}%`}
-//                         style={{
-//                           fill: "#4a3c6e",
-//                           fontSize: "12px",
-//                           fontWeight: "bold",
-//                         }}
-//                         className="text-xs sm:text-sm"
-//                       />
-//                     </Bar>
-//                   </BarChart>
-//                 </ResponsiveContainer>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       <style jsx>{`
-//         @keyframes fadeIn {
-//           0% {
-//             opacity: 0;
-//             transform: translateY(30px) scale(0.98);
-//           }
-//           100% {
-//             opacity: 1;
-//             transform: translateY(0) scale(1);
-//           }
-//         }
-//         .animate-fadeIn {
-//           animation: fadeIn 0.8s ease-out forwards;
-//         }
-//       `}</style>
-//     </div>
-//   );
-// };
-
-// export default AdminAnalytics;
-
-
-import React from "react";
+import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import api from "../../api/api";
+
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+  ArrowRight,
+  Briefcase,
+  Building2,
+  CircleDot,
+  Rocket,
+  Sparkles,
+  Star,
+  Users,
+} from "lucide-react";
+
+import {
+  StatCard,
+  EmptyState,
+  CompanyLogo,
+  ACCENT,
+  ACCENT_LIGHT,
+  ACCENT_BORDER,
+} from "../../components/AdminAnalyticsWidgets";
 
 const AdminAnalytics = () => {
-  // Sample data for charts
-  const userActivityData = [
-    { month: "Jan", activity: 50 },
-    { month: "Feb", activity: 70 },
-    { month: "Mar", activity: 60 },
-    { month: "Apr", activity: 90 },
-    { month: "May", activity: 80 },
-    { month: "Jun", activity: 110 },
-    { month: "Jul", activity: 120 },
-  ];
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const jobPostingsData = [
-    { industry: "Tech", count: 10 },
-    { industry: "Healthcare", count: 30 },
-    { industry: "Finance", count: 80 },
-    { industry: "Retail", count: 50 },
-    { industry: "Education", count: 90 },
-    { industry: "Manufacturing", count: 40 },
-    { industry: "Other", count: 20 },
-  ];
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const jobsRes = await api.get("/jobs");
+        setJobs(jobsRes.data.jobs || []);
+      } catch (err) {
+        console.error("Error loading jobs:", err);
+        toast.error("Failed to load jobs");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  return (
-    <div
-      className="min-h-screen bg-white flex flex-col font-inter"
-      style={{ fontFamily: '"Inter", "Noto Sans", sans-serif' }}
-    >
-      <ToastContainer />
+    fetchJobs();
+  }, []);
 
-      <div className="flex flex-1 justify-center py-5 px-4 sm:px-10 lg:px-40">
-        <div className="flex flex-col max-w-[960px] w-full animate-fadeIn">
-          <div className="flex flex-wrap justify-between gap-3 p-4">
-            <h2 className="text-[#4a3c6e] text-3xl sm:text-4xl font-bold tracking-tight">
-              Analytics
-            </h2>
-          </div>
-          <div className="flex flex-wrap gap-4 p-4">
-            {[
-              { label: "Total Job Seekers", value: "12,345" },
-              { label: "Total Recruiters", value: "678" },
-              { label: "Total Jobs", value: "9,012" },
-              { label: "Resumes Evaluated", value: "5,678" },
-            ].map((item, index) => (
-              <div
-                key={index}
-                className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-gradient-to-br from-white to-[#e8eaf6] shadow-lg hover:shadow-[0_8px_24px_rgba(74,60,110,0.3)] hover:-translate-y-1 transition-all duration-300"
-              >
-                <p className="text-[#4a3c6e] text-base font-medium">
-                  {item.label}
-                </p>
-                <p className="text-[#4a3c6e] text-2xl font-bold tracking-tight">
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </div>
-          <h2 className="text-[#4a3c6e] text-xl sm:text-2xl font-bold tracking-tight px-4 py-3">
-            Platform Usage
-          </h2>
-          <div className="flex flex-wrap gap-4 px-4 py-6">
-            {/* User Activity Over Time */}
-            <div className="flex min-w-[280px] flex-1 flex-col gap-2 rounded-xl border border-[#d1c4e9] p-6 bg-gradient-to-br from-white to-[#e8eaf6] shadow-lg hover:shadow-[0_8px_24px_rgba(74,60,110,0.3)] hover:-translate-y-1 transition-all duration-300">
-              <p className="text-[#4a3c6e] text-base font-medium">
-                User Visit Count
-              </p>
-              <p className="text-[#4a3c6e] text-3xl font-bold tracking-tight">
-                15
-              </p>
-              <div className="min-h-[180px] sm:min-h-[200px] mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={userActivityData}
-                    margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-                  >
-                    <XAxis dataKey="month" stroke="#6e6388" fontSize={12} />
-                    <YAxis stroke="#6e6388" fontSize={12} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#ffffff",
-                        borderColor: "#d1c4e9",
-                        color: "#4a3c6e",
-                      }}
-                      cursor={{ fill: "#e8eaf6" }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="activity"
-                      stroke="#6e6388"
-                      strokeWidth={3}
-                      fill="url(#lineGradient)"
-                      dot={false}
-                    />
-                    <defs>
-                      <linearGradient
-                        id="lineGradient"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop offset="0%" stopColor="#e8eaf6" />
-                        <stop
-                          offset="100%"
-                          stopColor="#e8eaf6"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            {/* Job Postings by Industry */}
-            <div className="flex min-w-[280px] flex-1 flex-col gap-2 rounded-xl border border-[#d1c4e9] p-6 bg-gradient-to-br from-white to-[#e8eaf6] shadow-lg hover:shadow-[0_8px_24px_rgba(74,60,110,0.3)] hover:-translate-y-1 transition-all duration-300">
-              <p className="text-[#4a3c6e] text-base font-medium">
-                Recruiter Visit Count
-              </p>
-              <p className="text-[#4a3c6e] text-3xl font-bold tracking-tight">
-                8
-              </p>
-              <div className="min-h-[180px] sm:min-h-[200px] mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={jobPostingsData}
-                    margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-                  >
-                    <XAxis dataKey="industry" stroke="#6e6388" fontSize={12} />
-                    <YAxis stroke="#6e6388" fontSize={12} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#ffffff",
-                        borderColor: "#d1c4e9",
-                        color: "#4a3c6e",
-                      }}
-                      cursor={{ fill: "#e8eaf6" }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke="#6e6388"
-                      strokeWidth={3}
-                      fill="url(#lineGradient)"
-                      dot={false}
-                    />
-                    <defs>
-                      <linearGradient
-                        id="lineGradient"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop offset="0%" stopColor="#e8eaf6" />
-                        <stop
-                          offset="100%"
-                          stopColor="#e8eaf6"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
+  const staticStats = {
+    applicants: 148,
+    shortlisted: 37,
+    hired: 16,
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="w-14 h-14 border-4 rounded-full animate-spin"
+            style={{ borderColor: "#f3e8ff", borderTopColor: ACCENT }}
+          />
+          <p className="text-base font-medium text-gray-400 animate-pulse">
+            Loading dashboard...
+          </p>
         </div>
       </div>
+    );
+  }
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          0% {
-            opacity: 0;
-            transform: translateY(30px) scale(0.98);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.8s ease-out forwards;
-        }
-      `}</style>
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#faf5ff_0%,_#ffffff_48%)]">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="light"
+      />
+
+      <main className="min-w-0">
+        <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-8">
+          <div className="flex items-start sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-black tracking-tight">
+                Admin Dashboard
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Recruitment overview with static insights and recent openings.
+              </p>
+            </div>
+
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600">
+              <CircleDot size={12} className="text-emerald-500" />
+              Live updates
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label="Total Jobs"
+              value={jobs.length}
+              color={ACCENT}
+              delay={0}
+              icon={Briefcase}
+            />
+            <StatCard
+              label="Applicants"
+              value={staticStats.applicants}
+              color={ACCENT}
+              delay={0.1}
+              icon={Users}
+            />
+            <StatCard
+              label="Shortlisted"
+              value={staticStats.shortlisted}
+              color={ACCENT}
+              delay={0.2}
+              icon={Star}
+            />
+            <StatCard
+              label="Hired"
+              value={staticStats.hired}
+              color={ACCENT}
+              delay={0.3}
+              icon={Rocket}
+            />
+          </div>
+
+          <div className="w-full mb-8">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-black flex items-center gap-2">
+                  <Sparkles size={16} className="text-[#9c44fe]" />
+                  Weekly Hiring Snapshot
+                </h3>
+                <span className="text-xs text-gray-400">Static Demo Data</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: "Interviews", value: 18 },
+                  { label: "Offers Sent", value: 7 },
+                  { label: "Offer Accept", value: "71%" },
+                  { label: "Time to Hire", value: "12d" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-xl border border-gray-100 bg-gray-50 p-3"
+                  >
+                    <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+                      {item.label}
+                    </p>
+                    <p className="text-xl font-black text-black mt-1">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-lg font-bold text-black mb-4">Recent Job Posts</h2>
+
+            {jobs.length === 0 ? (
+              <EmptyState
+                icon={<Briefcase size={36} style={{ color: ACCENT }} />}
+                title="No Jobs Yet"
+                subtitle="Create your first job post to start attracting candidates."
+              />
+            ) : (
+              <div className="space-y-3">
+                {jobs.slice(0, 6).map((job) => (
+                  <div
+                    key={job._id}
+                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
+                  >
+                    <CompanyLogo
+                      src={job.img}
+                      name={job.companyName}
+                      size="w-12 h-12"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-bold text-black truncate">
+                        {job.jobTitle}
+                      </h3>
+                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                        <Building2 size={12} />
+                        {job.companyName} · {job.location}
+                      </p>
+                    </div>
+                    <span
+                      className="hidden sm:inline text-xs font-medium px-3 py-1 rounded-full border"
+                      style={{
+                        color: ACCENT,
+                        borderColor: ACCENT_BORDER,
+                        backgroundColor: ACCENT_LIGHT,
+                      }}
+                    >
+                      {job.openings || 0} openings
+                    </span>
+                    <span className="text-gray-300">
+                      <ArrowRight size={16} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
