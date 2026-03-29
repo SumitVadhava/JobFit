@@ -10,7 +10,6 @@ import {
   Plus,
   Search,
   Filter,
-  MoreVertical,
   Edit,
   Trash2,
   CheckCircle,
@@ -122,8 +121,6 @@ const StatCard = ({ icon, label, value, accent }) => (
 
 // ─── Job Card Component ──────────────────────────────────────────────────────
 const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 transition-all duration-300 group">
       {/* Card Header */}
@@ -154,45 +151,24 @@ const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
             </div>
           </div>
 
-          {/* Actions Menu */}
-          <div className="relative">
+          {/* Quick Actions */}
+          <div className="flex items-center gap-1">
             <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => onEdit?.(job)}
+              className="p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-700 transition-colors"
+              aria-label="Edit job"
+              title="Edit job"
             >
-              <MoreVertical className="w-4 h-4" />
+              <Edit className="w-4 h-4" />
             </button>
-
-            {menuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-8 w-40 bg-white border border-gray-200 rounded-xl shadow-xl z-20 py-1.5 animate-in fade-in slide-in-from-top-2">
-                  <button
-                    onClick={() => {
-                      onEdit?.(job);
-                      setMenuOpen(false);
-                    }}
-                    className="w-full flex items-center space-x-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                    <span>Edit Job</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      onDelete?.(job._id);
-                      setMenuOpen(false);
-                    }}
-                    className="w-full flex items-center space-x-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Delete Job</span>
-                  </button>
-                </div>
-              </>
-            )}
+            <button
+              onClick={() => onDelete?.(job._id)}
+              className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+              aria-label="Delete job"
+              title="Delete job"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -255,7 +231,7 @@ const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
 };
 
 // ─── Job Detail Modal ────────────────────────────────────────────────────────
-const JobDetailModal = ({ job, isOpen, onClose, onEdit, onDelete }) => {
+const JobDetailModal = ({ job, isOpen, onClose }) => {
   if (!isOpen || !job) return null;
 
   return (
@@ -375,26 +351,12 @@ const JobDetailModal = ({ job, isOpen, onClose, onEdit, onDelete }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-end space-x-3">
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-end">
           <button
             onClick={onClose}
             className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Close
-          </button>
-          <button
-            onClick={() => {
-              onClose();
-              onDelete?.(job._id);
-            }}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>Delete Job</span>
-          </button>
-          <button onClick={() => { onClose(); onEdit?.(job); }} className="px-5 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
-            <Edit className="w-4 h-4" />
-            <span>Edit Job</span>
           </button>
         </div>
       </div>
@@ -897,8 +859,6 @@ const Recruiter_History = () => {
         job={selectedJob}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        onEdit={handleEdit}
-        onDelete={openDeleteModal}
       />
 
       <EditJobModal

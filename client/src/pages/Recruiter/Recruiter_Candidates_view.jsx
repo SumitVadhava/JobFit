@@ -1,717 +1,1018 @@
-import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Filter,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Users,
-  Award,
-  MapPin,
-  GraduationCap,
-  Briefcase,
-  ChevronDown,
-} from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import api from "../../api/api";
 
-// Sample data
-const dummyCandidates = [
+/* ─────────────────── Constants ─────────────────── */
+const ACCENT = "#9c44fe";
+
+const DUMMY_APPLICATIONS = [
   {
-    name: "Jane Doe",
-    score: 85,
-    experience: 3,
-    skills: ["React", "Tailwind"],
-    education: "B.Tech",
-    location: "New York",
-    status: "Available",
+    _id: "dummy-app-1",
+    name: "Aarav Sharma",
+    email: "aarav.sharma@example.com",
+    atsScore: 88,
+    qualifications:
+      "B.Tech in Computer Science with 3 years of full-stack development experience in React, Node.js, and MongoDB.",
+    experience: "3 years",
+    skills: ["React", "Node.js", "MongoDB", "TypeScript", "REST APIs"],
   },
   {
-    name: "John Smith",
-    score: 78,
-    experience: 5,
-    skills: ["Node.js", "Express"],
-    education: "MCA",
-    location: "San Francisco",
-    status: "Interviewed",
+    _id: "dummy-app-2",
+    name: "Priya Nair",
+    email: "priya.nair@example.com",
+    atsScore: 76,
+    qualifications:
+      "MCA graduate with strong backend fundamentals, database optimization knowledge, and cloud deployment exposure.",
+    experience: "2 years",
+    skills: ["Express.js", "PostgreSQL", "AWS", "Docker", "Redis"],
   },
   {
-    name: "Sara Lee",
-    score: 92,
-    experience: 4,
-    skills: ["React", "Node.js"],
-    education: "B.Sc",
-    location: "Austin",
-    status: "Available",
+    _id: "dummy-app-3",
+    name: "Rohit Verma",
+    email: "rohit.verma@example.com",
+    atsScore: 64,
+    qualifications:
+      "Software engineer focused on frontend engineering, component systems, accessibility, and performance tuning.",
+    experience: "1.5 years",
+    skills: ["JavaScript", "Tailwind CSS", "Redux", "Jest", "Vite"],
   },
-  {
-    name: "Michael Brown",
-    score: 88,
-    experience: 2,
-    skills: ["JavaScript", "React"],
-    education: "BCA",
-    location: "Chicago",
-    status: "Hired",
-  },
-  {
-    name: "Emily Clark",
-    score: 90,
-    experience: 6,
-    skills: ["Java", "Spring"],
-    education: "M.Tech",
-    location: "Boston",
-    status: "Available",
-  },
-  {
-    name: "Alice Johnson",
-    score: 81,
-    experience: 4,
-    skills: ["Angular", "TypeScript"],
-    education: "B.Tech",
-    location: "Seattle",
-    status: "Interviewed",
-  },
-  {
-    name: "Robert Miles",
-    score: 76,
-    experience: 3,
-    skills: ["Vue.js", "Pinia"],
-    education: "MCA",
-    location: "Denver",
-    status: "Available",
-  },
-  {
-    name: "Lucy Carter",
-    score: 95,
-    experience: 7,
-    skills: ["React", "Node.js", "GraphQL"],
-    education: "Ph.D",
-    location: "Los Angeles",
-    status: "Hired",
-  },
-  {
-    name: "Kevin White",
-    score: 83,
-    experience: 5,
-    skills: ["Python", "Django"],
-    education: "B.Sc",
-    location: "Miami",
-    status: "Available",
-  },
-  {
-    name: "Nina Roy",
-    score: 89,
-    experience: 2,
-    skills: ["Flutter", "Dart"],
-    education: "BCA",
-    location: "Portland",
-    status: "Interviewed",
-  },
-  ...Array.from({ length: 50 }, (_, i) => ({
-    name: `Candidate ${i + 11}`,
-    score: 70 + (i % 30),
-    experience: (i % 6) + 1,
-    skills: ["React", "Node.js"],
-    education: ["B.Tech", "MCA", "B.Sc", "M.Tech", "Ph.D"][i % 5],
-    location: ["New York", "San Francisco", "Austin", "Chicago", "Boston"][
-      i % 5
-    ],
-    status: ["Available", "Interviewed", "Hired"][i % 3],
-  })),
 ];
 
-const getUniqueValues = (array, key) => {
-  const values = array.flatMap((item) =>
-    key === "skills" ? item[key] : [item[key]]
-  );
-  return [...new Set(values)];
-};
+/* ─────────────── ATS Score Circle ──────────────── */
+const AtsScoreCircle = ({ score = 0, size = 64 }) => {
+  const sw = 5;
+  const r = (size - sw * 2) / 2;
+  const circ = 2 * Math.PI * r;
+  const off = circ - (score / 100) * circ;
 
-const statusColors = {
-  Available: {
-    bg: "bg-green-50",
-    color: "text-green-700",
-    border: "border-green-200",
-  },
-  Interviewed: {
-    bg: "bg-blue-50",
-    color: "text-blue-700",
-    border: "border-blue-200",
-  },
-  Hired: {
-    bg: "bg-purple-50",
-    color: "text-purple-700",
-    border: "border-purple-200",
-  },
-};
-
-const CandidatesView = () => {
-  const [filters, setFilters] = useState({
-    score: 0,
-    experience: 0,
-    skills: "",
-    education: "",
-    location: "",
-    status: "",
-    search: "",
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const candidatesPerPage = 10;
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentPage]);
-
-  const handleFilterChange = (name, value) => {
-    setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
-  };
-
-  const handleSliderChange = (name, value) => {
-    setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
-  };
-
-  const handleClearFilters = () => {
-    setFilters({
-      score: 0,
-      experience: 0,
-      skills: "",
-      education: "",
-      location: "",
-      status: "",
-      search: "",
-    });
-    setCurrentPage(1);
-  };
-
-  const toggleFilterDrawer = () => {
-    setIsFilterOpen(!isFilterOpen);
-  };
-
-  const filteredCandidates = dummyCandidates.filter((c) => {
-    return (
-      c.score >= filters.score &&
-      c.experience >= filters.experience &&
-      (!filters.skills || c.skills.includes(filters.skills)) &&
-      (!filters.education || c.education === filters.education) &&
-      (!filters.location || c.location === filters.location) &&
-      (!filters.status || c.status === filters.status) &&
-      (!filters.search ||
-        c.name.toLowerCase().includes(filters.search.toLowerCase()))
-    );
-  });
-
-  const indexOfLast = currentPage * candidatesPerPage;
-  const indexOfFirst = indexOfLast - candidatesPerPage;
-  const currentCandidates = filteredCandidates.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(filteredCandidates.length / candidatesPerPage);
-
-  const Slider = ({ value, onChange, min = 0, max = 100, label }) => (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <div className="relative">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-          style={{
-            background: `linear-gradient(to right, #6B46C1 0%, #6B46C1 ${
-              (value / max) * 100
-            }%, #E5E7EB ${(value / max) * 100}%, #E5E7EB 100%)`,
-          }}
-        />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>{min}</span>
-          <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs">
-            {value}
-          </span>
-          <span>{max}</span>
-        </div>
-      </div>
-    </div>
-  );
-
-  const Select = ({ value, onChange, options, placeholder, icon: Icon }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between px-3 py-2 text-left bg-white border border-purple-200 rounded-lg shadow-sm hover:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
-        >
-          <div className="flex items-center space-x-2">
-            {Icon && <Icon className="w-4 h-4 text-purple-600" />}
-            <span className={value ? "text-gray-900" : "text-gray-500"}>
-              {value || placeholder}
-            </span>
-          </div>
-          <ChevronDown
-            className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-              isOpen ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-
-        {isOpen && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-            <button
-              onClick={() => {
-                onChange("");
-                setIsOpen(false);
-              }}
-              className="w-full px-3 py-2 text-left hover:bg-gray-50 text-gray-700"
-            >
-              All
-            </button>
-            {options.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  onChange(option);
-                  setIsOpen(false);
-                }}
-                className="w-full px-3 py-2 text-left hover:bg-gray-50 text-gray-700"
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const FilterSection = ({ isMobile = false }) => (
-    <div className="space-y-6">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Search by name..."
-          value={filters.search}
-          onChange={(e) => handleFilterChange("search", e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
-        />
-      </div>
-
-      {/* Score Slider */}
-      <Slider
-        value={filters.score}
-        onChange={(value) => handleSliderChange("score", value)}
-        min={0}
-        max={100}
-        label="Minimum ATS Score"
-      />
-
-      {/* Experience Slider */}
-      <Slider
-        value={filters.experience}
-        onChange={(value) => handleSliderChange("experience", value)}
-        min={0}
-        max={10}
-        label="Minimum Experience (years)"
-      />
-
-      {/* Skills Select */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Skills
-        </label>
-        <Select
-          value={filters.skills}
-          onChange={(value) => handleFilterChange("skills", value)}
-          options={getUniqueValues(dummyCandidates, "skills")}
-          placeholder="Select skills"
-          icon={Briefcase}
-        />
-      </div>
-
-      {/* Education Select */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Education
-        </label>
-        <Select
-          value={filters.education}
-          onChange={(value) => handleFilterChange("education", value)}
-          options={getUniqueValues(dummyCandidates, "education")}
-          placeholder="Select education"
-          icon={GraduationCap}
-        />
-      </div>
-
-      {/* Location Select */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Location
-        </label>
-        <Select
-          value={filters.location}
-          onChange={(value) => handleFilterChange("location", value)}
-          options={getUniqueValues(dummyCandidates, "location")}
-          placeholder="Select location"
-          icon={MapPin}
-        />
-      </div>
-
-      {/* Status Select 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Status
-        </label>
-        <Select
-          value={filters.status}
-          onChange={(value) => handleFilterChange("status", value)}
-          options={getUniqueValues(dummyCandidates, "status")}
-          placeholder="Select status"
-          icon={Users}
-        />
-      </div>*/}
-
-      {/* Action Buttons */}
-      <div className="flex gap-3 pt-4">
-        <button
-          onClick={handleClearFilters}
-          className="flex-1 px-4 py-2 text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 transition-all duration-200 font-medium"
-        >
-          Clear
-        </button>
-        <button
-          onClick={isMobile ? toggleFilterDrawer : undefined}
-          className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 font-medium"
-        >
-          Apply
-        </button>
-      </div>
-    </div>
-  );
+  const color =
+    score >= 80
+      ? "#22c55e"
+      : score >= 60
+        ? "#eab308"
+        : score >= 40
+          ? "#f97316"
+          : "#ef4444";
 
   return (
-    <div className="min-h-screen bg-gray-50 font-inter">
-      {/* Container with responsive padding */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        {/* Mobile Filter Toggle */}
-        <div className="flex justify-end mb-4 lg:hidden">
-          <button
-            onClick={toggleFilterDrawer}
-            className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-all duration-200"
-          >
-            <Filter className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-medium text-gray-700">Filters</span>
-          </button>
+    <div
+      className="relative flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="#f3f4f6"
+          strokeWidth={sw}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={sw}
+          strokeDasharray={circ}
+          strokeDashoffset={off}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 1.2s ease-out" }}
+        />
+      </svg>
+      <span className="absolute text-sm font-extrabold" style={{ color }}>
+        {score}
+      </span>
+    </div>
+  );
+};
+
+/* ──────────────── Stat Card ────────────────────── */
+const StatCard = ({ icon, label, value, sub, iconBorder = false }) => (
+  <div
+    className={`rounded-2xl border p-5 transition-all duration-300 hover:shadow-lg bg-white border-[#9c44fe]/10 hover:border-[#9c44fe]/30
+      `}
+  >
+    <div className="flex items-center gap-3 mb-3">
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center bg-[#9c44fe]/10 ${iconBorder ? "border border-[#9c44fe]/35" : "border border-transparent"}
+          `}
+      >
+        {icon}
+      </div>
+      <span
+        className={`text-xs font-bold uppercase tracking-wider text-gray-400
+          `}
+      >
+        {label}
+      </span>
+    </div>
+    <p
+      className={`text-3xl font-extrabold text-gray-900
+        `}
+    >
+      {value}
+    </p>
+    {sub && <p className={`text-xs mt-1 text-gray-900`}>{sub}</p>}
+  </div>
+);
+
+/* ─────────────────── Main Component ─────────────────── */
+const CandidatesView = () => {
+  const [jobs, setJobs] = useState([]);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [jobSearch, setJobSearch] = useState("");
+  const [sortBy, setSortBy] = useState("score-desc");
+  const [expandedCandidate, setExpandedCandidate] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const candidatesPerPage = 6;
+
+  /* ── Fetch Jobs ── */
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/jobs");
+        setJobs(res.data.jobs || []);
+      } catch (err) {
+        console.error("Error fetching jobs:", err);
+        toast.error("Failed to load jobs. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, []);
+
+  /* ── Fetch Candidates ── */
+  const fetchCandidates = useCallback(async (jobId) => {
+    try {
+      setCandidatesLoading(true);
+      // Adjust endpoint to match your API:
+      const res = await api.get(`/jobs/${jobId}/applications`);
+      const applications = res.data.applications || [];
+
+      if (applications.length === 0) {
+        setCandidates(
+          DUMMY_APPLICATIONS.map((candidate) => ({
+            ...candidate,
+            _id: `${jobId}-${candidate._id}`,
+          })),
+        );
+        return;
+      }
+
+      setCandidates(applications);
+    } catch (err) {
+      console.error("Error fetching candidates:", err);
+      setCandidates(
+        DUMMY_APPLICATIONS.map((candidate) => ({
+          ...candidate,
+          _id: `${jobId}-${candidate._id}`,
+        })),
+      );
+      toast.info("Showing demo applications right now.");
+    } finally {
+      setCandidatesLoading(false);
+    }
+  }, []);
+
+  const handleJobClick = useCallback(
+    (job) => {
+      setSelectedJob(job);
+      setSearchQuery("");
+      setCurrentPage(1);
+      setExpandedCandidate(null);
+      fetchCandidates(job._id);
+    },
+    [fetchCandidates],
+  );
+
+  const handleBack = useCallback(() => {
+    setSelectedJob(null);
+    setCandidates([]);
+    setSearchQuery("");
+    setCurrentPage(1);
+  }, []);
+
+  /* ── Filter & Sort Candidates ── */
+  const filtered = candidates
+    .filter(
+      (c) =>
+        searchQuery === "" ||
+        (c.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.qualifications || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()),
+    )
+    .sort((a, b) => {
+      if (sortBy === "score-desc") return (b.atsScore || 0) - (a.atsScore || 0);
+      if (sortBy === "score-asc") return (a.atsScore || 0) - (b.atsScore || 0);
+      if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
+      return 0;
+    });
+
+  const totalPages = Math.ceil(filtered.length / candidatesPerPage);
+  const paginated = filtered.slice(
+    (currentPage - 1) * candidatesPerPage,
+    currentPage * candidatesPerPage,
+  );
+
+  /* ── Stats ── */
+  const avgScore =
+    candidates.length > 0
+      ? Math.round(
+          candidates.reduce((sum, c) => sum + (c.atsScore || 0), 0) /
+            candidates.length,
+        )
+      : 0;
+  const topScore =
+    candidates.length > 0
+      ? Math.max(...candidates.map((c) => c.atsScore || 0))
+      : 0;
+  const highScoreCount = candidates.filter(
+    (c) => (c.atsScore || 0) >= 80,
+  ).length;
+
+  /* ── Filter Jobs ── */
+  const filteredJobs = jobs.filter(
+    (j) =>
+      jobSearch === "" ||
+      j.jobTitle?.toLowerCase().includes(jobSearch.toLowerCase()) ||
+      j.companyName?.toLowerCase().includes(jobSearch.toLowerCase()) ||
+      j.department?.toLowerCase().includes(jobSearch.toLowerCase()),
+  );
+
+  /* ═══════════════ LOADING ═══════════════ */
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="w-14 h-14 border-4 rounded-full animate-spin"
+            style={{ borderColor: "#f3e8ff", borderTopColor: ACCENT }}
+          />
+          <p className="text-base font-medium text-gray-400 animate-pulse">
+            Loading your job posts…
+          </p>
         </div>
+      </div>
+    );
+  }
 
-        {/* Main Layout */}
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-4">
-          {/* Desktop Sidebar Filters */}
-          <div className="hidden lg:block w-56 flex-shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Filter className="w-5 h-5 text-purple-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
-              </div>
-              <div className="border-t border-gray-200 pt-4">
-                <FilterSection />
-              </div>
-            </div>
-          </div>
+  /* ═══════════════ CANDIDATES VIEW ═══════════════ */
+  if (selectedJob) {
+    return (
+      <div className="min-h-screen bg-[#faf8ff]">
+        <ToastContainer />
 
-          {/* Mobile Filter Drawer */}
-          {isFilterOpen && (
-            <div className="fixed inset-0 z-50 lg:hidden">
-              <div
-                className="fixed inset-0 bg-black bg-opacity-50"
-                onClick={toggleFilterDrawer}
-              ></div>
-              <div className="fixed top-0 left-0 right-0 bg-white rounded-b-xl shadow-xl">
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center space-x-2">
-                      <Filter className="w-5 h-5 text-purple-600" />
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        Filters
-                      </h2>
-                    </div>
-                    <button
-                      onClick={toggleFilterDrawer}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-                    >
-                      <X className="w-5 h-5 text-gray-500" />
-                    </button>
+        {/* ── Sticky Header ── */}
+        <div className="bg-white/90 backdrop-blur-md border-b border-[#9c44fe]/10 sticky top-0 z-30">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            {/* Back + Title */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBack}
+                className="group p-2.5 rounded-xl border border-gray-300 text-gray-900 hover:bg-gray-100 transition-all"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  fill="currentColor"
+                  viewBox="0 0 256 256"
+                  className="transition-transform group-hover:-translate-x-0.5"
+                >
+                  <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z" />
+                </svg>
+              </button>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3">
+                  {/* Mini logo */}
+                  <div className="shrink-0 w-10 h-10 rounded-xl overflow-hidden border-2 border-[#9c44fe]/20">
+                    <img
+                      src={selectedJob.img}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white font-bold" style="background:${ACCENT}">${selectedJob.companyName?.charAt(0) || "J"}</div>`;
+                      }}
+                    />
                   </div>
-                  <div className="border-t border-gray-200 pt-6 max-h-96 overflow-y-auto">
-                    <FilterSection isMobile={true} />
+                  <div className="min-w-0">
+                    <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
+                      {selectedJob.jobTitle}
+                    </h1>
+                    <p className="text-xs text-gray-500 truncate">
+                      {selectedJob.companyName} · {selectedJob.location} ·{" "}
+                      {selectedJob.department}
+                    </p>
                   </div>
                 </div>
               </div>
+
+              <div
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+                style={{
+                  backgroundColor: "#f3f4f6",
+                  color: "#111827",
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  fill="currentColor"
+                  viewBox="0 0 256 256"
+                >
+                  <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.07,195.63a8,8,0,1,0,13.86,8C27.21,186.38,50.44,172,84,172s56.79,14.38,67.07,31.63a8,8,0,1,0,13.86-8A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Z" />
+                </svg>
+                {candidates.length} Applicant
+                {candidates.length !== 1 ? "s" : ""}
+              </div>
+            </div>
+
+            {/* Search + Sort */}
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+              <div className="relative flex-1">
+                <svg
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 256 256"
+                >
+                  <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search candidates…"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all placeholder:text-slate-400"
+                />
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-2.5 bg-white border border-[#9c44fe]/15 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#9c44fe]/25 cursor-pointer appearance-none"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239c44fe' viewBox='0 0 256 256'%3E%3Cpath d='M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 12px center",
+                  paddingRight: "36px",
+                }}
+              >
+                <option value="score-desc">Highest Score</option>
+                <option value="score-asc">Lowest Score</option>
+                <option value="name">Name (A–Z)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {/* ── Stats Row ── */}
+          {!candidatesLoading && candidates.length > 0 && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                accent
+                iconBorder
+                label="Total"
+                value={candidates.length}
+                sub="applicants"
+                icon={
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill={ACCENT}
+                    viewBox="0 0 256 256"
+                  >
+                    <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.07,195.63a8,8,0,1,0,13.86,8C27.21,186.38,50.44,172,84,172s56.79,14.38,67.07,31.63a8,8,0,1,0,13.86-8A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33C228.79,186.38,205.56,172,172,172a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z" />
+                  </svg>
+                }
+              />
+              <StatCard
+                label="Avg Score"
+                value={avgScore}
+                sub="out of 100"
+                icon={
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill={ACCENT}
+                    viewBox="0 0 256 256"
+                  >
+                    <path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0V156.69l50.34-50.35a8,8,0,0,1,11.32,0L128,132.69,180.69,80H160a8,8,0,0,1,0-16h40a8,8,0,0,1,8,8v40a8,8,0,0,1-16,0V91.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31,40,179.31V200H224A8,8,0,0,1,232,208Z" />
+                  </svg>
+                }
+              />
+              <StatCard
+                label="Top Score"
+                value={topScore}
+                sub="highest match"
+                icon={
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill={ACCENT}
+                    viewBox="0 0 256 256"
+                  >
+                    <path d="M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.46,16.46,0,0,1,31.08,91l59.46-5.15,23.21-55.36a16.4,16.4,0,0,1,30.5,0l23.21,55.36L226.92,91A16.46,16.46,0,0,1,234.29,114.85Z" />
+                  </svg>
+                }
+              />
+              <StatCard
+                label="Strong Fit"
+                value={highScoreCount}
+                sub="score ≥ 80"
+                icon={
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill={ACCENT}
+                    viewBox="0 0 256 256"
+                  >
+                    <path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" />
+                  </svg>
+                }
+              />
             </div>
           )}
 
-          {/* Main Content */}
-          <div className="flex-1 min-w-0">
-            {/* Header */}
-            <div className="mb-6">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                Candidates for Software Engineer
-              </h1>
-              <p className="text-sm sm:text-base text-gray-600">
-                Showing {indexOfFirst + 1} -{" "}
-                {Math.min(indexOfLast, filteredCandidates.length)} of{" "}
-                {filteredCandidates.length} candidates
+          {/* ── Candidates ── */}
+          {candidatesLoading ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <div
+                className="w-12 h-12 border-4 rounded-full animate-spin mb-4"
+                style={{ borderColor: "#f3e8ff", borderTopColor: ACCENT }}
+              />
+              <p className="text-gray-400 text-sm">Loading candidates…</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-[#9c44fe]/10 p-16 text-center">
+              <div
+                className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5"
+                style={{ backgroundColor: `${ACCENT}12` }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="36"
+                  height="36"
+                  fill={ACCENT}
+                  viewBox="0 0 256 256"
+                >
+                  <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.07,195.63a8,8,0,1,0,13.86,8C27.21,186.38,50.44,172,84,172s56.79,14.38,67.07,31.63a8,8,0,1,0,13.86-8A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {searchQuery ? "No Matching Candidates" : "No Applications Yet"}
+              </h3>
+              <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                {searchQuery
+                  ? "Try adjusting your search query."
+                  : "No one has applied for this position yet. Share the listing to attract talent."}
               </p>
             </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {paginated.map((c, i) => {
+                  const isExpanded = expandedCandidate === c._id;
+                  const initials = (c.name || "?")
+                    .split(" ")
+                    .map((w) => w[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2);
 
-            {/* Desktop Table */}
-            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div>
-                <table className="w-full table-fixed">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      {[
-                        "Candidate",
-                        "ATS Score",
-                        "Experience",
-                        "Skills",
-                        "Education",
-                        "Location",
-                        // "Status",
-                        "Actions",
-                      ].map((header) => (
-                        <th
-                          key={header}
-                          className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap"
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {currentCandidates.map((candidate, idx) => (
-                      <tr
-                        key={idx}
-                        className="hover:bg-purple-50 transition-colors duration-200 group"
-                      >
-                        <td className="px-3 py-3 whitespace-nowrap">
-                          <div className="font-medium text-gray-900 text-sm">
-                            {candidate.name}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap">
+                  return (
+                    <div
+                      key={c._id || i}
+                      className="bg-white rounded-2xl border border-[#9c44fe]/10 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-[#9c44fe]/8 hover:border-[#9c44fe]/25"
+                      style={{ animationDelay: `${i * 60}ms` }}
+                    >
+                      <div className="p-5 sm:p-6">
+                        <div className="flex items-start gap-4 sm:gap-5">
+                          {/* Avatar */}
                           <div
-                            className={`font-semibold text-sm ${
-                              candidate.score >= 90
-                                ? "text-green-600"
-                                : candidate.score >= 80
-                                ? "text-blue-600"
-                                : "text-gray-600"
-                            }`}
+                            className="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-base shadow-md"
+                            style={{
+                              background: `linear-gradient(135deg, ${ACCENT}, #7c3aed)`,
+                              boxShadow: `0 4px 14px ${ACCENT}30`,
+                            }}
                           >
-                            {candidate.score}
+                            {initials}
                           </div>
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap text-gray-700 text-sm">
-                          {candidate.experience} yrs
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="truncate text-gray-700 text-sm">
-                            {candidate.skills.join(", ")}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap text-gray-700 text-sm">
-                          {candidate.education}
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap text-gray-700 text-sm">
-                          {candidate.location}
-                        </td>
-                        {/*<td className="px-3 py-3 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
-                              statusColors[candidate.status].bg
-                            } ${statusColors[candidate.status].color} ${
-                              statusColors[candidate.status].border
-                            }`}
-                          >
-                            {candidate.status}
-                          </span>
-                        </td>*/}
-                        <td className="px-3 py-3 whitespace-nowrap text-right inline-flex items-center justify-center">
-                          <button className="inline-flex items-center justify-center space-x-1 px-2 py-1 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-all duration-200 transform group-hover:scale-105">
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>View</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
 
-            {/* Mobile Cards */}
-            <div className="md:hidden space-y-4">
-              {currentCandidates.map((candidate, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-200"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-lg">
-                        {candidate.name}
-                      </h3>
-                      <div className="flex items-center space-x-4 mt-1">
-                        <span
-                          className={`font-semibold ${
-                            candidate.score >= 90
-                              ? "text-green-600"
-                              : candidate.score >= 80
-                              ? "text-blue-600"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          <Award className="w-4 h-4 inline mr-1" />
-                          {candidate.score}
-                        </span>
-                        <span className="text-gray-600">
-                          <Briefcase className="w-4 h-4 inline mr-1" />
-                          {candidate.experience} yrs
-                        </span>
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="text-lg font-bold text-gray-900 truncate">
+                                  {c.name || "Unknown Candidate"}
+                                </h3>
+                                {c.email && (
+                                  <p className="text-sm text-gray-400 mt-0.5 truncate">
+                                    {c.email}
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Score */}
+                              <div className="shrink-0 flex flex-col items-center">
+                                <AtsScoreCircle
+                                  score={c.atsScore || 0}
+                                  size={60}
+                                />
+                                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-1">
+                                  ATS
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Qualifications Preview */}
+                            <div
+                              className="mt-4 p-4 rounded-xl border"
+                              style={{
+                                backgroundColor: `${ACCENT}06`,
+                                borderColor: `${ACCENT}12`,
+                              }}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="14"
+                                  height="14"
+                                  fill="#111827"
+                                  viewBox="0 0 256 256"
+                                >
+                                  <path d="M251.76,88.94l-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.74,78.51,216,128,216a130,130,0,0,0,48-8.76V240a8,8,0,0,0,16,0V199.51a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z" />
+                                </svg>
+                                <span
+                                  className="text-xs font-bold uppercase tracking-wider"
+                                  style={{ color: "#111827" }}
+                                >
+                                  Qualifications
+                                </span>
+                              </div>
+                              <p
+                                className={`text-sm text-gray-600 leading-relaxed ${!isExpanded ? "line-clamp-2" : ""}`}
+                              >
+                                {c.qualifications ||
+                                  "No qualifications provided"}
+                              </p>
+                            </div>
+
+                            {/* Expanded Details */}
+                            <div
+                              className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                                isExpanded
+                                  ? "max-h-[400px] opacity-100 mt-4"
+                                  : "max-h-0 opacity-0 mt-0"
+                              }`}
+                            >
+                              <div className="space-y-3">
+                                {c.experience && (
+                                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="16"
+                                      height="16"
+                                      fill="#6b7280"
+                                      viewBox="0 0 256 256"
+                                      className="mt-0.5 shrink-0"
+                                    >
+                                      <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />
+                                    </svg>
+                                    <div>
+                                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Experience
+                                      </span>
+                                      <p className="text-sm text-gray-700 mt-0.5">
+                                        {c.experience}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                                {c.skills && (
+                                  <div className="flex flex-wrap gap-2">
+                                    {(Array.isArray(c.skills)
+                                      ? c.skills
+                                      : c.skills.split(",")
+                                    ).map((skill, si) => (
+                                      <span
+                                        key={si}
+                                        className="text-xs font-medium px-3 py-1.5 rounded-full border"
+                                        style={{
+                                          color: ACCENT,
+                                          backgroundColor: `${ACCENT}08`,
+                                          borderColor: `${ACCENT}20`,
+                                        }}
+                                      >
+                                        {skill.trim()}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex flex-wrap items-center gap-2 mt-4">
+                              <button
+                                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:opacity-90 active:scale-[0.97]"
+                                style={{
+                                  background: "#111827",
+                                  boxShadow: "0 4px 14px rgba(17, 24, 39, 0.35)",
+                                }}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="15"
+                                  height="15"
+                                  fill="currentColor"
+                                  viewBox="0 0 256 256"
+                                >
+                                  <path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z" />
+                                </svg>
+                                View Resume
+                              </button>
+
+                              <button className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-green-600 border border-green-200 bg-white hover:bg-green-50 transition-all duration-300 active:scale-[0.97]">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="15"
+                                  height="15"
+                                  fill="currentColor"
+                                  viewBox="0 0 256 256"
+                                >
+                                  <path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34Z" />
+                                </svg>
+                                Shortlist
+                              </button>
+
+                              <button className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 bg-white hover:bg-red-50 transition-all duration-300 active:scale-[0.97]">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="15"
+                                  height="15"
+                                  fill="currentColor"
+                                  viewBox="0 0 256 256"
+                                >
+                                  <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+                                </svg>
+                                Reject
+                              </button>
+
+                              <button
+                                onClick={() =>
+                                  setExpandedCandidate(
+                                    isExpanded ? null : c._id,
+                                  )
+                                }
+                                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-300 ml-auto ${
+                                  isExpanded
+                                    ? "text-[#9c44fe] bg-[#9c44fe]/5 border-[#9c44fe]/20"
+                                    : "text-gray-400 bg-white border-gray-200 hover:border-gray-300 hover:text-gray-600"
+                                }`}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="14"
+                                  height="14"
+                                  fill="currentColor"
+                                  viewBox="0 0 256 256"
+                                  className={`transition-transform duration-500 ${isExpanded ? "rotate-180" : ""}`}
+                                >
+                                  <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z" />
+                                </svg>
+                                {isExpanded ? "Less" : "More"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                        statusColors[candidate.status].bg
-                      } ${statusColors[candidate.status].color} ${
-                        statusColors[candidate.status].border
-                      }`}
+                  );
+                })}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 mt-8">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-2.5 rounded-xl text-gray-400 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      fill="currentColor"
+                      viewBox="0 0 256 256"
                     >
-                      {candidate.status}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <GraduationCap className="w-4 h-4 mr-2 text-gray-400" />
-                      {candidate.education}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                      {candidate.location}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">Skills:</span>{" "}
-                      {candidate.skills.join(", ")}
-                    </div>
-                  </div>
-
-                  <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200">
-                    <Eye className="w-4 h-4" />
-                    <span>View Details</span>
+                      <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z" />
+                    </svg>
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (p) => (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        className="w-10 h-10 rounded-xl text-sm font-semibold transition-all duration-300"
+                        style={
+                          currentPage === p
+                            ? {
+                                background: ACCENT,
+                                color: "white",
+                                boxShadow: `0 4px 14px ${ACCENT}40`,
+                              }
+                            : { color: "#9ca3af" }
+                        }
+                      >
+                        {p}
+                      </button>
+                    ),
+                  )}
+                  <button
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(p + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="p-2.5 rounded-xl text-gray-400 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      fill="currentColor"
+                      viewBox="0 0 256 256"
+                    >
+                      <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
+                    </svg>
                   </button>
                 </div>
-              ))}
+              )}
+
+              {filtered.length > 0 && (
+                <p className="text-center text-xs text-gray-400 mt-3">
+                  Showing {(currentPage - 1) * candidatesPerPage + 1}–
+                  {Math.min(currentPage * candidatesPerPage, filtered.length)}{" "}
+                  of {filtered.length} candidates
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  /* ═══════════════ JOBS GRID VIEW ═══════════════ */
+  return (
+    <div className="min-h-screen bg-[#faf8ff]">
+      <ToastContainer />
+
+      {/* ── Header ── */}
+      <div className="bg-white/90 backdrop-blur-md border-b border-[#9c44fe]/10 sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+                Candidates
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                Select a job post to view its applicants
+              </p>
             </div>
-
-            {/* Pagination */}
-            <div className="flex flex-col sm:flex-row items-center justify-between mt-8 space-y-4 sm:space-y-0">
-              <div className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            <div className="flex items-center gap-3">
+              {/* Job count badge */}
+              <div
+                className="flex items-center gap-2 px-4 py-2 rounded-xl"
+                style={{ backgroundColor: "#f3f4f6" }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  fill="#111827"
+                  viewBox="0 0 256 256"
                 >
-                  First
-                </button>
-
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="p-1.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                {/* Page Numbers */}
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const page =
-                      Math.max(1, Math.min(totalPages - 4, currentPage - 2)) +
-                      i;
-                    if (page > totalPages) return null;
-
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                          currentPage === page
-                            ? "bg-purple-600 text-white"
-                            : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="p-1.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                >
-                  Last
-                </button>
+                  <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />
+                </svg>
+                <span className="text-sm font-bold" style={{ color: "#111827" }}>
+                  {jobs.length} Job{jobs.length !== 1 ? "s" : ""}
+                </span>
               </div>
             </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative mt-4 max-w-md">
+            <svg
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              viewBox="0 0 256 256"
+            >
+              <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search jobs by title, company, department…"
+              value={jobSearch}
+              onChange={(e) => setJobSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all placeholder:text-slate-400"
+            />
           </div>
         </div>
       </div>
 
-      {/* Custom Slider Styles */}
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #6b46c1;
-          cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+      {/* ── Jobs Grid ── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {filteredJobs.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-[#9c44fe]/10 p-16 text-center">
+            <div
+              className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5"
+              style={{ backgroundColor: `${ACCENT}10` }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="36"
+                height="36"
+                fill={ACCENT}
+                viewBox="0 0 256 256"
+              >
+                <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56Z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {jobSearch ? "No Matching Jobs" : "No Jobs Posted Yet"}
+            </h3>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto">
+              {jobSearch
+                ? "Try a different search term."
+                : "Post your first job to start receiving applications."}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredJobs.map((job, index) => {
+              const wpLabel =
+                job.workPlaceType === "onsite"
+                  ? "On-site"
+                  : job.workPlaceType === "remote"
+                    ? "Remote"
+                    : job.workPlaceType === "hybrid"
+                      ? "Hybrid"
+                      : job.workPlaceType;
 
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #6b46c1;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              return (
+                <div
+                  key={job._id || index}
+                  onClick={() => handleJobClick(job)}
+                  className="group bg-white rounded-2xl border border-[#9c44fe]/10 p-6 cursor-pointer transition-all duration-400 hover:shadow-2xl hover:shadow-[#9c44fe]/10 hover:-translate-y-1.5 hover:border-[#9c44fe]/30"
+                >
+                  {/* Logo + Title */}
+                  <div className="flex items-start gap-4">
+                    <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 border-[#9c44fe]/15 transition-all duration-300 group-hover:border-[#9c44fe]/30 group-hover:shadow-lg">
+                      <img
+                        src={job.img}
+                        alt={job.companyName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white font-bold text-xl" style="background:linear-gradient(135deg,${ACCENT},#7c3aed)">${job.companyName?.charAt(0) || "J"}</div>`;
+                        }}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base font-bold text-gray-900 truncate transition-colors group-hover:text-[#9c44fe]">
+                        {job.jobTitle}
+                      </h3>
+                      <p className="text-sm text-gray-400 mt-0.5 truncate">
+                        {job.companyName}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Meta */}
+                  <div className="mt-4 space-y-2.5">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                        className="text-gray-300 shrink-0"
+                      >
+                        <path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,75.3,80,132.17,83.41,134.55a8,8,0,0,0,9.18,0C136,236.17,216,179.3,216,104A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z" />
+                      </svg>
+                      <span className="truncate">{job.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                        className="text-gray-300 shrink-0"
+                      >
+                        <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />
+                      </svg>
+                      <span>{job.department}</span>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {wpLabel && (
+                        <span
+                          className="text-xs font-semibold px-2.5 py-1 rounded-full border"
+                          style={{
+                            color: ACCENT,
+                            backgroundColor: `${ACCENT}08`,
+                            borderColor: `${ACCENT}18`,
+                          }}
+                        >
+                          {wpLabel}
+                        </span>
+                      )}
+                      {job.experience && (
+                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
+                          {job.experience}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between mt-5 pt-4 border-t border-[#9c44fe]/8">
+                    <div className="flex items-center gap-1.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        fill={ACCENT}
+                        viewBox="0 0 256 256"
+                      >
+                        <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.07,195.63a8,8,0,1,0,13.86,8C27.21,186.38,50.44,172,84,172s56.79,14.38,67.07,31.63a8,8,0,1,0,13.86-8A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Z" />
+                      </svg>
+                      <span
+                        className="text-xs font-semibold"
+                        style={{ color: ACCENT }}
+                      >
+                        {job.openings || 0} Opening
+                        {(job.openings || 0) !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <span className="flex items-center gap-1 text-xs font-medium text-gray-300 group-hover:text-[#9c44fe] transition-colors">
+                      View Applicants
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                        className="transition-transform group-hover:translate-x-1"
+                      >
+                        <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

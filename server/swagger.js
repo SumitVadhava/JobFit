@@ -50,13 +50,6 @@ const options = {
               format: "password",
               example: "Secret@123",
             },
-            recruiterKey: {
-              type: "string",
-              nullable: true,
-              example: "RECRUITER_SECRET_KEY",
-              description:
-                "Required only for recruiter accounts that have a recruiter key",
-            },
           },
         },
         SignupRequest: {
@@ -83,11 +76,6 @@ const options = {
               type: "string",
               enum: ["active", "inactive"],
               example: "active",
-            },
-            recruiterKey: {
-              type: "string",
-              nullable: true,
-              example: "RECRUITER_SECRET_KEY",
             },
           },
         },
