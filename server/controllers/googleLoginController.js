@@ -38,6 +38,7 @@ const googleAddLoginController = async (req, res) => {
             name: name,
             email: email,
             userName: name,
+            img: picture || null,
           });
         }
       } else {
@@ -48,6 +49,7 @@ const googleAddLoginController = async (req, res) => {
             name: name,
             email: email,
             userName: name,
+            img: picture || null,
           });
         }
       }
