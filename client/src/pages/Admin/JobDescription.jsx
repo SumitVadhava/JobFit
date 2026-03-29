@@ -1,640 +1,727 @@
-// import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import api from "../../api/api";
+import { Paper, Box, Typography } from '@mui/material';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 
-// const ErrorBoundary = ({ children }) => {
-//   const [hasError, setHasError] = useState(false);
-//   const [error, setError] = useState(null);
+/* ─── Google Fonts ─── */
+const fontLink = document.createElement('link');
+fontLink.rel = 'stylesheet';
+fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap';
+document.head.appendChild(fontLink);
 
-//   React.useEffect(() => {
-//     const errorHandler = (error) => {
-//       setHasError(true);
-//       setError(error);
-//     };
-//     window.addEventListener('error', errorHandler);
-//     return () => window.removeEventListener('error', errorHandler);
-//   }, []);
-
-//   if (hasError) {
-//     return <h1 className="text-red-600 text-center p-4">Error: {error?.message || 'Something went wrong.'}</h1>;
-//   }
-//   return children;
-// };
-
-// const Header = ({ onSearch }) => {
-//   return (
-//     <header className="sticky top-0 z-10 flex justify-center whitespace-nowrap px-4 sm:px-10 py-4 bg-slate-50">
-//       <label className="flex w-full max-w-[600px] h-12">
-//         <div className="flex w-full items-center rounded-xl bg-white border border-[#cedbe8] shadow-md hover:shadow-lg transition-shadow duration-300">
-//           <div className="text-[#49739c] flex items-center justify-center pl-4 pr-2">
-//             <svg
-//               xmlns="http://www.w3.org/2000/svg"
-//               width="28px"
-//               height="28px"
-//               fill="currentColor"
-//               viewBox="0 0 256 256"
-//               className="transform hover:scale-110 transition-transform duration-200"
-//             >
-//               <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
-//             </svg>
-//           </div>
-//           <input
-//             placeholder="Search jobs or companies..."
-//             className="w-full rounded-r-xl bg-transparent text-[#0d141c] px-3 py-2 text-base placeholder:text-[#6b829a] focus:outline-none focus:ring-2 focus:ring-[#0c7ff2] focus:border-transparent transition-all duration-200"
-//             onChange={(e) => onSearch(e.target.value)}
-//           />
-//         </div>
-//       </label>
-//     </header>
-//   );
-// };
-
-// const JobTable = ({ jobs, onView }) => {
-//   return (
-//     <div className="px-4 py-3">
-//       <div className="overflow-x-auto rounded-lg border border-[#cedbe8] bg-white">
-//         <table className="w-full hidden md:table">
-//           <thead>
-//             <tr className="bg-white text-left text-sm font-medium text-[#0d141c]">
-//               <th className="px-4 py-3 w-[200px] sm:w-[300px] md:w-[400px] job-table-column-120">Job Title</th>
-//               <th className="px-4 py-3 w-[200px] sm:w-[300px] md:w-[400px] job-table-column-240">Company</th>
-//               <th className="px-4 py-3 w-[150px] sm:w-[200px] md:w-[400px] job-table-column-360">Submitted Date</th>
-//               <th className="px-4 py-3 w-[100px] sm:w-60 job-table-column-480">Status</th>
-//               <th className="px-4 py-3 w-[80px] sm:w-60 job-table-column-600 text-[#49739c]">Actions</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {jobs.map((job, index) => (
-//               <tr
-//                 key={index}
-//                 className={`border-t border-[#cedbe8] hover:bg-slate-100 transition-colors ${index % 2 === 0 ? 'bg-slate-50' : 'bg-white'}`}
-//               >
-//                 <td className="px-4 py-2 text-sm text-[#0d141c] job-table-column-120">{job.title}</td>
-//                 <td className="px-4 py-2 text-sm text-[#49739c] job-table-column-240">{job.company}</td>
-//                 <td className="px-4 py-2 text-sm text-[#49739c] job-table-column 360">{job.date}</td>
-//                 <td className="px-4 py-2 text-sm job-table-column-480">
-//                   <button
-//                     className={`px-4 py-1 rounded-lg text-sm font-medium transition-colors ${
-//                       job.status === 'Pending Review' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-//                     }`}
-//                   >
-//                     {job.status}
-//                   </button>
-//                 </td>
-//                 <td className="px-4 py-2 job-table-column-600">
-//                   <button
-//                     onClick={() => onView(job)}
-//                     className="text-[#49739c] hover:text-[#0c7ff2] transition-colors"
-//                     title="View Details"
-//                   >
-//                     <svg
-//                       xmlns="http://www.w3.org/2000/svg"
-//                       width="20"
-//                       height="20"
-//                       fill="currentColor"
-//                       viewBox="0 0 256 256"
-//                     >
-//                       <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-16-56a16,16,0,1,1,16-16A16,16,0,0,1,112,160Z" />
-//                     </svg>
-//                   </button>
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//         <div className="md:hidden divide-y divide-[#cedbe8]">
-//           {jobs.map((job, index) => (
-//             <div key={index} className="p-4 bg-white hover:bg-slate-100 transition-colors fade-in">
-//               <div className="flex justify-between items-start">
-//                 <div>
-//                   <p className="text-sm font-medium text-[#0d141c]">{job.title}</p>
-//                   <p className="text-sm text-[#49739c]">{job.company}</p>
-//                   <p className="text-sm text-[#49739c]">{job.date}</p>
-//                 </div>
-//                 <button
-//                   onClick={() => onView(job)}
-//                   className="text-[#49739c] hover:text-[#0c7ff2] transition-colors"
-//                   title="View Details"
-//                 >
-//                   <svg
-//                     xmlns="http://www.w3.org/2000/svg"
-//                     width="20"
-//                     height="20"
-//                     fill="currentColor"
-//                     viewBox="0 0 256 256"
-//                   >
-//                     <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-16-56a16,16,0,1,1,16-16A16,16,0,0,1,112,160Z" />
-//                   </svg>
-//                 </button>
-//               </div>
-//               <button
-//                 className={`mt-2 px-4 py-1 rounded-lg text-sm font-medium transition-colors ${
-//                   job.status === 'Pending Review' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-//                 }`}
-//               >
-//                 {job.status}
-//               </button>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// const JobDescriptions = () => {
-//   const [activeTab, setActiveTab] = useState('All');
-//   const [searchQuery, setSearchQuery] = useState('');
-
-//   const jobs = [
-//     { title: 'Software Engineer', company: 'Tech Innovators Inc.', date: '2024-07-26', status: 'Pending Review' },
-//     { title: 'Product Manager', company: 'Global Solutions Ltd.', date: '2024-07-25', status: 'Reviewed' },
-//     { title: 'Data Analyst', company: 'Data Driven Corp.', date: '2024-07-24', status: 'Pending Review' },
-//     { title: 'UX Designer', company: 'Creative Minds Agency', date: '2024-07-23', status: 'Reviewed' },
-//     { title: 'Marketing Specialist', company: 'Marketing Masters LLC', date: '2024-07-22', status: 'Pending Review' },
-//     { title: 'Sales Representative', company: 'Sales Success Group', date: '2024-07-21', status: 'Reviewed' },
-//     { title: 'Customer Support Agent', company: 'Support Solutions Co.', date: '2024-07-20', status: 'Pending Review' },
-//     { title: 'Financial Analyst', company: 'Finance First Inc.', date: '2024-07-19', status: 'Reviewed' },
-//     { title: 'HR Manager', company: 'People Power Corp.', date: '2024-07-18', status: 'Pending Review' },
-//     { title: 'Operations Manager', company: 'Operational Excellence Ltd.', date: '2024-07-17', status: 'Reviewed' },
-//   ];
-
-//   const handleSearch = (query) => {
-//     setSearchQuery(query.toLowerCase());
-//   };
-
-//   const handleView = (job) => {
-//     console.log(`Viewing job: ${job.title} at ${job.company} (Status: ${job.status}, Date: ${job.date})`);
-//   };
-
-//   const filteredJobs = jobs.filter((job) => {
-//     const matchesTab = activeTab === 'All' || job.status === activeTab;
-//     const matchesSearch =
-//       job.title.toLowerCase().includes(searchQuery) || job.company.toLowerCase().includes(searchQuery);
-//     return matchesTab && matchesSearch;
-//   });
-
-//   return (
-//     <ErrorBoundary>
-//       <div
-//         className="relative flex min-h-screen flex-col bg-slate-50 group/design-root overflow-x-hidden"
-//         style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
-//       >
-//         <div className="layout-container flex h-full grow flex-col">
-//           <Header onSearch={handleSearch} />
-//           <div className="px-4 sm:px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-5">
-//             <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-//               <div className="flex flex-wrap justify-between gap-3 p-4">
-//                 <div className="flex min-w-[200px] sm:min-w-72 flex-col gap-3">
-//                   <p className="text-2xl sm:text-[32px] font-bold leading-tight text-[#0d141c] fade-in">
-//                     Job Descriptions
-//                   </p>
-//                   <p className="text-sm text-[#49739c] fade-in">Manage and review submitted job descriptions.</p>
-//                 </div>
-//               </div>
-//               <div className="pb-3">
-//                 <div className="flex border-b border-[#cedbe8] px-4 gap-4 sm:gap-8">
-//                   {['All', 'Pending Review', 'Reviewed'].map((status) => (
-//                     <button
-//                       key={status}
-//                       onClick={() => setActiveTab(status)}
-//                       className={`flex flex-col items-center justify-center pb-[13px] pt-4 text-sm font-bold tracking-[0.015em] transition-colors fade-in ${
-//                         activeTab === status
-//                           ? 'text-[#0d141c] border-b-[3px] border-[#0c7ff2]'
-//                           : 'text-[#49739c] border-b-[3px] border-transparent hover:text-[#0c7ff2]'
-//                       }`}
-//                     >
-//                       {status}
-//                     </button>
-//                   ))}
-//                 </div>
-//               </div>
-//               <JobTable jobs={filteredJobs} onView={handleView} />
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </ErrorBoundary>
-//   );
-// };
-
-// export default JobDescriptions;
-
-
-import React, { useState } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Paper,
-  TextField,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Grid,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
-import { motion } from 'framer-motion';
-
-const ErrorBoundary = ({ children }) => {
-  const [hasError, setHasError] = useState(false);
-  const [error, setError] = useState(null);
-
-  React.useEffect(() => {
-    const errorHandler = (error) => {
-      setHasError(true);
-      setError(error);
-    };
-    window.addEventListener('error', errorHandler);
-    return () => window.removeEventListener('error', errorHandler);
-  }, []);
-
-  if (hasError) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#F9FAFB' }}>
-        <Typography
-          variant="h6"
-          sx={{
-            color: '#DC2626',
-            textAlign: 'center',
-            p: 4,
-            fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' },
-            fontWeight: 600,
-          }}
-        >
-          Error: {error?.message || 'Something went wrong.'}
-        </Typography>
-      </Box>
-    );
-  }
-  return children;
+/* ─── Design tokens (Light Theme) ─── */
+const t = {
+  bg: '#F9FAFB',
+  surface: '#FFFFFF',
+  card: '#FFFFFF',
+  border: '#E9D5FF',
+  borderHov: '#C084FC',
+  text: '#111827',
+  muted: '#6B7280',
+  accent: '#6B46C1',
+  accentDim: '#F3E8FF',
+  green: '#15803D',
+  greenDim: '#DCFCE7',
+  red: '#DC2626',
+  redDim: '#FEE2E2',
+  amber: '#B45309',
+  amberDim: '#FEF3C7',
 };
 
-const JobTable = ({ jobs }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+const STATUS = {
+  pending: { label: 'Pending', bg: t.amberDim, color: t.amber, dot: '#F59E0B' },
+  reviewed: { label: 'Reviewed', bg: t.greenDim, color: t.green, dot: '#22C55E' },
+  risky: { label: 'Risky', bg: t.redDim, color: t.red, dot: '#EF4444' },
+};
 
-  const statusColors = {
-    'Pending Review': { bg: '#FEF3C7', color: '#D97706' },
-    Reviewed: { bg: '#E6F4EA', color: '#2E7D32' },
-  };
+/* ─── Inline global styles ─── */
+const GlobalStyle = () => (
+  <style>{`
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: ${t.bg}; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: ${t.surface}; }
+    ::-webkit-scrollbar-thumb { background: ${t.border}; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: ${t.borderHov}; }
+    .jd-select { appearance: none; -webkit-appearance: none; cursor: pointer; outline: none; }
+    .jd-select option { background: ${t.card}; color: ${t.text}; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes shimmer {
+      0%  { background-position: -200% 0; }
+      100%{ background-position:  200% 0; }
+    }
+    .shimmer-row {
+      background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    .sort-th { cursor: pointer; user-select: none; }
+    .sort-th:hover { background: #F3F0FF !important; color: ${t.accent} !important; }
+    .sort-arrow { opacity: 0; transition: opacity 0.18s, transform 0.18s; }
+    .sort-th:hover .sort-arrow { opacity: 0.5; }
+    .sort-arrow.active { opacity: 1; }
+  `}</style>
+);
 
-  const renderTable = () => (
-    <TableContainer
-      component={Paper}
-      sx={{
-        borderRadius: 3,
-        boxShadow: '0 4px 12px rgba(107, 70, 193, 0.1)',
-        overflowX: 'auto',
-        minHeight: { xs: '300px', sm: '400px', md: '500px' },
-        bgcolor: '#FFFFFF',
-        border: '1px solid #E9D5FF',
-        maxWidth: { xs: '95%', sm: '90%', md: '1000px' },
-        width: 'fit-content',
-        mx: 'auto',
-      }}
-    >
-      <Table sx={{ minWidth: { sm: 650, md: 900 }, width: '100%' }} stickyHeader>
-        <TableHead sx={{ bgcolor: '#F9FAFB' }}>
-          <TableRow>
-            {[
-              'Job Title',
-              ...(isMobile ? [] : ['Company', 'Submitted Date']),
-              'Status',
-            ].map((head) => (
-              <TableCell
-                key={head}
-                sx={{
-                  fontWeight: 600,
-                  fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                  color: '#1A1A1A',
-                  textAlign: 'left',
-                  whiteSpace: 'nowrap',
-                  bgcolor: '#F9FAFB',
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 1,
-                  py: { xs: 1.5, sm: 2 },
-                  px: { xs: 1, sm: 2, md: 3 },
-                }}
-              >
-                {head}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {jobs.map((job, index) => (
-            <TableRow
-              key={index}
-              sx={{
-                '&:hover': {
-                  bgcolor: '#F3E8FF',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 8px rgba(107, 70, 193, 0.1)',
-                },
-                transition: 'all 0.3s ease',
-                bgcolor: index % 2 === 0 ? '#F9FAFB' : '#FFFFFF',
-                borderRadius: '8px',
-                m: 1,
-                display: 'table-row',
-              }}
-            >
-              <TableCell
-                sx={{
-                  fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                  color: '#1A1A1A',
-                  whiteSpace: 'nowrap',
-                  py: { xs: 1.5, sm: 2 },
-                  px: { xs: 1, sm: 2, md: 3 },
-                }}
-              >
-                {job.title}
-              </TableCell>
-              {!isMobile && (
-                <>
-                  <TableCell
-                    sx={{
-                      fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                      color: '#4A4A4A',
-                      py: { xs: 1.5, sm: 2 },
-                      px: { xs: 1, sm: 2, md: 3 },
-                    }}
-                  >
-                    {job.company}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                      color: '#4A4A4A',
-                      py: { xs: 1.5, sm: 2 },
-                      px: { xs: 1, sm: 2, md: 3 },
-                    }}
-                  >
-                    {job.date}
-                  </TableCell>
-                </>
-              )}
-              <TableCell
-                sx={{
-                  fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                  py: { xs: 1.5, sm: 2 },
-                  px: { xs: 1, sm: 2, md: 3 },
-                }}
-              >
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    px: 2,
-                    py: 0.5,
-                    borderRadius: '6px',
-                    bgcolor: statusColors[job.status].bg,
-                    color: statusColors[job.status].color,
-                    fontWeight: 500,
-                    fontSize: { xs: '0.7rem', sm: '0.875rem' },
-                  }}
-                >
-                  {job.status}
-                </Box>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {jobs.length === 0 && (
-        <Box sx={{ p: 4, textAlign: 'center', color: '#6B7280', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-          No jobs found matching the criteria.
-        </Box>
-      )}
-    </TableContainer>
-  );
-
-  const renderCards = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, maxWidth: '95%', mx: 'auto' }}>
-      {jobs.map((job, index) => (
-        <Paper
-          key={index}
-          sx={{
-            borderRadius: 3,
-            boxShadow: '0 4px 12px rgba(107, 70, 193, 0.1)',
-            bgcolor: '#FFFFFF',
-            border: '1px solid #E9D5FF',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 16px rgba(107, 70, 193, 0.15)',
-            },
-            transition: 'all 0.3s ease',
-            p: { xs: 2, sm: 2.5 },
-          }}
-        >
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: { xs: '1rem', sm: '1.125rem' },
-              color: '#1A1A1A',
-              fontWeight: 600,
-              mb: 1,
+/* ─── Status Pill ─── */
+const StatusPill = ({ value, onChange, compact }) => {
+  const [open, setOpen] = useState(false);
+  const s = STATUS[value] || STATUS.pending;
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 7,
+          background: s.bg, color: s.color,
+          border: `1px solid ${s.color}40`,
+          borderRadius: 99, padding: compact ? '4px 10px' : '5px 14px',
+          fontSize: compact ? 11 : 12, fontFamily: "'Inter', sans-serif",
+          fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+          transition: 'all .2s',
+        }}
+      >
+        <span style={{
+          width: 6, height: 6, borderRadius: '50%',
+          background: s.dot, animation: value === 'pending' ? 'pulse-dot 1.5s infinite' : 'none',
+          flexShrink: 0,
+        }} />
+        {s.label}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill={s.color}
+          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>
+          <path d="M1 3l4 4 4-4" stroke={s.color} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        </svg>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: .95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: .95 }}
+            transition={{ duration: .15 }}
+            style={{
+              position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 100,
+              background: t.card, border: `1px solid ${t.border}`,
+              borderRadius: 10, overflow: 'hidden', minWidth: 140,
+              boxShadow: '0 12px 32px rgba(107, 70, 193, 0.1)',
             }}
           >
-            {job.title}
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography
-              sx={{
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                color: '#4A4A4A',
-              }}
-            >
-              Company: {job.company}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                color: '#4A4A4A',
-              }}
-            >
-              Submitted Date: {job.date}
-            </Typography>
-            <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-              Status:{' '}
-              <Box
-                component="span"
-                sx={{
-                  display: 'inline-flex',
-                  px: 2,
-                  py: 0.5,
-                  borderRadius: '6px',
-                  bgcolor: statusColors[job.status].bg,
-                  color: statusColors[job.status].color,
-                  fontWeight: 500,
-                  fontSize: { xs: '0.7rem', sm: '0.875rem' },
+            {Object.entries(STATUS).map(([key, cfg]) => (
+              <button
+                key={key}
+                onClick={() => { onChange(key); setOpen(false); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  width: '100%', padding: '9px 14px',
+                  background: key === value ? cfg.bg : 'transparent',
+                  color: cfg.color, border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontFamily: "'Inter', sans-serif", fontWeight: 600,
+                  textAlign: 'left', transition: 'background .15s',
                 }}
+                onMouseEnter={e => { if (key !== value) e.currentTarget.style.background = '#F3F4F6'; }}
+                onMouseLeave={e => { if (key !== value) e.currentTarget.style.background = 'transparent'; }}
               >
-                {job.status}
-              </Box>
-            </Typography>
-          </Box>
-        </Paper>
-      ))}
-    </Box>
-  );
-
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {isMobile ? renderCards() : renderTable()}
-    </Box>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.dot }} />
+                {cfg.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
-const JobDescriptions = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+/* ─── Stat Card ─── */
+const StatCard = ({ icon: Icon, label, value, color, delay }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay }}
+        style={{ flex: 1, minWidth: 140 }}
+    >
+        <Paper
+            elevation={0}
+            sx={{
+                p: { xs: 2, sm: 2.5 },
+                borderRadius: 3,
+                border: '1px solid #F1F5F9',
+                bgcolor: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                transition: 'all 0.25s ease',
+                '&:hover': { borderColor: color, boxShadow: `0 4px 16px ${color}18` },
+            }}
+        >
+            <Box sx={{
+                width: 44, height: 44, borderRadius: 2.5,
+                bgcolor: `${color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+                <Icon sx={{ fontSize: 22, color }} />
+            </Box>
+            <Box>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {label}
+                </Typography>
+                <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
+                    {value}
+                </Typography>
+            </Box>
+        </Paper>
+    </motion.div>
+);
 
-  const [activeTab, setActiveTab] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
+/* ─── Search Bar ─── */
+const SearchBar = ({ value, onChange }) => (
+  <div style={{ position: 'relative', width: '100%', maxWidth: 440 }}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={t.muted} strokeWidth="2"
+      style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+    </svg>
+    <input
+      type="text"
+      placeholder="Search by title or company…"
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      style={{
+        width: '100%',
+        background: t.card, border: `1px solid ${t.border}`,
+        borderRadius: 10, padding: '10px 14px 10px 40px',
+        color: t.text, fontSize: 13, fontFamily: "'Inter', sans-serif",
+        outline: 'none', transition: 'border-color .2s, box-shadow .2s',
+      }}
+      onFocus={e => {
+        e.target.style.borderColor = t.accent;
+        e.target.style.boxShadow = `0 0 0 2px ${t.accent}20`;
+      }}
+      onBlur={e => {
+        e.target.style.borderColor = t.border;
+        e.target.style.boxShadow = 'none';
+      }}
+    />
+  </div>
+);
 
-  const jobs = [
-    { title: 'Software Engineer', company: 'Tech Innovators Inc.', date: '2024-07-26', status: 'Pending Review' },
-    { title: 'Product Manager', company: 'Global Solutions Ltd.', date: '2024-07-25', status: 'Reviewed' },
-    { title: 'Data Analyst', company: 'Data Driven Corp.', date: '2024-07-24', status: 'Pending Review' },
-    { title: 'UX Designer', company: 'Creative Minds Agency', date: '2024-07-23', status: 'Reviewed' },
-    { title: 'Marketing Specialist', company: 'Marketing Masters LLC', date: '2024-07-22', status: 'Pending Review' },
-    { title: 'Sales Representative', company: 'Sales Success Group', date: '2024-07-21', status: 'Reviewed' },
-    { title: 'Customer Support Agent', company: 'Support Solutions Co.', date: '2024-07-20', status: 'Pending Review' },
-    { title: 'Financial Analyst', company: 'Finance First Inc.', date: '2024-07-19', status: 'Reviewed' },
-    { title: 'HR Manager', company: 'People Power Corp.', date: '2024-07-18', status: 'Pending Review' },
-    { title: 'Operations Manager', company: 'Operational Excellence Ltd.', date: '2024-07-17', status: 'Reviewed' },
+/* ─── Tab Bar ─── */
+const TabBar = ({ active, onChange, counts }) => {
+  const tabs = [
+    { key: 'All', label: 'All', count: counts.all },
+    { key: 'pending', label: 'Pending', count: counts.pending },
+    { key: 'reviewed', label: 'Reviewed', count: counts.reviewed },
+    { key: 'risky', label: 'Risky', count: counts.risky },
   ];
+  return (
+    <div style={{ display: 'flex', gap: 4, background: t.card, borderRadius: 10, padding: 4, border: `1px solid ${t.border}` }}>
+      {tabs.map(tab => (
+        <button
+          key={tab.key}
+          onClick={() => onChange(tab.key)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '7px 14px', borderRadius: 7, border: 'none',
+            background: active === tab.key ? t.accentDim : 'transparent',
+            color: active === tab.key ? t.accent : t.muted,
+            fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: active === tab.key ? 600 : 500,
+            cursor: 'pointer', transition: 'all .2s',
+          }}
+          onMouseEnter={e => { if (active !== tab.key) e.currentTarget.style.color = t.text; }}
+          onMouseLeave={e => { if (active !== tab.key) e.currentTarget.style.color = t.muted; }}
+        >
+          {tab.label}
+          <span style={{
+            background: active === tab.key ? t.accent : '#F3F4F6',
+            color: active === tab.key ? '#FFFFFF' : t.muted,
+            borderRadius: 99, padding: '2px 8px', fontSize: 11,
+            fontFamily: "'Inter', sans-serif", fontWeight: 600
+          }}>
+            {tab.count}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+};
 
-  const handleSearch = (query) => {
-    setSearchQuery(query.toLowerCase());
-  };
+/* ─── Skeleton Rows ─── */
+const SkeletonRows = () => (
+  <>
+    {[1, 2, 3, 4, 5].map(i => (
+      <tr key={i}>
+        {[200, 140, 100, 90].map((w, j) => (
+          <td key={j} style={{ padding: '14px 20px', borderBottom: `1px solid ${t.border}` }}>
+            <div className="shimmer-row" style={{ height: 14, borderRadius: 6, width: w, maxWidth: '100%' }} />
+          </td>
+        ))}
+      </tr>
+    ))}
+  </>
+);
 
-  const filteredJobs = jobs.filter((job) => {
-    const matchesTab = activeTab === 'All' || job.status === activeTab;
-    const matchesSearch =
-      job.title.toLowerCase().includes(searchQuery) || job.company.toLowerCase().includes(searchQuery);
-    return matchesTab && matchesSearch;
-  });
+/* ─── Sort Arrow Icon ─── */
+const SortArrow = ({ direction, active }) => (
+  <svg
+    width="12" height="12" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+    className={`sort-arrow${active ? ' active' : ''}`}
+    style={{
+      marginLeft: 4, flexShrink: 0,
+      transform: direction === 'asc' ? 'rotate(0deg)' : 'rotate(180deg)',
+      color: active ? t.accent : t.muted,
+      transition: 'transform 0.2s, opacity 0.2s',
+    }}
+  >
+    <path d="M12 5l0 14M5 12l7-7 7 7" />
+  </svg>
+);
+
+/* ─── Pagination ─── */
+const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) => {
+  if (totalPages <= 1) return null;
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalItems);
+
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <ErrorBoundary>
-      <motion.div
-        style={{
-          fontFamily: "'Inter', 'Roboto', sans-serif",
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          bgcolor: '#F9FAFB',
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-      >
-        <Container
-          maxWidth="lg"
-          sx={{
-            maxWidth: { xs: '95%', sm: '90%', md: '1280px' },
-            mx: 'auto',
-            py: { xs: 2, sm: 4, md: 5 },
-            px: { xs: 1, sm: 3, md: 4 },
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+        {/* Prev */}
+        <button
+          onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+          disabled={currentPage === 1}
+          style={{
+            padding: 10, borderRadius: 12, border: 'none', background: 'transparent',
+            color: '#6B7280', cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            opacity: currentPage === 1 ? 0.3 : 1, transition: 'all 0.2s',
           }}
+          onMouseEnter={e => { if (currentPage !== 1) { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'; } }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; }}
         >
-          <Grid container spacing={{ xs: 1, sm: 2, md: 3 }} justifyContent="center">
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3, textAlign: 'center' }}>
-                <Typography
-                  variant="h4"
-                  fontWeight={700}
-                  sx={{
-                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.25rem' },
-                    color: '#1A1A1A',
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
+            <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z" />
+          </svg>
+        </button>
+
+        {/* Page Numbers */}
+        {pages.map(page => (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            style={{
+              width: 40, height: 40, borderRadius: 12, border: 'none',
+              fontSize: 14, fontFamily: "'Inter', sans-serif", fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.3s',
+              background: currentPage === page ? '#111827' : 'transparent',
+              color: currentPage === page ? '#FFFFFF' : '#6B7280',
+              boxShadow: currentPage === page ? '0 10px 15px rgba(17,24,39,0.2)' : 'none',
+            }}
+            onMouseEnter={e => { if (currentPage !== page) { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'; } }}
+            onMouseLeave={e => { if (currentPage !== page) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; } }}
+          >
+            {page}
+          </button>
+        ))}
+
+        {/* Next */}
+        <button
+          onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          style={{
+            padding: 10, borderRadius: 12, border: 'none', background: 'transparent',
+            color: '#6B7280', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            opacity: currentPage === totalPages ? 0.3 : 1, transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => { if (currentPage !== totalPages) { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)'; } }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
+            <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Count info */}
+      <p style={{ textAlign: 'center', fontSize: 12, color: '#9CA3AF', fontFamily: "'Inter', sans-serif", marginTop: 16, marginBottom: 32 }}>
+        Showing {start}–{end} of {totalItems} job{totalItems !== 1 ? 's' : ''}
+      </p>
+    </div>
+  );
+};
+
+/* ─── Job Table ─── */
+const SORTABLE_COLS = [
+  { key: 'jobTitle', label: 'Job Title' },
+  { key: 'companyName', label: 'Company' },
+  { key: 'date', label: 'Date Posted' },
+  { key: null, label: 'Status' },
+];
+
+const JobTable = ({ jobs, onStatusChange, loading, sortKey, sortDir, onSort }) => {
+  return (
+    <div style={{
+      background: t.card, border: `1px solid ${t.border}`,
+      borderRadius: 16, overflow: 'hidden',
+      boxShadow: '0 4px 12px rgba(107, 70, 193, 0.05)',
+    }}>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${t.border}` }}>
+              {SORTABLE_COLS.map(col => (
+                <th
+                  key={col.label}
+                  className={col.key ? 'sort-th' : ''}
+                  onClick={() => col.key && onSort(col.key)}
+                  style={{
+                    padding: '16px 20px', textAlign: 'left',
+                    fontSize: 12, fontFamily: "'Inter', sans-serif",
+                    color: sortKey === col.key ? t.accent : t.muted,
+                    letterSpacing: '0.05em', textTransform: 'uppercase',
+                    fontWeight: 600, background: '#F9FAFB', whiteSpace: 'nowrap',
+                    transition: 'color .15s, background .15s',
+                    cursor: col.key ? 'pointer' : 'default',
                   }}
                 >
-                  Job Descriptions
-                </Typography>
-                {/* <Typography
-                  variant="body2"
-                  sx={{
-                    fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                    color: '#6B7280',
-                  }}
-                >
-                  Manage and review submitted job descriptions.
-                </Typography> */}
-              </Box>
-            </Grid>
-            <Grid item xs={12} sx={{ maxWidth: { xs: '95%', sm: '90%', md: '1000px' }, mx: 'auto' }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 3 } }}>
-                <TextField
-                  placeholder="Search jobs or companies..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  fullWidth
-                  variant="outlined"
-                  size="small"
-                  InputProps={{
-                    startAdornment: (
-                      <Box sx={{ mr: 1, color: '#6B7280' }}>
-                        <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
-                          <path d="M229.66 218.34l-50.07-50.06a88 88 0 1 0-11.32 11.31l50.07 50.07a8 8 0 0 0 11.32-11.32zM40 112a72 72 0 1 1 72 72 72.08 72.08 0 0 1-72-72z" />
-                        </svg>
-                      </Box>
-                    ),
-                  }}
-                  sx={{
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px',
-                      '& fieldset': { borderColor: '#E9D5FF' },
-                      '&:hover fieldset': { borderColor: '#A78BFA' },
-                    },
-                    '& .MuiInputBase-input': {
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    },
-                  }}
-                />
-                <Box sx={{ display: 'flex', borderBottom: '2px solid #E9D5FF', px: 4, gap: { xs: 2, sm: 4, md: 6 }, mb: 3 }}>
-                  {['All', 'Pending Review', 'Reviewed'].map((status) => (
-                    <Button
-                      key={status}
-                      onClick={() => setActiveTab(status)}
-                      sx={{
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-                        color: activeTab === status ? '#1A1A1A' : '#6B7280',
-                        borderBottom: activeTab === status ? '3px solid #6B46C1' : '3px solid transparent',
-                        borderRadius: 0,
-                        pb: 1.5,
-                        pt: 1,
-                        '&:hover': {
-                          color: '#6B46C1',
-                          borderBottom: '3px solid #A78BFA',
-                        },
-                        transition: 'all 0.3s ease',
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    {col.label}
+                    {col.key && (
+                      <SortArrow
+                        direction={sortKey === col.key ? sortDir : 'asc'}
+                        active={sortKey === col.key}
+                      />
+                    )}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? <SkeletonRows /> : (
+              <>
+                {jobs.length === 0 && (
+                  <tr>
+                    <td colSpan={4} style={{ padding: '60px 20px', textAlign: 'center', color: t.muted, fontFamily: "'Inter', sans-serif", fontSize: 14 }}>
+                      No jobs match the current filters.
+                    </td>
+                  </tr>
+                )}
+                <AnimatePresence>
+                  {jobs.map((job, i) => (
+                    <motion.tr
+                      key={job._id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      transition={{ duration: .25, delay: i * 0.03 }}
+                      style={{
+                        borderBottom: `1px solid ${t.border}`,
+                        transition: 'background .15s',
+                        cursor: 'default',
                       }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      {status}
-                    </Button>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: t.text, fontWeight: 600 }}>
+                          {job.jobTitle}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: t.muted, fontWeight: 500 }}>
+                          {job.companyName}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: t.muted, fontWeight: 500 }}>
+                          {job.date}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <StatusPill
+                          value={job.adminReview}
+                          onChange={(val) => onStatusChange(job._id, val)}
+                        />
+                      </td>
+                    </motion.tr>
                   ))}
-                </Box>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <JobTable jobs={filteredJobs} />
-            </Grid>
-          </Grid>
-        </Container>
-      </motion.div>
-    </ErrorBoundary>
+                </AnimatePresence>
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Mobile Card ─── */
+const MobileCard = ({ job, onStatusChange, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: .3, delay: index * 0.06 }}
+    style={{
+      background: t.card, border: `1px solid ${t.border}`,
+      borderRadius: 14, padding: '16px 18px',
+      display: 'flex', flexDirection: 'column', gap: 10,
+      boxShadow: '0 4px 12px rgba(107, 70, 193, 0.05)',
+    }}
+  >
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: t.text, fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
+        {job.jobTitle}
+      </span>
+      <StatusPill value={job.adminReview} onChange={val => onStatusChange(job._id, val)} compact />
+    </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: t.muted, fontWeight: 500 }}>
+        {job.companyName}
+      </span>
+      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: t.muted, fontWeight: 500 }}>
+        {job.date}
+      </span>
+    </div>
+  </motion.div>
+);
+
+/* ─── Main Component ─── */
+const JOBS_PER_PAGE = 8;
+
+const JobDescriptions = () => {
+  const [activeTab, setActiveTab] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [jobsData, setJobsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  // Sorting state
+  const [sortKey, setSortKey] = useState('date');
+  const [sortDir, setSortDir] = useState('desc');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Scroll to top on page change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
+  useEffect(() => { fetchJobs(); }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/admin/jobs');
+      const raw = res.data?.data || res.data || [];
+      setJobsData(raw.map(job => ({
+        ...job,
+        date: job.createdAt
+          ? new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : new Date(parseInt(job._id.substring(0, 8), 16) * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        _dateRaw: job.createdAt
+          ? new Date(job.createdAt).getTime()
+          : new Date(parseInt(job._id.substring(0, 8), 16) * 1000).getTime(),
+      })));
+    } catch { toast.error('Failed to load jobs'); }
+    finally { setLoading(false); }
+  };
+
+  const handleStatusChange = async (jobId, newStatus) => {
+    try {
+      await api.patch(`/jobs/${jobId}/admin-review`, { adminReview: newStatus });
+      setJobsData(prev => prev.map(j => j._id === jobId ? { ...j, adminReview: newStatus } : j));
+      toast.success('Status updated');
+    } catch { toast.error('Failed to update status'); }
+  };
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const counts = {
+    all: jobsData.length,
+    pending: jobsData.filter(j => j.adminReview === 'pending').length,
+    reviewed: jobsData.filter(j => j.adminReview === 'reviewed').length,
+    risky: jobsData.filter(j => j.adminReview === 'risky').length,
+  };
+
+  // Filter
+  const filteredJobs = jobsData.filter(job => {
+    const matchTab = activeTab === 'All' || job.adminReview === activeTab;
+    const q = searchQuery.toLowerCase();
+    const matchSearch = !q || `${job.jobTitle} ${job.companyName}`.toLowerCase().includes(q);
+    return matchTab && matchSearch;
+  });
+
+  // Sort
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    let aVal = a[sortKey] ?? '';
+    let bVal = b[sortKey] ?? '';
+    if (sortKey === 'date') { aVal = a._dateRaw; bVal = b._dateRaw; }
+    if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+    if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+    if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Paginate
+  const totalPages = Math.ceil(sortedJobs.length / JOBS_PER_PAGE);
+  const paginatedJobs = sortedJobs.slice(
+    (currentPage - 1) * JOBS_PER_PAGE,
+    currentPage * JOBS_PER_PAGE
+  );
+
+  // Reset page when filter/search/sort changes
+  const handleTabChange = (tab) => { setActiveTab(tab); setCurrentPage(1); };
+  const handleSearch = (q) => { setSearchQuery(q); setCurrentPage(1); };
+
+  return (
+    <>
+      <GlobalStyle />
+      <ToastContainer
+        theme="light"
+        toastStyle={{ background: t.card, border: `1px solid ${t.border}`, fontFamily: "'Inter', sans-serif" }}
+      />
+      <div style={{
+        minHeight: '100vh', background: t.bg,
+        fontFamily: "'Inter', sans-serif",
+        padding: isMobile ? '24px 16px' : '40px 32px',
+      }}>
+        <div style={{ maxWidth: 1080, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
+
+          {/* ── Header ── */}
+          <motion.div
+            initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}
+          >
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                <div style={{ width: 4, height: 28, background: `linear-gradient(180deg, ${t.accent}, #A78BFA)`, borderRadius: 4 }} />
+                <h1 style={{
+                  fontFamily: "'Inter', sans-serif", fontSize: isMobile ? 22 : 28,
+                  fontWeight: 800, color: t.text, letterSpacing: '-0.02em',
+                }}>
+                  Job Board
+                </h1>
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: t.muted, marginLeft: 14 }}>
+                Moderate and review submitted job descriptions
+              </p>
+            </div>
+
+            <button
+              onClick={fetchJobs}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                background: t.card, border: `1px solid ${t.border}`,
+                color: t.accent, borderRadius: 9, padding: '8px 16px',
+                fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: 600,
+                cursor: 'pointer', transition: 'all .2s',
+                boxShadow: '0 2px 4px rgba(107, 70, 193, 0.05)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = t.accentDim; }}
+              onMouseLeave={e => { e.currentTarget.style.background = t.card; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                <path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                <path d="M8 16H3v5" />
+              </svg>
+              Refresh
+            </button>
+          </motion.div>
+
+          {/* ── Stat Cards ── */}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <StatCard label="Total" value={counts.all} color={t.accent} icon={AssignmentIcon} delay={.1} />
+            <StatCard label="Pending" value={counts.pending} color={t.amber} icon={PendingActionsIcon} delay={.15} />
+            <StatCard label="Reviewed" value={counts.reviewed} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
+            <StatCard label="Risky" value={counts.risky} color={t.red} icon={ReportProblemIcon} delay={.25} />
+          </div>
+
+          {/* ── Controls ── */}
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .3, duration: .4 }}
+            style={{
+              display: 'flex', gap: 12, flexWrap: 'wrap',
+              alignItems: 'center', justifyContent: 'space-between',
+            }}
+          >
+            <SearchBar value={searchQuery} onChange={handleSearch} />
+            <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+              <TabBar active={activeTab} onChange={handleTabChange} counts={counts} />
+            </div>
+          </motion.div>
+
+          {/* ── Table / Cards ── */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35, duration: .4 }}>
+            {isMobile ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {loading
+                  ? [1, 2, 3].map(i => (
+                    <div key={i} className="shimmer-row" style={{ height: 100, borderRadius: 14 }} />
+                  ))
+                  : paginatedJobs.length === 0
+                    ? (
+                      <div style={{
+                        background: t.card, border: `1px solid ${t.border}`,
+                        borderRadius: 14, padding: '48px 20px',
+                        textAlign: 'center', color: t.muted, fontSize: 14,
+                        fontFamily: "'Inter', sans-serif"
+                      }}>
+                        No jobs match the current filters.
+                      </div>
+                    )
+                    : paginatedJobs.map((job, i) => (
+                      <MobileCard key={job._id} job={job} onStatusChange={handleStatusChange} index={i} />
+                    ))
+                }
+              </div>
+            ) : (
+              <JobTable
+                jobs={paginatedJobs}
+                onStatusChange={handleStatusChange}
+                loading={loading}
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={handleSort}
+              />
+            )}
+
+            {/* ── Pagination ── */}
+            {!loading && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                totalItems={sortedJobs.length}
+                itemsPerPage={JOBS_PER_PAGE}
+              />
+            )}
+          </motion.div>
+
+        </div>
+      </div>
+    </>
   );
 };
 
