@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContexts";
 import api from "../../api/api";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 /* ── ATS Circular Gauge ─────────────────────────────────────── */
 const AtsGauge = ({ score }) => {
@@ -158,7 +160,7 @@ const EditCard = ({ onRemove, children }) => (
 /* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════ */
-const Recruiter_CandidateProfile_view = ({ userProp }) => {
+const Candidate_Profile_View = ({ userProp }) => {
 
   const { id: paramId } = useParams();
   const navigate = useNavigate();
@@ -178,6 +180,7 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
     languages: [],
     atsScore: 0,
     profilePicture: "",
+    resumeLink: "",
   };
 
   const initial = {
@@ -193,6 +196,7 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
     languages: ["English (Native)", "Spanish (Intermediate)"],
     atsScore: 92,
     profilePicture: userProp?.picture || "https://ui-avatars.com/api/?name=Sophia+Bennett&background=0f172a&color=fff&size=200",
+    resumeLink: "",
   };
 
   const [data, setData] = useState(initial);
@@ -205,6 +209,7 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeSkillTab, setActiveSkillTab] = useState("tech");
+  const [dragActive, setDragActive] = useState(false);
 
   const galleryImages = [
     `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=0f172a&color=fff&size=200`,
@@ -229,14 +234,15 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
     languages: [],
     atsScore: profile?.atsScore || 0,
     profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=0f172a&color=fff&size=200`,
+    resumeLink: profile?.resumeLink || "",
   });
 
   /* ── Helper to map state back to API shape ────────────── */
   const mapStateToApi = () => ({
-    name: data.name || null,
-    email: data.email || null,
-    img: data.profilePicture || null,
-    description: data.resumeSummary || null,
+    name: data.name?.trim() ? data.name : " ",
+    email: data.email?.trim() ? data.email : " ",
+    img: data.profilePicture || " ",
+    description: data.resumeSummary?.trim() ? data.resumeSummary.trim() : " ",
     atsScore: data.atsScore || 0,
     experience: [{
       jobTitle: "Professional Experience",
@@ -260,6 +266,7 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
       }),
     skills: data.techSkills.filter(s => s.trim()).map(s => ({ skillName: s })),
     softSkills: data.softSkills.filter(s => s.trim()).map(s => ({ skillName: s })),
+    resumeLink: data.resumeLink || null,
   });
 
   /* ── Fetch profile on mount ──────────────────────────────── */
@@ -271,13 +278,30 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
 
         let response;
         let profile = null;
+        let bestAts = -1;
         try {
+          const userIdToFetch = paramId || (user?._id || user?.id);
           if (isOwnProfile) {
             response = await api.get("/profile");
           } else {
-            response = await api.get(`/profile/${paramId}`);
+            response = await api.get(`/profile/${userIdToFetch}`);
           }
           if (response) profile = response.data.profile;
+
+          // Compute best ATS dynamically from ATS history and Resumes
+          if (userIdToFetch) {
+            const [resumeRes, atsHistoryRes] = await Promise.all([
+              api.get(`/resume/${userIdToFetch}`).catch(() => null),
+              isOwnProfile ? api.get("/atshistory").catch(() => null) : Promise.resolve(null),
+            ]);
+            const resumesList = resumeRes?.data?.resumes || resumeRes?.data || [];
+            const normalised = Array.isArray(resumesList) ? resumesList : [];
+            const atsData = atsHistoryRes?.data?.history || [];
+            const rScores = normalised.map(r => r.atsScore || 0);
+            const hScores = atsData.map(h => h.score || 0);
+            const allScores = [...rScores, ...hScores];
+            if (allScores.length > 0) bestAts = Math.max(...allScores);
+          }
         } catch (e) {
           // Ignore API error and fallback to dummy data
         }
@@ -294,10 +318,18 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
           : (profile?.user?.picture || "");
 
         if (profile) {
-          setData(mapProfileToState(profile, userName, userEmail, userPicture));
+          const mappedProfile = mapProfileToState(profile, userName, userEmail, userPicture);
+          if (bestAts > -1) mappedProfile.atsScore = bestAts;
+          setData(mappedProfile);
         } else if (isOwnProfile) {
           // Fallback to initial dummy data if no profile or backend is disabled
-          setData(p => ({ ...initial, name: userName || initial.name, email: userEmail, profilePicture: userPicture || initial.profilePicture }));
+          setData(p => ({
+            ...initial,
+            name: userName || initial.name,
+            email: userEmail,
+            profilePicture: userPicture || initial.profilePicture,
+            atsScore: bestAts > -1 ? bestAts : p.atsScore
+          }));
         } else {
           setError("Profile not found.");
         }
@@ -390,6 +422,47 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
     } else { alert("Invalid image."); setUploading(false); }
   };
 
+  const processResumeFile = async (file) => {
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      return toast.error("Only PDF files are allowed.", { position: "top-center" });
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return toast.error("File exceeds 5MB limit. Please upload a smaller PDF.", { position: "top-center" });
+    }
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("pdf", file);
+    try {
+      const res = await api.post("/profile/upload-resume", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      set("resumeLink", res.data.profile.resumeLink);
+      setSaved(true);
+      toast.success("Resume uploaded successfully!", { position: "top-center" });
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      toast.error("Resume upload failed.", { position: "top-center" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleResumeUpload = (e) => processResumeFile(e.target.files[0]);
+
+  const handleDrag = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    setDragActive(false);
+    if (!isOwnProfile || uploading) return;
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) processResumeFile(e.dataTransfer.files[0]);
+  };
+
   /* ── Loading State ────────────────────────────────────────── */
   if (loading) {
     return (
@@ -458,19 +531,29 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
             {/* Identity */}
             <div className="flex-1 min-w-0">
               {editing ? (
-                <input
-                  className="text-2xl font-bold text-slate-900 bg-blue-50 border-b-2 border-blue-500 rounded-t-lg px-2 py-1 w-full outline-none"
-                  value={data.name}
-                  onChange={e => set("name", e.target.value)}
-                  placeholder="Full Name"
-                />
+                <>
+                  <input
+                    className="text-2xl font-bold text-slate-900 bg-blue-50 border-b-2 border-blue-500 rounded-t-lg px-2 py-1 w-full outline-none"
+                    value={data.name}
+                    onChange={e => set("name", e.target.value)}
+                    placeholder="Full Name"
+                  />
+                  <input
+                    className="text-sm font-medium text-slate-900 bg-blue-50 border-b-2 border-blue-500 rounded-t-lg px-2 py-1 w-full outline-none mt-2"
+                    value={data.email}
+                    onChange={e => set("email", e.target.value)}
+                    placeholder="Email Address"
+                  />
+                </>
               ) : (
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{data.name}</h1>
+                <>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{data.name}</h1>
+                  <p className="text-sm font-medium text-slate-500 mt-0.5">
+                    {data.email}
+                  </p>
+                </>
               )}
-              <p className="text-sm font-medium text-slate-500 mt-0.5">
-                {data.email}
-              </p>
-              <div className="flex flex-wrap gap-2 mt-2.5">
+              <div className="flex flex-wrap items-center gap-2 mt-2.5">
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 tracking-wide">● Available</span>
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 tracking-wide">Open to Offers</span>
               </div>
@@ -640,8 +723,8 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                         key={tab.key}
                         onClick={() => setActiveSkillTab(tab.key)}
                         className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 ${activeSkillTab === tab.key
-                            ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                            : "text-slate-500 hover:text-slate-700"
+                          ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                          : "text-slate-500 hover:text-slate-700"
                           }`}
                       >
                         <span className={activeSkillTab === tab.key ? tab.color : ""}>
@@ -698,6 +781,81 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                 </Section>
               </div>
 
+              {/* ── Resume Upload (Like Image) ──────────────────── */}
+              <div className="anim-up d400 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mb-2">
+                <h2 className="text-[17px] font-bold text-slate-900 mb-1.5">Resume</h2>
+                <p className="text-[13px] text-slate-500 mb-5 leading-relaxed">Your resume is the first impression you make on potential employers. Craft it carefully to secure your desired job or internship.</p>
+
+                <div
+                  className={`relative border-2 border-dashed rounded-xl p-8 mb-4 border-slate-300 transition-all flex flex-col items-center justify-center text-center 
+                  ${dragActive ? 'border-blue-500 bg-blue-50/50 scale-[1.01]' : 'border-slate-300 bg-white hover:bg-slate-50'}
+                  ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                >
+                  {data.resumeLink ? (
+                    <>
+                      <div className="flex flex-col items-center gap-2 mb-4">
+                        <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 border border-blue-100 shadow-[0_2px_8px_-2px_rgba(59,130,246,0.2)]">
+                          <svg width="28" height="28" fill="currentColor" viewBox="0 0 256 256"><path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z"></path></svg>
+                        </div>
+                        <div className="text-center pointer-events-none">
+                          <p className="text-sm font-bold text-slate-900">{dragActive ? "Drop PDF Here" : "Resume Attached"}</p>
+                          <p className="text-xs text-slate-500 mt-1">{dragActive ? "Drag and drop to update" : "Visible to recruiters"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <a href={data.resumeLink} target="_blank" rel="noreferrer" className="px-5 py-2 text-[13px] font-semibold rounded-full border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors shadow-sm">
+                          View PDF
+                        </a>
+                        {isOwnProfile && (
+                          <label className="cursor-pointer px-5 py-2 text-[13px] font-semibold rounded-full border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors shadow-sm">
+                            {uploading ? "Uploading..." : "Replace resume"}
+                            <input type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} disabled={uploading} />
+                          </label>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {isOwnProfile ? (
+                        <label className={`cursor-pointer px-6 py-2 mb-2 text-[13px] font-semibold rounded-full border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors ${dragActive ? 'bg-blue-50 ring-2 ring-blue-100' : ''}`}>
+                          {uploading ? "Uploading..." : (dragActive ? "Drop PDF Here" : "Upload resume")}
+                          <input type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} disabled={uploading} />
+                        </label>
+                      ) : (
+                        <div className="px-6 py-2 mb-2 text-[13px] font-semibold rounded-full border border-slate-300 text-slate-500">
+                          No resume uploaded
+                        </div>
+                      )}
+                      <p className="text-[12px] font-medium text-slate-400 mt-1 pointer-events-none">Supported formats: pdf, up to 5MB</p>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-[#f0f4ff] rounded-xl border border-blue-100 mt-1">
+                  <div className="flex items-center gap-4 mb-3 sm:mb-0">
+                    <div className="flex-shrink-0 relative w-12 h-12 ml-1">
+                      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-slate-800">
+                        <path d="M4.5 16C4.5 13.5147 6.51472 11.5 9 11.5H16.1716C17.365 11.5 18.5096 11.9741 19.3536 12.818L21.6464 15.1109C22.4904 15.9549 23.635 16.4289 24.8284 16.4289H39C41.4853 16.4289 43.5 18.4437 43.5 20.9289V35C43.5 37.4853 41.4853 39.5 39 39.5H9C6.51472 39.5 4.5 37.4853 4.5 35V16Z" stroke="currentColor" strokeWidth="2" fill="white" />
+                        <rect x="23" y="11" width="16" height="18" rx="1" fill="white" stroke="currentColor" strokeWidth="1.5" transform="rotate(15 23 11)" />
+                        <circle cx="34" cy="18" r="2" fill="#ef4444" />
+                        <path d="M29 23L39 25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        <path d="M30 27L38 29" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-[14px] font-bold text-slate-900 leading-tight">Don't have a resume yet?</h4>
+                      <p className="text-[13px] text-slate-500 mt-0.5">Create a job-winning resume with our simple resume builder</p>
+                    </div>
+                  </div>
+                  <button onClick={() => navigate("/user/resume")} className="text-[13px] font-bold text-blue-600 hover:text-blue-800 transition-colors px-2 whitespace-nowrap outline-none">
+                    Create resume
+                  </button>
+                </div>
+              </div>
 
             </div>
 
@@ -718,6 +876,8 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                       : "Consider enriching this profile further."}
                 </p>
               </div>
+
+
 
               {/* Quick Stats */}
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
@@ -797,8 +957,9 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
           </div>
         )}
       </div>
+      <ToastContainer position="top-center" autoClose={3000} />
     </>
   );
 };
 
-export default Recruiter_CandidateProfile_view;
+export default Candidate_Profile_View;

@@ -118,6 +118,8 @@ const StatCard = ({ icon, label, value, accent }) => (
 
 // ─── Job Card Component ──────────────────────────────────────────────────────
 const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
+  const canEdit = (job.totalCandidates ?? 0) <= 3;
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 transition-all duration-300 group">
       {/* Card Header */}
@@ -150,14 +152,16 @@ const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
 
           {/* Quick Actions */}
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => onEdit?.(job)}
-              className="p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-700 transition-colors"
-              aria-label="Edit job"
-              title="Edit job"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => onEdit?.(job)}
+                className="p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-700 transition-colors"
+                aria-label="Edit job"
+                title="Edit job"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => onDelete?.(job._id)}
               className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
@@ -204,6 +208,10 @@ const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
             <span>{job.openings ?? "N/A"} Openings</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-600 col-span-2">
+            <Users className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+            <span>{job.totalCandidates ?? 0} Candidates Applied</span>
           </div>
         </div>
 
@@ -619,15 +627,40 @@ const Recruiter_History = () => {
           return;
         }
 
-        // ✅ Get token
-        const token = localStorage.getItem("token");
-
         // ✅ API call (Axios)
         // Since api.js defines baseURL as ".../api", we request "/jobs/..."
         const response = await api.get(`/jobs/recruiter/${userId}`);
 
-        // ✅ Set real data
-        setJobs(response.data.jobs || []);
+        const recruiterJobs = response.data.jobs || [];
+
+        // For each job, get candidate count and lock editing when > 3 candidates applied.
+        const jobsWithCandidateStats = await Promise.all(
+          recruiterJobs.map(async (job) => {
+            try {
+              const candidatesResponse = await api.get(`/jobs/${job._id}/candidates`);
+              const totalCandidates =
+                Number(candidatesResponse?.data?.totalCandidates) || 0;
+
+              return {
+                ...job,
+                totalCandidates,
+              };
+            } catch (candidateError) {
+              console.error(
+                `Error fetching candidates for job ${job._id}:`,
+                candidateError
+              );
+
+              return {
+                ...job,
+                totalCandidates: 0,
+              };
+            }
+          })
+        );
+
+        // ✅ Set enriched jobs data
+        setJobs(jobsWithCandidateStats);
       } catch (error) {
         console.error("Error fetching jobs:", error);
       } finally {
@@ -670,6 +703,11 @@ const Recruiter_History = () => {
   };
 
   const handleEdit = (job) => {
+    if ((job.totalCandidates ?? 0) > 3) {
+      toast.info("This job cannot be edited after more than 3 candidates apply");
+      return;
+    }
+
     setSelectedJob(job);
     setEditModalOpen(true);
   };
@@ -709,7 +747,11 @@ const Recruiter_History = () => {
     };
 
     setJobs((prev) =>
-      prev.map((j) => (j._id === normalizedUpdatedJob._id ? normalizedUpdatedJob : j))
+      prev.map((j) =>
+        j._id === normalizedUpdatedJob._id
+          ? { ...j, ...normalizedUpdatedJob }
+          : j
+      )
     );
   };
 
