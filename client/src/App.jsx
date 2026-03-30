@@ -16,6 +16,7 @@ import Companies from './pages/Admin/Companies';
 import Recruiter_Analytics_view from './pages/Recruiter/Recruiter_Analytics_view';
 import Recruiter_Post_view from './pages/Recruiter/Recruiter_Post_view';
 import Recruiter_Candidates_view from './pages/Recruiter/Recruiter_Candidates_view';
+import Recruiter_History from './pages/Recruiter/Recruiter_History';
 import { useAuth } from './contexts/AuthContexts'
 import User_Best_Resume_view from './pages/User/User_Best_Resume_view'
 import Recruiter_CandidateProfile_view from './pages/User/Recruiter_CandidateProfile_view'
@@ -216,7 +217,7 @@ function App() {
               <Recruiter_Posted_Jobs_view />
             </ProtectedRoute>} />
 
-        
+
 
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactSupport />} />
