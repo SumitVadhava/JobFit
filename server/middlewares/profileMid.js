@@ -1,7 +1,7 @@
 const Profile = require("../models/candidateProfile");
 
 const validateProfileData = (body) => {
-  const { img, description, experience, education, skills, name, email } = body;
+  const { img, description, experience, education, skills, softSkills, name, email } = body;
 
   if (experience !== undefined) {
     if (!Array.isArray(experience)) return "experience must be an array";
@@ -35,11 +35,20 @@ const validateProfileData = (body) => {
     }
   }
 
+  if (softSkills !== undefined) {
+    if (!Array.isArray(softSkills)) return "softSkills must be an array";
+    for (const skill of softSkills) {
+      if (typeof skill !== 'object' || !skill.skillName) {
+        return "Each softSkill item must be an object with: skillName";
+      }
+    }
+  }
+
   return null;
 };
 
 const validateUpdateProfile = (req, res, next) => {
-  const { img, description, experience, education, skills, name, email } = req.body;
+  const { img, description, experience, education, skills, softSkills, name, email } = req.body;
 
   const hasAtLeastOneField =
     img !== undefined ||
@@ -47,6 +56,7 @@ const validateUpdateProfile = (req, res, next) => {
     experience !== undefined ||
     education !== undefined ||
     skills !== undefined ||
+    softSkills !== undefined ||
     name !== undefined ||
     email !== undefined;
 

@@ -69,6 +69,14 @@ const candidateProfileSchema = new mongoose.Schema({
       }
     ],
     default: []
+  },
+  softSkills: {
+    type: [
+      {
+        skillName: { type: String, required: true }
+      }
+    ],
+    default: []
   }
 });
 

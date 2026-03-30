@@ -31,7 +31,9 @@ const googleAddLoginController = async (req, res) => {
     // Auto-create profile with name & email on first Google login
     if (isNewUser) {
       if (role === ROLES.RECRUITER) {
-        const existingProfile = await RecruiterProfile.findOne({ user: userToUse._id });
+        const existingProfile = await RecruiterProfile.findOne({
+          user: userToUse._id,
+        });
         if (!existingProfile) {
           await RecruiterProfile.create({
             user: userToUse._id,
@@ -42,7 +44,9 @@ const googleAddLoginController = async (req, res) => {
           });
         }
       } else {
-        const existingProfile = await CandidateProfile.findOne({ user: userToUse._id });
+        const existingProfile = await CandidateProfile.findOne({
+          user: userToUse._id,
+        });
         if (!existingProfile) {
           await CandidateProfile.create({
             user: userToUse._id,
@@ -56,7 +60,12 @@ const googleAddLoginController = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: userToUse._id, email: userToUse.email, role: userToUse.role },
+      {
+        id: userToUse._id,
+        email: userToUse.email,
+        role: userToUse.role,
+        userModel: "google_logins",
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN },
     );
@@ -90,4 +99,3 @@ const googleAddLoginController = async (req, res) => {
 };
 
 module.exports = { googleAddLoginController };
-

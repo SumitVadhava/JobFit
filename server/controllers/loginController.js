@@ -7,27 +7,43 @@ const getLoginController = async (req, res) => {
   try {
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(400).json({ error: true, message: "Invalid email credentials", data: null });
+      return res.status(400).json({
+        error: true,
+        message: "Invalid email credentials",
+        data: null,
+      });
     }
 
     if (!user.password) {
-      return res.status(400).json({ error: true, message: "Invalid credentials", data: null });
+      return res
+        .status(400)
+        .json({ error: true, message: "Invalid credentials", data: null });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: true, message: "Invalid password credentials", data: null });
+      return res.status(400).json({
+        error: true,
+        message: "Invalid password credentials",
+        data: null,
+      });
     }
 
-
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
+      {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        userModel: "logins",
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "1d" },
     );
 
     if (!token) {
-      return res.status(500).json({ error: true, message: "Error generating token", data: null });
+      return res
+        .status(500)
+        .json({ error: true, message: "Error generating token", data: null });
     }
 
     const safeUser = {
@@ -41,11 +57,15 @@ const getLoginController = async (req, res) => {
     res.json({
       error: false,
       message: "Login successful",
-      data: { token, user: safeUser }
+      data: { token, user: safeUser },
     });
   } catch (err) {
     console.error("Login Server Error:", err);
-    res.status(500).json({ error: true, message: "Server error: " + err.message, data: null });
+    res.status(500).json({
+      error: true,
+      message: "Server error: " + err.message,
+      data: null,
+    });
   }
 };
 
