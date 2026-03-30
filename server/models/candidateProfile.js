@@ -47,15 +47,11 @@ const candidateProfileSchema = new mongoose.Schema({
     default: 0,
   },
   experience: {
-    type: [
-      {
-        jobTitle: { type: String, required: true },
-        companyName: { type: String, required: true },
-        role: { type: String, required: true },
-        expYear: { type: Number, required: true },
-      },
-    ],
-    default: [],
+    type: Number,
+    min: 0,
+    max: 100,
+    required: false,
+    default: 0,
   },
   education: {
     type: [
