@@ -1097,3 +1097,4 @@ const CandidatesView = () => {
 };
 
 export default CandidatesView;
+

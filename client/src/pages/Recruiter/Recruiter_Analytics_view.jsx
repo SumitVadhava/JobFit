@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
@@ -29,7 +28,6 @@ import {
 } from "lucide-react";
 import api from "../../api/api";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 const ACCENT = "#9c44fe";
 const ACCENT_LIGHT = "rgba(156,68,254,0.07)";
 const ACCENT_BORDER = "rgba(156,68,254,0.18)";
@@ -70,7 +68,6 @@ const formatBackendDateTime = (timestamp) => {
   return `${day} ${monthName} ${year}, ${timePart}`;
 };
 
-// ─── StatCard (matches AdminAnalytics / User Analytics style) ─────────────────
 const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
@@ -111,7 +108,6 @@ const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
   </motion.div>
 );
 
-// ─── Company Logo ──────────────────────────────────────────────────────────────
 const CompanyLogo = ({ src, name, size = "w-11 h-11" }) => {
   const [err, setErr] = useState(false);
   const initial = (name || "J").charAt(0).toUpperCase();
@@ -168,7 +164,6 @@ const CandidateAvatar = ({ src, name, size = "w-10 h-10" }) => {
   );
 };
 
-// ─── Custom Tooltip for Bar Chart ─────────────────────────────────────────────
 const BarTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -192,18 +187,16 @@ const BarTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-const RecruiterAnalytics = () => {
+const Recruiter_Analytics_view = () => {
   const [jobs, setJobs] = useState([]);
   const [allCandidates, setAllCandidates] = useState([]);
-  const [perJobData, setPerJobData] = useState([]); // [{ jobTitle, applicants }]
+  const [perJobData, setPerJobData] = useState([]);
   const [candidateSummary, setCandidateSummary] = useState({
     totalJobs: 0,
     totalCandidates: 0,
   });
   const [loading, setLoading] = useState(true);
 
-  // grab recruiter id from localStorage
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user._id || user.id;
 
@@ -217,17 +210,14 @@ const RecruiterAnalytics = () => {
       try {
         setLoading(true);
 
-        // 1) all recruiter jobs
-        const jobsRes = await api
-          .get(`/jobs/recruiter/${userId}`)
-          .catch(() => null);
+        const jobsRes = await api.get(`/jobs/recruiter/${userId}`).catch(() => null);
         const recruiterJobs = jobsRes?.data?.jobs || [];
         setJobs(recruiterJobs);
 
-        // 2) all candidates across recruiter jobs
         const allCandRes = await api
           .get(`/jobs/recruiter/${userId}/candidates`)
           .catch(() => null);
+
         const totalCandidates = Number(allCandRes?.data?.totalCandidates) || 0;
         const totalJobsFromCandidatesApi =
           Number(allCandRes?.data?.totalJobs) || recruiterJobs.length;
@@ -240,7 +230,6 @@ const RecruiterAnalytics = () => {
         });
         setAllCandidates(candidates);
 
-        // 3) per-job applicant count from recruiter candidates API response
         if (recruiterJobs.length > 0) {
           const byJob = candidates.reduce((acc, candidate) => {
             const jobId = candidate.jobId;
@@ -292,7 +281,6 @@ const RecruiterAnalytics = () => {
     fetchAll();
   }, [userId]);
 
-  // ─── Derived stats ─────────────────────────────────────────────────────────
   const totalJobs = candidateSummary.totalJobs || jobs.length;
   const totalApplications =
     candidateSummary.totalCandidates ||
@@ -305,7 +293,6 @@ const RecruiterAnalytics = () => {
     null,
   );
 
-  // Recent 5 applications — from allCandidates
   const recentApplications = [...allCandidates]
     .sort(
       (a, b) =>
@@ -325,7 +312,6 @@ const RecruiterAnalytics = () => {
       img: job.img,
     }));
 
-  // ─── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -356,7 +342,6 @@ const RecruiterAnalytics = () => {
 
       <main className="min-w-0">
         <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-8">
-          {/* ── Header ─────────────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -368,7 +353,7 @@ const RecruiterAnalytics = () => {
                 Recruiter Dashboard
               </h1>
               <p className="text-sm text-gray-500 mt-1">
-                Recruitment overview — jobs, applications & top performers.
+                Recruitment overview - jobs, applications and top performers.
               </p>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600">
@@ -377,7 +362,6 @@ const RecruiterAnalytics = () => {
             </span>
           </motion.div>
 
-          {/* ── Stat Cards ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             <StatCard
               icon={Briefcase}
@@ -399,7 +383,6 @@ const RecruiterAnalytics = () => {
             />
           </div>
 
-          {/* ── Applications Per Job — Bar Chart ───────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -460,7 +443,7 @@ const RecruiterAnalytics = () => {
                       tickLine={false}
                       interval={0}
                       tickFormatter={(v) =>
-                        v.length > 12 ? v.slice(0, 12) + "…" : v
+                        v.length > 12 ? `${v.slice(0, 12)}...` : v
                       }
                     />
                     <YAxis
@@ -494,7 +477,6 @@ const RecruiterAnalytics = () => {
             )}
           </motion.div>
 
-          {/* ── Top Performing Job (Pie Chart) ─────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -598,7 +580,6 @@ const RecruiterAnalytics = () => {
             )}
           </motion.div>
 
-          {/* ── Recent Applications ────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -628,7 +609,8 @@ const RecruiterAnalytics = () => {
             ) : (
               <div className="space-y-3">
                 {recentApplications.map((app, i) => {
-                  const candidateName = app.name || app.userName || "Unknown Candidate";
+                  const candidateName =
+                    app.name || app.userName || "Unknown Candidate";
 
                   const candidateAvatarSrc =
                     app.profileImage ||
@@ -643,7 +625,6 @@ const RecruiterAnalytics = () => {
                     "";
 
                   const applicationTime = app.appliedAt || app.createdAt;
-
                   const formattedDateTime = formatBackendDateTime(applicationTime);
 
                   return (
@@ -654,21 +635,21 @@ const RecruiterAnalytics = () => {
                       transition={{ duration: 0.3, delay: 0.5 + i * 0.07 }}
                       className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
                     >
-                      {/* Avatar */}
-                      <CandidateAvatar src={candidateAvatarSrc} name={candidateName} />
+                      <CandidateAvatar
+                        src={candidateAvatarSrc}
+                        name={candidateName}
+                      />
 
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-black truncate">
                           {candidateName}
                         </p>
                         <p className="text-xs text-gray-400 truncate mt-0.5">
-                          {app.email || "—"}
-                          {app.jobTitle && ` · ${app.jobTitle}`}
+                          {app.email || "-"}
+                          {app.jobTitle && ` - ${app.jobTitle}`}
                         </p>
                       </div>
 
-                      {/* ATS score badge */}
                       {app.atsScore != null && (
                         <span
                           className="hidden sm:inline text-xs font-bold px-2.5 py-1 rounded-full border shrink-0"
@@ -682,287 +663,21 @@ const RecruiterAnalytics = () => {
                         </span>
                       )}
 
-                      {/* Time */}
                       <span className="text-xs text-gray-300 shrink-0">
                         {formattedDateTime}
                       </span>
 
-                      <ArrowRight
-                        size={15}
-                        className="text-gray-300 shrink-0"
-                      />
+                      <ArrowRight size={15} className="text-gray-300 shrink-0" />
                     </motion.div>
                   );
                 })}
               </div>
             )}
           </motion.div>
-
-          {/* ── Quick Snapshot (4 mini tiles matching admin style) ─────── */}
         </div>
       </main>
     </div>
   );
 };
 
-export default RecruiterAnalytics;
-=======
-import { useRef, useState, useEffect } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
-
-const Recruiter_Analytics_view = () => {
-  const chartContainerRef = useRef(null);
-  const [chartWidth, setChartWidth] = useState(478); // Default width
-
-  // Data for charts
-  const jobPostedData = [
-    { month: "Jan", jobs: 12 },
-    { month: "Feb", jobs: 8 },
-    { month: "Mar", jobs: 15 },
-    { month: "Apr", jobs: 10 },
-    { month: "May", jobs: 18 },
-    { month: "Jun", jobs: 20 },
-  ];
-
-  const userVisitedData = [
-    { month: "Jan", visits: 120 },
-    { month: "Feb", visits: 90 },
-    { month: "Mar", visits: 150 },
-    { month: "Apr", visits: 110 },
-    { month: "May", visits: 180 },
-    { month: "Jun", visits: 200 },
-  ];
-
-  // Handle responsive chart width
-  useEffect(() => {
-    const updateChartWidth = () => {
-      if (chartContainerRef.current) {
-        const containerWidth = chartContainerRef.current.offsetWidth;
-        setChartWidth(Math.min(containerWidth, 960)); // Cap at max content width
-      }
-    };
-
-    updateChartWidth();
-    window.addEventListener("resize", updateChartWidth);
-    return () => window.removeEventListener("resize", updateChartWidth);
-  }, []);
-
-  return (
-    <div
-      className="relative flex min-h-screen flex-col bg-white group/design-root overflow-x-hidden"
-      style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
-    >
-      <div className="layout-container flex h-full grow flex-col px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-1 justify-center py-5">
-          <div
-            ref={chartContainerRef}
-            className="layout-content-container flex flex-col w-full max-w-[960px] flex-1"
-          >
-            {/* Header Section */}
-            <div className="flex flex-wrap justify-between gap-3 p-4 animate-fadeIn">
-              <div className="flex min-w-[288px] flex-col gap-3">
-                <h1 className="text-[#131118] text-[32px] font-bold leading-tight tracking-tight sm:text-[28px]">
-                  Recruitment Analytics
-                </h1>
-                <p className="text-[#6e6388] text-sm font-normal leading-normal">
-                  Track and analyze your recruitment performance
-                </p>
-              </div>
-            </div>
-
-            {/* Metrics Section */}
-            <div className="flex flex-wrap gap-4 p-4 animate-fadeIn">
-              <Card title="Total Applicants" value="1,250" />
-              <Card title="Top ATS Score" value="78%" />
-              <Card
-                title="Required Skills"
-                value="Project Management, Communication, Leadership"
-              />
-            </div>
-
-            {/* Application Trends Section */}
-            <Section title="Job Posted Analytics">
-              <div className="flex min-w-[288px] flex-1 flex-col gap-2 rounded-lg border border-[#dedce5] p-4 sm:p-6 bg-white">
-                <p className="text-[#131118] text-base font-medium leading-normal">
-                  Job Posted by You
-                </p>
-                <p className="text-[#131118] text-[32px] font-bold leading-tight truncate sm:text-[28px]">
-                  {jobPostedData[jobPostedData.length - 1].jobs}
-                </p>
-                <div className="flex gap-1">
-                  <p className="text-[#6e6388] text-base font-normal leading-normal">
-                    Last 6 Months
-                  </p>
-                </div>
-                <div className="min-h-[180px] w-full">
-                  <LineChart
-                    width={chartWidth - 32}
-                    height={148}
-                    data={jobPostedData}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 10 }}
-                  >
-                    <CartesianGrid stroke="#dedce5" vertical={false} />
-                    <XAxis
-                      dataKey="month"
-                      tick={{
-                        fill: "#6e6388",
-                        fontSize: 13,
-                        fontWeight: "bold",
-                      }}
-                    />
-                    <YAxis tick={{ fill: "#6e6388", fontSize: 13 }} />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="jobs"
-                      stroke="#9d45ff" // Updated color
-                      strokeWidth={3}
-                      dot={false}
-                    />
-                  </LineChart>
-                </div>
-              </div>
-            </Section>
-
-            {/* User Visited Section */}
-            <Section title="User Visited Analytics">
-              <div className="flex min-w-[288px] flex-1 flex-col gap-2 rounded-lg border border-[#dedce5] p-4 sm:p-6 bg-white">
-                <p className="text-[#131118] text-base font-medium leading-normal">
-                  User Visited Count
-                </p>
-                <p className="text-[#131118] text-[32px] font-bold leading-tight truncate sm:text-[28px]">
-                  {userVisitedData[userVisitedData.length - 1].visits}
-                </p>
-                <div className="flex gap-1">
-                  <p className="text-[#6e6388] text-base font-normal leading-normal">
-                    Last 6 Months
-                  </p>
-                </div>
-                <div className="min-h-[180px] w-full">
-                  <LineChart
-                    width={chartWidth - 32}
-                    height={148}
-                    data={userVisitedData}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 10 }}
-                  >
-                    <CartesianGrid stroke="#dedce5" vertical={false} />
-                    <XAxis
-                      dataKey="month"
-                      tick={{
-                        fill: "#6e6388",
-                        fontSize: 13,
-                        fontWeight: "bold",
-                      }}
-                    />
-                    <YAxis tick={{ fill: "#6e6388", fontSize: 13 }} />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="visits"
-                      stroke="#a557fe" // Updated color
-                      strokeWidth={3}
-                      dot={false}
-                    />
-                  </LineChart>
-                </div>
-              </div>
-            </Section>
-
-            {/* Candidate Qualifications Section */}
-            {/* <Section title="Candidate Qualifications">
-              <div className="flex min-w-[288px] flex-1 flex-col gap-2 rounded-lg border border-[#dedce5] p-4 sm:p-6 bg-white">
-                <p className="text-[#131118] text-base font-medium leading-normal">
-                  Common Skills
-                </p>
-                <p className="text-[#131118] text-[32px] font-bold leading-tight truncate sm:text-[28px]">
-                  +10%
-                </p>
-                <div className="flex gap-1">
-                  <p className="text-[#6e6388] text-base font-normal leading-normal">
-                    This Quarter
-                  </p>
-                  <p className="text-[#078845] text-base font-medium leading-normal">
-                    +10%
-                  </p>
-                </div>
-                <div className="min-h-[200px] w-full">
-                  <BarChart
-                    width={chartWidth - 32}
-                    height={200} // Increased height for more skills
-                    data={candidateQualificationsData}
-                    layout="vertical"
-                    margin={{ top: 20, right: 40, left: 10, bottom: 10 }}
-                  >
-                    <CartesianGrid stroke="#dedce5" horizontal={false} />
-                    <XAxis
-                      type="number"
-                      tick={{ fill: "#6e6388", fontSize: 12 }}
-                      domain={[0, 100]}
-                    />
-                    <YAxis
-                      dataKey="skill"
-                      type="category"
-                      tick={{
-                        fill: "#6e6388",
-                        fontSize: 12,
-                        fontWeight: "bold",
-                      }}
-                      width={140} // Increased for longer skill names
-                    />
-                    <Tooltip />
-                    <Bar
-                      dataKey="percentage"
-                      fill="#6e6388"
-                      barSize={20} // Adjusted for proper spacing between horizontal bars
-                    >
-                      <LabelList
-                        dataKey="percentage"
-                        position="right"
-                        formatter={(value) => `${value}%`}
-                        style={{
-                          fill: "#131118",
-                          fontSize: 12,
-                          fontWeight: "bold",
-                        }}
-                      />
-                    </Bar>
-                  </BarChart>
-                </div>
-              </div>
-            </Section> */}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Section = ({ title, children }) => (
-  <div className="px-4 pt-5 pb-3 animate-fadeIn">
-    <h2 className="text-[#131118] text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3 sm:text-[20px]">
-      {title}
-    </h2>
-    <div className="flex flex-wrap gap-4 py-3">{children}</div>
-  </div>
-);
-
-const Card = ({ title, value }) => (
-  <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-4 sm:p-6 bg-[#f1f0f4] shadow-sm transition-transform hover:scale-[1.02] duration-200">
-    <p className="text-[#131118] text-base font-medium leading-normal">
-      {title}
-    </p>
-    <p className="text-[#131118] text-2xl font-bold leading-tight sm:text-xl">
-      {value}
-    </p>
-  </div>
-);
-
 export default Recruiter_Analytics_view;
->>>>>>> Stashed changes
