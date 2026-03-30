@@ -277,6 +277,8 @@ function UserAnalytics() {
 
   const totalAtsCount = resumes.length + rawAtsHistory.length;
   const skillsCount = profile?.skills?.length ?? 0;
+  const softSkillsCount = profile?.softSkills?.length ?? 0;
+  const totalSkillsCount = skillsCount + softSkillsCount;
   const appliedCount = applications.length;
 
   // Application status breakdown
@@ -365,7 +367,7 @@ function UserAnalytics() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard icon={Bookmark} label="Saved Jobs" value={savedJobsCount} delay={0} />
             <StatCard icon={Briefcase} label="Applied" value={appliedCount} delay={0.08} />
-            <StatCard icon={Code2} label="Skills" value={skillsCount} delay={0.16} />
+            <StatCard icon={Code2} label="Skills" value={totalSkillsCount} delay={0.16} />
             <StatCard icon={Star} label="Best ATS" value={`${bestAtsScore}%`} delay={0.24} />
           </div>
 

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContexts";
 import api from "../../api/api";
@@ -157,6 +158,137 @@ const EditCard = ({ onRemove, children }) => (
   </div>
 );
 
+/* ── Constants ─────────────────────────────────────────────── */
+const EXPERIENCE_RANGES = ["0-2", "2-4", "4-6", "6-8", "8-10", "10+"];
+
+/* ── Shadcn-style Custom Select (portal-based) ────────────── */
+const ShadcnSelect = ({ value, onChange, options, placeholder = "Select…" }) => {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef(null);
+  const popoverRef = useRef(null);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+
+  // Recalculate position when opened
+  useEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const update = () => {
+      const r = triggerRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, left: r.left, width: r.width });
+    };
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (
+        triggerRef.current?.contains(e.target) ||
+        popoverRef.current?.contains(e.target)
+      ) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const selected = options.find(o => o.value === value);
+
+  const popover = open
+    ? ReactDOM.createPortal(
+      <div
+        ref={popoverRef}
+        className="fixed z-[9999] rounded-lg border border-slate-200 bg-white shadow-lg"
+        style={{
+          top: pos.top,
+          left: pos.left,
+          width: pos.width,
+          animation: "shadcn-pop 0.15s ease-out",
+        }}
+      >
+        <div className="p-1 max-h-[220px] overflow-auto">
+          {options.map(opt => {
+            const isActive = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={`
+                    w-full flex items-center justify-between gap-2 px-2.5 py-2 text-sm rounded-md
+                    transition-colors duration-100 outline-none
+                    ${isActive
+                    ? "bg-indigo-50 text-indigo-700 font-semibold"
+                    : "text-slate-700 hover:bg-slate-50 font-medium"
+                  }
+                  `}
+              >
+                <span>{opt.label}</span>
+                {isActive && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    className="text-indigo-600 shrink-0"
+                  >
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>,
+      document.body
+    )
+    : null;
+
+  return (
+    <div className="relative min-w-[160px]">
+      {/* Trigger */}
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen(p => !p)}
+        className={`
+          w-full flex items-center justify-between gap-2
+          h-10 px-3 text-sm font-medium rounded-lg border
+          bg-white shadow-sm transition-all duration-150
+          ${open
+            ? "border-indigo-400 ring-2 ring-indigo-100"
+            : "border-slate-200 hover:border-slate-300"
+          }
+        `}
+      >
+        <span className={selected ? "text-slate-900" : "text-slate-400"}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <svg
+          width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          className={`text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {popover}
+
+      {/* Inline keyframe for pop animation */}
+      <style>{`
+        @keyframes shadcn-pop {
+          from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 /* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════ */
@@ -169,37 +301,19 @@ const Candidate_Profile_View = ({ userProp }) => {
   // Determine if viewing own profile or someone else's
   const isOwnProfile = !paramId || (user && (paramId === user._id || paramId === user.id));
 
-  const emptyProfile = {
+  const [data, setData] = useState({
     name: "",
+    userName: "",
     email: "",
     resumeSummary: "",
-    totalExperience: 0,
+    totalExperience: "0-2",
     education: [],
     techSkills: [],
     softSkills: [],
-    languages: [],
     atsScore: 0,
     profilePicture: "",
     resumeLink: "",
-  };
-
-  const initial = {
-    name: userProp?.userName || "Sophia Bennett",
-    resumeSummary:
-      "Highly skilled Senior Software Engineer with a passion for building robust backend architectures and mentoring junior developers. 8+ years of experience delivering high-quality, scalable systems across fintech and SaaS.",
-    totalExperience: 8,
-    education: [
-      { degree: "B.S. in Computer Science", date: "2012 – 2016", institution: "University of Technology" },
-    ],
-    techSkills: ["Java", "Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL"],
-    softSkills: ["Leadership", "Communication", "Problem Solving", "Agile", "Mentoring"],
-    languages: ["English (Native)", "Spanish (Intermediate)"],
-    atsScore: 92,
-    profilePicture: userProp?.picture || "https://ui-avatars.com/api/?name=Sophia+Bennett&background=0f172a&color=fff&size=200",
-    resumeLink: "",
-  };
-
-  const [data, setData] = useState(initial);
+  });
 
   const [editing, setEditing] = useState(false);
   const [gallery, setGallery] = useState(false);
@@ -220,10 +334,23 @@ const Candidate_Profile_View = ({ userProp }) => {
 
   /* ── Helper to map API response into component state ────── */
   const mapProfileToState = (profile, userName, userEmail, userPicture) => ({
-    name: userName || "",
-    email: userEmail || "",
+    name: profile?.name || userName || "",
+    userName: profile?.userName || userName || "",
+    email: profile?.email || userEmail || "",
     resumeSummary: profile?.description || "",
-    totalExperience: profile?.experience?.[0]?.expYear || 0,
+    totalExperience: (() => {
+      const raw = profile?.experience;
+      // If it's already a valid range string, use it directly
+      if (typeof raw === "string" && EXPERIENCE_RANGES.includes(raw)) return raw;
+      // Convert numeric value to the matching range
+      const num = Number(raw) || 0;
+      if (num >= 10) return "10+";
+      if (num >= 8) return "8-10";
+      if (num >= 6) return "6-8";
+      if (num >= 4) return "4-6";
+      if (num >= 2) return "2-4";
+      return "0-2";
+    })(),
     education: (profile?.education || []).map(edu => ({
       degree: edu.degree || "",
       date: edu.yearOfPassing ? `${edu.yearOfPassing}` : "",
@@ -231,43 +358,48 @@ const Candidate_Profile_View = ({ userProp }) => {
     })),
     techSkills: (profile?.skills || []).map(s => s.skillName || s),
     softSkills: (profile?.softSkills || []).map(s => s.skillName || s),
-    languages: [],
     atsScore: profile?.atsScore || 0,
     profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=0f172a&color=fff&size=200`,
     resumeLink: profile?.resumeLink || "",
   });
 
   /* ── Helper to map state back to API shape ────────────── */
-  const mapStateToApi = () => ({
-    name: data.name?.trim() ? data.name : " ",
-    email: data.email?.trim() ? data.email : " ",
-    img: data.profilePicture || " ",
-    description: data.resumeSummary?.trim() ? data.resumeSummary.trim() : " ",
-    atsScore: data.atsScore || 0,
-    experience: [{
-      jobTitle: "Professional Experience",
-      // clamp to 0-99 so scroll-wheel accidents don't produce huge numbers
-      expYear: Math.min(Math.max(parseInt(data.totalExperience) || 0, 0), 99),
-      companyName: "N/A",
-      role: "Candidate",
-    }],
-    education: data.education
-      // skip entries where BOTH degree and institution are blank
-      .filter(edu => (edu.degree || edu.institution || "").trim())
-      .map(edu => {
-        const deg = (edu.degree || "").trim();
-        const inst = (edu.institution || "").trim();
-        return {
-          // if user left "Degree" blank but filled "Institution", use institution as degree
-          degree: deg || inst || "Other",
-          university: inst || deg || "Unknown",
-          yearOfPassing: parseInt(edu.date) || new Date().getFullYear(),
-        };
-      }),
-    skills: data.techSkills.filter(s => s.trim()).map(s => ({ skillName: s })),
-    softSkills: data.softSkills.filter(s => s.trim()).map(s => ({ skillName: s })),
-    resumeLink: data.resumeLink || null,
-  });
+  const mapStateToApi = () => {
+    const payload = {};
+    if (data.name?.trim()) payload.name = data.name.trim();
+    if (data.userName?.trim()) payload.userName = data.userName.trim();
+    // Email is usually not sent if it shouldn't be updated, but backend handles it if sent.
+    // We display it but don't allow changing it in UI, so we can skip sending it to avoid accidental changes if server allows it.
+
+    if (data.resumeSummary?.trim()) payload.description = data.resumeSummary.trim();
+    if (data.profilePicture?.trim()) payload.img = data.profilePicture.trim();
+
+    // Always sync ATS score if managed by client
+    payload.atsScore = data.atsScore || 0;
+
+    // Sync experience range as a string directly
+    if (data.totalExperience) {
+      payload.experience = data.totalExperience;
+    }
+
+    payload.education = data.education
+      .filter(edu => (edu.degree || edu.institution).trim())
+      .map(edu => ({
+        degree: (edu.degree || "Other").trim(),
+        university: (edu.institution || "Unknown").trim(),
+        yearOfPassing: parseInt(edu.date) || new Date().getFullYear(),
+      }));
+
+    payload.skills = data.techSkills
+      .filter(s => s.trim())
+      .map(s => ({ skillName: s.trim() }));
+
+    payload.softSkills = data.softSkills
+      .filter(s => s.trim())
+      .map(s => ({ skillName: s.trim() }));
+
+    return payload;
+  };
 
   /* ── Fetch profile on mount ──────────────────────────────── */
   useEffect(() => {
@@ -288,6 +420,7 @@ const Candidate_Profile_View = ({ userProp }) => {
           }
           if (response) profile = response.data.profile;
 
+          // Compute best ATS dynamically from ATS history and Resumes
           // Compute best ATS dynamically from ATS history and Resumes
           if (userIdToFetch) {
             const [resumeRes, atsHistoryRes] = await Promise.all([
@@ -322,14 +455,20 @@ const Candidate_Profile_View = ({ userProp }) => {
           if (bestAts > -1) mappedProfile.atsScore = bestAts;
           setData(mappedProfile);
         } else if (isOwnProfile) {
-          // Fallback to initial dummy data if no profile or backend is disabled
-          setData(p => ({
-            ...initial,
-            name: userName || initial.name,
-            email: userEmail,
-            profilePicture: userPicture || initial.profilePicture,
-            atsScore: bestAts > -1 ? bestAts : p.atsScore
-          }));
+          // No profile? Start with auth info and zero'd stats
+          setData({
+            name: userName || "",
+            userName: userName || "",
+            email: userEmail || "",
+            resumeSummary: "",
+            totalExperience: 0,
+            education: [],
+            techSkills: [],
+            softSkills: [],
+            atsScore: bestAts > -1 ? bestAts : 0,
+            profilePicture: userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=0f172a&color=fff&size=200`,
+            resumeLink: "",
+          });
         } else {
           setError("Profile not found.");
         }
@@ -362,41 +501,25 @@ const Candidate_Profile_View = ({ userProp }) => {
   const addArr = (field, val) => set(field, [...data[field], val]);
 
   const handleSave = async () => {
-    if (!data.name.trim()) return alert("Name is required");
+    if (!data.name.trim()) return toast.error("Name is required");
     const payload = mapStateToApi();
-    console.log("Saving profile payload:", JSON.stringify(payload, null, 2));
     try {
       await api.put("/profile", payload);
       setEditing(false);
       setSaved(true);
+      toast.success("Profile saved successfully!");
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       console.error("Error saving profile:", err);
-      const status = err.response?.status;
-      const serverMsg = err.response?.data?.error || err.response?.data?.message || err.message;
-
-      // If profile doesn't exist yet (404) or conflict (409), try creating it
-      if (status === 404 || status === 409) {
-        try {
-          await api.post("/profile", payload);
-          setEditing(false);
-          setSaved(true);
-          setTimeout(() => setSaved(false), 2500);
-        } catch (createErr) {
-          console.error("Error creating profile:", createErr);
-          const createMsg = createErr.response?.data?.error || createErr.response?.data?.message || createErr.message;
-          alert(`Failed to save profile: ${createMsg}`);
-        }
-      } else {
-        alert(`Failed to save profile.\n\nServer error: ${serverMsg}`);
-      }
+      const serverMsg = err.response?.data?.message || err.response?.data?.error || err.message;
+      toast.error(`Error saving profile: ${serverMsg}`);
     }
   }
 
   /* Native Share API ─────────────────────────────────────────── */
   const handleShare = async () => {
     const userId = paramId || user?._id || user?.id || "";
-    const profileUrl = `${window.location.origin}/user/profile/${userId}`;
+    const profileUrl = `${window.location.origin}/candidate/profile/${userId}`;
     const shareData = {
       title: `${data.name} — Candidate Profile`,
       text: `Check out ${data.name}'s profile: ${data.totalExperience !== 0 ? data.totalExperience + " years" : "Fresher"} · ATS Score ${data.atsScore}%`,
@@ -538,19 +661,16 @@ const Candidate_Profile_View = ({ userProp }) => {
                     onChange={e => set("name", e.target.value)}
                     placeholder="Full Name"
                   />
-                  <input
-                    className="text-sm font-medium text-slate-900 bg-blue-50 border-b-2 border-blue-500 rounded-t-lg px-2 py-1 w-full outline-none mt-2"
-                    value={data.email}
-                    onChange={e => set("email", e.target.value)}
-                    placeholder="Email Address"
-                  />
+                  <p className="text-sm font-medium text-slate-500 mt-2 px-2 select-all cursor-copy" title="Email is non-editable">
+                    {data.email}
+                  </p>
                 </>
               ) : (
                 <>
                   <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{data.name}</h1>
-                  <p className="text-sm font-medium text-slate-500 mt-0.5">
+                  {isOwnProfile && <p className="text-sm font-medium text-slate-500 mt-0.5">
                     {data.email}
-                  </p>
+                  </p>}
                 </>
               )}
               <div className="flex flex-wrap items-center gap-2 mt-2.5">
@@ -636,31 +756,32 @@ const Candidate_Profile_View = ({ userProp }) => {
               {/* Experience */}
               <div className="anim-up d180">
                 <Section icon="brief" label="Experience" accent="indigo">
-                  <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 italic font-bold">
-                        {data.totalExperience}
+                  <div className="group relative rounded-2xl transition-all duration-300">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {/* <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                          <Ic d={ICONS.clock} size={22} />
+                        </div> */}
+                        <div>
+                          <p className="text-sm font-bold text-slate-800 tracking-tight">Total Experience</p>
+                          <p className="text-xs text-slate-500 font-medium">Accumulated professional history</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">Total Years of Experience</p>
-                        <p className="text-xs text-slate-500 font-medium">Accumulated across all roles</p>
+                      <div className="relative">
+                        {editing ? (
+                          <ShadcnSelect
+                            value={data.totalExperience}
+                            onChange={val => set("totalExperience", val)}
+                            options={EXPERIENCE_RANGES.map(r => ({ value: r, label: `${r} Years` }))}
+                            placeholder="Select experience…"
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-indigo-100 shadow-sm">
+                            <span className="text-lg font-black text-indigo-600">{data.totalExperience + " Years"|| "0-2" + " Years"}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {editing ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number" min={0}
-                          className="w-20 text-center text-lg font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 focus:border-indigo-500 rounded-xl px-2 py-2 outline-none transition-colors"
-                          value={data.totalExperience || 0}
-                          onChange={e => set("totalExperience", parseInt(e.target.value) || 0)}
-                        />
-                        <span className="text-sm font-bold text-slate-400">Yrs</span>
-                      </div>
-                    ) : (
-                      <span className="text-lg font-black text-indigo-600">
-                        {data.totalExperience !== 0 ? data.totalExperience + " years" : "Fresher"}
-                      </span>
-                    )}
                   </div>
                 </Section>
               </div>
@@ -787,7 +908,7 @@ const Candidate_Profile_View = ({ userProp }) => {
                 <p className="text-[13px] text-slate-500 mb-5 leading-relaxed">Your resume is the first impression you make on potential employers. Craft it carefully to secure your desired job or internship.</p>
 
                 <div
-                  className={`relative border-2 border-dashed rounded-xl p-8 mb-4 border-slate-300 transition-all flex flex-col items-center justify-center text-center 
+                  className={`relative border-2 border-dashed rounded-xl p-8 mb-2 border-slate-300 transition-all flex flex-col items-center justify-center text-center 
                   ${dragActive ? 'border-blue-500 bg-blue-50/50 scale-[1.01]' : 'border-slate-300 bg-white hover:bg-slate-50'}
                   ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
                   onDragEnter={handleDrag}
@@ -833,27 +954,6 @@ const Candidate_Profile_View = ({ userProp }) => {
                       <p className="text-[12px] font-medium text-slate-400 mt-1 pointer-events-none">Supported formats: pdf, up to 5MB</p>
                     </>
                   )}
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-[#f0f4ff] rounded-xl border border-blue-100 mt-1">
-                  <div className="flex items-center gap-4 mb-3 sm:mb-0">
-                    <div className="flex-shrink-0 relative w-12 h-12 ml-1">
-                      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-slate-800">
-                        <path d="M4.5 16C4.5 13.5147 6.51472 11.5 9 11.5H16.1716C17.365 11.5 18.5096 11.9741 19.3536 12.818L21.6464 15.1109C22.4904 15.9549 23.635 16.4289 24.8284 16.4289H39C41.4853 16.4289 43.5 18.4437 43.5 20.9289V35C43.5 37.4853 41.4853 39.5 39 39.5H9C6.51472 39.5 4.5 37.4853 4.5 35V16Z" stroke="currentColor" strokeWidth="2" fill="white" />
-                        <rect x="23" y="11" width="16" height="18" rx="1" fill="white" stroke="currentColor" strokeWidth="1.5" transform="rotate(15 23 11)" />
-                        <circle cx="34" cy="18" r="2" fill="#ef4444" />
-                        <path d="M29 23L39 25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        <path d="M30 27L38 29" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="text-[14px] font-bold text-slate-900 leading-tight">Don't have a resume yet?</h4>
-                      <p className="text-[13px] text-slate-500 mt-0.5">Create a job-winning resume with our simple resume builder</p>
-                    </div>
-                  </div>
-                  <button onClick={() => navigate("/candidate/best-resumes")} className="text-[13px] font-bold text-blue-600 hover:text-blue-800 transition-colors px-2 whitespace-nowrap outline-none">
-                    Create resume
-                  </button>
                 </div>
               </div>
 

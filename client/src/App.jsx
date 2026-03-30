@@ -138,6 +138,11 @@ function App() {
             >
               <Candidate_Profile_View userProp={userProp} />
             </ProtectedRoute>} />
+        {/* Public route — shared profile viewable without login */}
+        <Route
+          path='/candidate/profile/:id'
+          element={<Candidate_Profile_View userProp={userProp} />}
+        />
 
 
         <Route
