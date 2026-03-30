@@ -233,6 +233,8 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
 
   /* ── Helper to map state back to API shape ────────────── */
   const mapStateToApi = () => ({
+    name: data.name || null,
+    email: data.email || null,
     img: data.profilePicture || null,
     description: data.resumeSummary || null,
     atsScore: data.atsScore || 0,
@@ -319,26 +321,32 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
 
   const handleSave = async () => {
     if (!data.name.trim()) return alert("Name is required");
+    const payload = mapStateToApi();
+    console.log("Saving profile payload:", JSON.stringify(payload, null, 2));
     try {
-      await api.put("/profile", mapStateToApi());
+      await api.put("/profile", payload);
       setEditing(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       console.error("Error saving profile:", err);
-      // If profile doesn't exist yet, create it
-      if (err.response?.status === 404) {
+      const status = err.response?.status;
+      const serverMsg = err.response?.data?.error || err.response?.data?.message || err.message;
+
+      // If profile doesn't exist yet (404) or conflict (409), try creating it
+      if (status === 404 || status === 409) {
         try {
-          await api.post("/profile", mapStateToApi());
+          await api.post("/profile", payload);
           setEditing(false);
           setSaved(true);
           setTimeout(() => setSaved(false), 2500);
         } catch (createErr) {
           console.error("Error creating profile:", createErr);
-          alert("Failed to save profile. Please try again.");
+          const createMsg = createErr.response?.data?.error || createErr.response?.data?.message || createErr.message;
+          alert(`Failed to save profile: ${createMsg}`);
         }
       } else {
-        alert("Failed to save profile. Please try again.");
+        alert(`Failed to save profile.\n\nServer error: ${serverMsg}`);
       }
     }
   }
@@ -689,19 +697,9 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
               {/* ATS Score */}
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 text-center">
                 <p className="text-xs font-bold tracking-widest uppercase text-slate-400 mb-4">ATS Match Score</p>
-                {editing ? (
-                  <div className="flex items-center justify-center gap-2 my-4">
-                    <input
-                      type="number" min={0} max={100}
-                      value={data.atsScore}
-                      onChange={e => set("atsScore", Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
-                      className="w-28 text-4xl font-black text-center text-slate-900 bg-blue-50 border-b-2 border-blue-500 rounded-t-lg outline-none py-2"
-                    />
-                    <span className="text-2xl font-bold text-slate-400">%</span>
-                  </div>
-                ) : (
+                <div className="flex items-center justify-center my-4">
                   <AtsGauge score={data.atsScore} />
-                )}
+                </div>
                 <p className="text-xs text-slate-500 leading-relaxed mt-3">
                   {data.atsScore >= 80
                     ? "Profile is highly optimised for current roles."
