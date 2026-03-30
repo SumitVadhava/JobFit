@@ -77,7 +77,7 @@ exports.updateProfile = async (req, res) => {
     const updatedProfile = await Profile.findOneAndUpdate(
       { user: userId },
       { $set: updates },
-      { new: true, upsert: true, runValidators: true },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
     );
 
     res.status(200).json({
