@@ -124,7 +124,7 @@ exports.createProfile = async (req, res) => {
       userModel,
       img: img || null,
       description: description || null,
-      experience: experience || [],
+      experience: experience || "0-2 years",
       atsScore: 0,
       education: education || [],
       skills: skills || [],
@@ -167,8 +167,7 @@ exports.updateProfile = async (req, res) => {
     const updates = {};
     if (img) updates.img = img;
     if (description) updates.description = description;
-    if (experience && Array.isArray(experience))
-      updates.experience = experience;
+    if (experience) updates.experience = experience;
     if (education && Array.isArray(education)) updates.education = education;
     if (skills && Array.isArray(skills)) updates.skills = skills;
     if (softSkills && Array.isArray(softSkills))

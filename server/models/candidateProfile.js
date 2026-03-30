@@ -47,11 +47,9 @@ const candidateProfileSchema = new mongoose.Schema({
     default: 0,
   },
   experience: {
-    type: Number,
-    min: 0,
-    max: 50,
+    type: string,
     required: false,
-    default: 0,
+    default: "0-2 years",
   },
   education: {
     type: [
