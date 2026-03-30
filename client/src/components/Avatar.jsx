@@ -122,7 +122,7 @@ const Avatar = ({ userData }) => {
                                 (
                                     <div>
                                         <Link
-                                            to="/user/profile"
+                                            to="/candidate/profile"
                                             state={userData}
                                             onClick={() => setOpen(false)}
                                             style={{
