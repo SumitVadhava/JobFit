@@ -324,6 +324,7 @@ const Candidate_Profile_View = ({ userProp }) => {
   const [error, setError] = useState(null);
   const [activeSkillTab, setActiveSkillTab] = useState("tech");
   const [dragActive, setDragActive] = useState(false);
+  const [profilePhotoFile, setProfilePhotoFile] = useState(null);
 
   const galleryImages = [
     `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=0f172a&color=fff&size=200`,
@@ -503,10 +504,27 @@ const Candidate_Profile_View = ({ userProp }) => {
   const handleSave = async () => {
     if (!data.name.trim()) return toast.error("Name is required");
     const payload = mapStateToApi();
+
+    let formData = null;
+    if (profilePhotoFile) {
+      formData = new FormData();
+      formData.append('profilePhoto', profilePhotoFile);
+      // Add other fields to formData
+      Object.keys(payload).forEach(key => {
+        if (key !== 'img') { // Don't send img if we're uploading a file
+          formData.append(key, JSON.stringify(payload[key]));
+        }
+      });
+    }
+
     try {
-      await api.put("/profile", payload);
+      const config = formData ? {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      } : {};
+      await api.put("/profile", formData || payload, config);
       setEditing(false);
       setSaved(true);
+      setProfilePhotoFile(null); // Clear the file after save
       toast.success("Profile saved successfully!");
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
@@ -538,6 +556,7 @@ const Candidate_Profile_View = ({ userProp }) => {
     setUploading(true);
     const file = e.target.files[0];
     if (file?.type.startsWith("image/")) {
+      setProfilePhotoFile(file);
       const r = new FileReader();
       r.onload = ev => { set("profilePicture", ev.target.result); setGallery(false); setUploading(false); };
       r.onerror = () => { alert("Upload failed."); setUploading(false); };
