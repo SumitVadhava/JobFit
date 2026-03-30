@@ -1,6 +1,6 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const adminController = require('../controllers/adminDashboardController');
+const adminController = require("../controllers/adminDashboardController");
 
 /**
  * @swagger
@@ -37,6 +37,8 @@ const adminController = require('../controllers/adminDashboardController');
  *                   example: "Operation successful"
  *                 data:
  *                   type: object
+ *       404:
+ *         description: Dashboard data not found
  *       401:
  *         description: Unauthorized
  *       403:
@@ -44,7 +46,7 @@ const adminController = require('../controllers/adminDashboardController');
  *       500:
  *         description: Internal server error
  */
-router.get('/dashboard', adminController.getDashboardData);
+router.get("/dashboard", adminController.getDashboardData);
 
 // ─────────────────────────────────────────────────────────
 // JOBS
@@ -113,7 +115,7 @@ router.get('/dashboard', adminController.getDashboardData);
  *       500:
  *         description: Internal server error
  */
-router.get('/jobs', adminController.getJobsData);
+router.get("/jobs", adminController.getJobsData);
 
 // ─────────────────────────────────────────────────────────
 // COMPANIES
@@ -153,6 +155,6 @@ router.get('/jobs', adminController.getJobsData);
  *       500:
  *         description: Internal server error
  */
-router.get('/companies', adminController.getCompaniesData);
+router.get("/companies", adminController.getCompaniesData);
 
 module.exports = router;

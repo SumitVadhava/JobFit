@@ -216,6 +216,69 @@ router.get(
 
 /**
  * @swagger
+ * /api/jobs/{jobId}/candidates/{applicationId}/hire:
+ *   patch:
+ *     summary: Hire a candidate for a recruiter-owned job
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Job document ID owned by logged-in recruiter
+ *       - in: path
+ *         name: applicationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Application document ID from applied_jobs
+ *     responses:
+ *       200:
+ *         description: Candidate hired successfully
+ *       400:
+ *         description: Invalid ids
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - recruiter role required
+ *       404:
+ *         description: Job or application not found
+ *       409:
+ *         description: Candidate already hired or no openings available
+ */
+router.patch(
+  "/:jobId/candidates/:applicationId/hire",
+  authorizeRole(ROLES.RECRUITER),
+  jobController.hireCandidateForJob,
+);
+
+/**
+ * @swagger
+ * /api/jobs/admin/candidates/unique-count:
+ *   get:
+ *     summary: Get total unique candidates across all jobs (admin)
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unique candidates count retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - admin role required
+ */
+router.get(
+  "/admin/candidates/unique-count",
+  authorizeRole(ROLES.ADMIN),
+  jobController.getUniqueCandidatesCountForAdmin,
+);
+
+/**
+ * @swagger
  * /api/jobs/{id}/apply:
  *   post:
  *     summary: Apply for a job (candidate only)
