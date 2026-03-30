@@ -393,8 +393,6 @@ const options = {
           properties: {
             _id: { type: "string" },
             userName: { type: "string", example: "John Doe" },
-            email: { type: "string", example: "john@example.com" },
-            role: { type: "string", example: "student" },
             atsScore: { type: "number", example: 85 },
             description: {
               type: "string",
