@@ -4,6 +4,7 @@ const fs = require("fs");
 const multer = require("multer");
 const FormData = require("form-data");
 const path = require("path");
+const AtsHistory = require("../models/atsHistory");
 
 const router = express.Router();
 
@@ -23,8 +24,8 @@ router.post("/upload", upload.single("pdf"), async (req, res) => {
     const jobDesc = req.body.jobDesc;
 
     const formData = new FormData();
-    formData.append("pdf", fs.createReadStream(filePath)); 
-    formData.append("jobDesc", jobDesc); 
+    formData.append("pdf", fs.createReadStream(filePath));
+    formData.append("jobDesc", jobDesc);
 
     const response = await axios.post(
       "https://jobfit-ats-api-1.onrender.com/analyze",
@@ -34,12 +35,33 @@ router.post("/upload", upload.single("pdf"), async (req, res) => {
       },
     );
 
+    // console.log("Resume analysis response:", response);
+    // console.log("Resume analysis response: DATA ::", response.data);
+
+    // Save to AtsHistory
+    const userId = req.user ? req.user.id : null;
+    if (userId && response.data && response.data.result) {
+      const score = response.data.result["ATS Score"] || 0;
+
+      await AtsHistory.findOneAndUpdate(
+        { userId },
+        {
+          $push: {
+            atsScores: {
+              score: score,
+              analyzedAt: new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+            },
+          },
+          $set: { updatedAt: new Date(Date.now() + 5.5 * 60 * 60 * 1000) },
+        },
+        { upsert: true, new: true },
+      );
+    }
+
     res.json({
       success: true,
       analysis: response.data,
     });
-
-  
   } catch (error) {
     console.error("Resume analysis error:", error.message);
     res

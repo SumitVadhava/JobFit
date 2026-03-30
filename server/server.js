@@ -16,6 +16,7 @@ const auth = require("./middlewares/auth");
 const authorizeRole = require("./middlewares/authorizeRole");
 const { ROLES, USER_FACING_ROLES } = require("./utils/roles");
 const resumeRoute = require("./ATS/resume");
+const atsHistoryRouter = require("./routes/atsHistoryRouter");
 const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
@@ -29,7 +30,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:5000",
-  "https://jobfit-s5v7.onrender.com"
+  "https://jobfit-s5v7.onrender.com",
 ];
 
 app.use(
@@ -47,7 +48,6 @@ app.use(
     credentials: true,
   }),
 );
-
 
 app.use(
   "/api-docs",
@@ -71,15 +71,25 @@ app.use(
   }),
 );
 
-
-
 app.use(helmet());
-
-// CORS configuration consolidated at the top
-
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    console.error(
+      "Bad JSON structure:",
+      err.message,
+      "at position",
+      err.position,
+    );
+    return res
+      .status(400)
+      .send({ status: 400, message: "Invalid JSON format" });
+  }
+  next();
+});
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Jobfit made by Code Conquerors😊");
@@ -89,7 +99,6 @@ app.get("/ping", (req, res) => {
   res.send("Welcome to the Jobfit made by Code Conquerors😊");
 });
 
-
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/public", express.static(path.join(__dirname, "public")));
 
@@ -97,8 +106,18 @@ app.use("/api", loginRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/jobs", auth, jobRouter);
 app.use("/api/admin", auth, authorizeRole(ROLES.ADMIN), adminDashboardRouter);
-app.use("/api/admin/candidates", auth, authorizeRole(ROLES.ADMIN), adminCandidateRouter);
-app.use("/api/admin/recruiters", auth, authorizeRole(ROLES.ADMIN), adminRecruiterRouter);
+app.use(
+  "/api/admin/candidates",
+  auth,
+  authorizeRole(ROLES.ADMIN),
+  adminCandidateRouter,
+);
+app.use(
+  "/api/admin/recruiters",
+  auth,
+  authorizeRole(ROLES.ADMIN),
+  adminRecruiterRouter,
+);
 app.use(
   "/api/user",
   auth,
@@ -112,15 +131,18 @@ app.use(
   profileRouter,
 );
 app.use("/api/resume", auth, authorizeRole(...USER_FACING_ROLES), resumeRoute);
+app.use(
+  "/api/atshistory",
+  auth,
+  authorizeRole(...USER_FACING_ROLES),
+  atsHistoryRouter,
+);
 app.use("/api/testimonials", testimonialRouter);
-
-
 
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
-
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -128,7 +150,6 @@ app.use((err, req, res, next) => {
     .status(500)
     .json({ error: true, data: null, message: "Internal Server Error" });
 });
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
