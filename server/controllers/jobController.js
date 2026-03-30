@@ -576,6 +576,83 @@ exports.getCandidatesForRecruiterJobs = async (req, res) => {
   }
 };
 
+exports.getUniqueCandidatesCountForRecruiter = async (req, res) => {
+  try {
+    const { recruiterId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(recruiterId)) {
+      return res.status(400).json({ message: "Invalid recruiter id" });
+    }
+
+    const principal = await resolveAuthenticatedPrincipal(req.user);
+    if (!principal) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (String(principal.id) !== String(recruiterId)) {
+      return res.status(403).json({
+        message: "Forbidden: you can only access candidates for your own jobs",
+      });
+    }
+
+    const recruiterJobs = await Job.find(
+      buildRecruiterOwnershipFilter(principal),
+    )
+      .select("_id")
+      .lean();
+
+    if (recruiterJobs.length === 0) {
+      return res.status(200).json({
+        message: "No jobs found for this recruiter",
+        totalJobs: 0,
+        uniqueCandidates: 0,
+      });
+    }
+
+    const jobIds = recruiterJobs.map((job) => job._id);
+
+    const uniqueCandidateAggregate = await AppliedJob.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+        },
+      },
+      {
+        $project: {
+          userId: 1,
+          userModel: {
+            $ifNull: ["$userModel", USER_MODELS.LOGIN],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            userId: "$userId",
+            userModel: "$userModel",
+          },
+        },
+      },
+      {
+        $count: "total",
+      },
+    ]);
+
+    const uniqueCandidates = uniqueCandidateAggregate[0]?.total || 0;
+
+    return res.status(200).json({
+      message: "Unique candidates count retrieved successfully",
+      recruiterId,
+      totalJobs: recruiterJobs.length,
+      uniqueCandidates,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
 exports.updateJob = async (req, res) => {
   try {
     const existingJob = await Job.findById(req.params.id);
