@@ -226,8 +226,11 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         });
         setIsLogin(true);
         setTimeout(() => {
-          navigate("/");
-        }, 300);
+          if (responserole === "admin") navigate("/admin/dashboard");
+          else if (responserole === "recruiter")
+            navigate("/recruiter/dashboard");
+          else navigate("/candidate/dashboard");
+        }, 1200);
       }
       console.log("Form submitted!");
       setErrors({});
@@ -285,7 +288,9 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         });
 
         // onClose();
-        navigate("/");
+        if (response.data.user.role === "admin") navigate("/admin/dashboard");
+        else if (response.data.user.role === "recruiter") navigate("/recruiter/dashboard");
+        else navigate("/candidate/dashboard");
 
 
 
