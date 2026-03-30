@@ -105,7 +105,7 @@ function App() {
               <JobSearch />
             </ProtectedRoute>} />
         <Route
-          path='/candidate/resume'
+          path='/candidate/ats'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -196,6 +196,16 @@ function App() {
             >
               <Recruiter_Candidates_view />
             </ProtectedRoute>} />
+
+        <Route
+          path="/recruiter/history"
+          element={
+            <ProtectedRoute
+              allowedRoles={['recruiter']}
+            >
+              <Recruiter_History />
+            </ProtectedRoute>} />
+
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route
           path="/recruiter/postedjobs"
@@ -205,6 +215,8 @@ function App() {
             >
               <Recruiter_Posted_Jobs_view />
             </ProtectedRoute>} />
+
+        
 
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactSupport />} />
