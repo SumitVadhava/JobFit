@@ -25,6 +25,32 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
+import { motion, AnimatePresence } from "framer-motion";
+import { Paper, Box, Typography } from "@mui/material";
+import WorkIcon from "@mui/icons-material/Work";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import PeopleIcon from "@mui/icons-material/People";
+
+/* ─── Design tokens ─── */
+const t = {
+  bg: "#F9FAFB",
+  surface: "#FFFFFF",
+  card: "#FFFFFF",
+  border: "#E9D5FF",
+  borderHov: "#C084FC",
+  text: "#111827",
+  muted: "#6B7280",
+  accent: "#6B46C1",
+  accentDim: "#F3E8FF",
+  green: "#15803D",
+  greenDim: "#DCFCE7",
+  red: "#DC2626",
+  redDim: "#FEE2E2",
+  amber: "#B45309",
+  amberDim: "#FEF3C7",
+  blue: "#2563EB",
+};
 
 // ─── Status Badge Component ─────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {
@@ -100,26 +126,71 @@ const WorkplaceBadge = ({ type }) => {
 };
 
 // ─── Stat Card Component ─────────────────────────────────────────────────────
-const StatCard = ({ icon, label, value, accent }) => (
-  <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow duration-200">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm text-gray-500 font-medium">{label}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-      </div>
-      <div
-        className={`w-12 h-12 rounded-xl flex items-center justify-center ${accent}`}
+const StatCard = ({ icon: Icon, label, value, color, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 16 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.45, delay }}
+    style={{ flex: 1, minWidth: 140 }}
+  >
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 3,
+        border: "1px solid #F1F5F9",
+        bgcolor: "#FFFFFF",
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+        transition: "all 0.25s ease",
+        "&:hover": { borderColor: color, boxShadow: `0 4px 16px ${color}18` },
+      }}
+    >
+      <Box
+        sx={{
+          width: 44,
+          height: 44,
+          borderRadius: 2.5,
+          bgcolor: `${color}14`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
-        {icon}
-      </div>
-    </div>
-  </div>
+        <Icon sx={{ fontSize: 22, color }} />
+      </Box>
+      <Box>
+        <Typography
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: 500,
+            color: "#94A3B8",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          {label}
+        </Typography>
+        <Typography
+          sx={{
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            color: "#0F172A",
+            lineHeight: 1.2,
+          }}
+        >
+          {value}
+        </Typography>
+      </Box>
+    </Paper>
+  </motion.div>
 );
 
 // ─── Job Card Component ──────────────────────────────────────────────────────
 const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 transition-all duration-300 group">
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition-all duration-300 group">
       {/* Card Header */}
       <div className="p-5 pb-4">
         <div className="flex items-start justify-between">
@@ -722,28 +793,32 @@ const Recruiter_History = () => {
         {/* ─── Stats Row ────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
-            icon={<Briefcase className="w-6 h-6 text-purple-600" />}
+            icon={WorkIcon}
             label="Total Jobs"
             value={totalJobs}
-            accent="bg-purple-50"
+            color={t.accent}
+            delay={0}
           />
           <StatCard
-            icon={<AlertCircle className="w-6 h-6 text-amber-600" />}
+            icon={ErrorOutlineIcon}
             label="Pending Review"
             value={pendingJobs}
-            accent="bg-amber-50"
+            color={t.amber}
+            delay={0.1}
           />
           <StatCard
-            icon={<CheckCircle className="w-6 h-6 text-green-600" />}
+            icon={CheckCircleOutlineIcon}
             label="Reviewed"
             value={reviewedJobs}
-            accent="bg-green-50"
+            color={t.green}
+            delay={0.2}
           />
           <StatCard
-            icon={<Users className="w-6 h-6 text-blue-600" />}
+            icon={PeopleIcon}
             label="Total Openings"
             value={totalOpenings}
-            accent="bg-blue-50"
+            color={t.blue}
+            delay={0.3}
           />
         </div>
 
