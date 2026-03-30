@@ -44,20 +44,6 @@ const buildProfileFilter = (userId, userModel) => ({
   $or: [{ userModel }, { userModel: { $exists: false } }],
 });
 
-const removeTempFile = async (filePath) => {
-  if (!filePath) {
-    return;
-  }
-
-  try {
-    await fs.promises.unlink(filePath);
-  } catch (error) {
-    if (error.code !== "ENOENT") {
-      console.error("Failed to remove temporary upload file:", error.message);
-    }
-  }
-};
-
 const handleError = (res, error, defaultMessage = "Server error") => {
   console.error("Profile Controller Error:", error);
   if (error.name === "ValidationError") {
@@ -255,11 +241,36 @@ exports.uploadResume = async (req, res) => {
       return res.status(400).json({ message: "No file provided" });
     }
 
-    const result = await cloudinary.uploader.upload(req.file.path, {
+    if (!req.file.buffer) {
+      return res.status(400).json({ message: "File buffer not available" });
+    }
+
+    // Check if Cloudinary is properly configured
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.error("Cloudinary environment variables missing:", {
+        cloud_name: !!process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: !!process.env.CLOUDINARY_API_KEY,
+        api_secret: !!process.env.CLOUDINARY_API_SECRET
+      });
+      return res.status(500).json({ message: "Cloudinary configuration incomplete - check environment variables" });
+    }
+
+    console.log("Uploading to Cloudinary:", {
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      originalname: req.file.originalname
+    });
+
+    // Upload buffer directly to Cloudinary
+    const result = await cloudinary.uploader.upload(`data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`, {
       resource_type: "raw",
       folder: "candidate_resumes",
       format: "pdf",
+      public_id: `${Date.now()}-${req.file.originalname.replace(/\.[^/.]+$/, "")}`,
+      timeout: 60000, // 60 seconds timeout
     });
+
+    console.log("Cloudinary upload successful:", result.secure_url);
 
     const updatedProfile = await Profile.findOneAndUpdate(
       buildProfileFilter(userId, userModel),
@@ -273,8 +284,41 @@ exports.uploadResume = async (req, res) => {
       profile: updatedProfile,
     });
   } catch (error) {
+    console.error("Resume upload error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      http_code: error.http_code,
+      name: error.name
+    });
+
+    // Provide specific error messages based on error type
+    if (error.message && error.message.includes('api_key')) {
+      return res.status(500).json({ message: "Cloudinary API key not configured - check environment variables" });
+    }
+
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: "Profile validation failed", error: error.message });
+    }
+
+    if (error.http_code) {
+      // Cloudinary specific errors
+      if (error.http_code === 401) {
+        return res.status(500).json({ message: "Cloudinary authentication failed - check API credentials" });
+      }
+      if (error.http_code === 403) {
+        return res.status(500).json({ message: "Cloudinary access forbidden - check permissions" });
+      }
+      if (error.http_code === 413) {
+        return res.status(400).json({ message: "File too large for Cloudinary" });
+      }
+      return res.status(500).json({ message: `Cloudinary upload failed: ${error.message}` });
+    }
+
+    if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+      return res.status(500).json({ message: "Cannot connect to Cloudinary - check network connection" });
+    }
+
     handleError(res, error, "Error uploading resume");
-  } finally {
-    await removeTempFile(req.file?.path);
   }
 };

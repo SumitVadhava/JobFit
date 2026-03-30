@@ -99,7 +99,6 @@ app.get("/ping", (req, res) => {
   res.send("Welcome to the Jobfit made by Code Conquerors😊");
 });
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/public", express.static(path.join(__dirname, "public")));
 
 app.use("/api", loginRouter);
@@ -136,11 +135,6 @@ app.use(
   atsHistoryRouter,
 );
 app.use("/api/testimonials", testimonialRouter);
-
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
