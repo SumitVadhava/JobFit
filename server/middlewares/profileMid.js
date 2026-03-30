@@ -61,6 +61,19 @@ const validateUpdateProfile = (req, res, next) => {
     });
   }
 
+  // Parse body fields if multipart (file upload)
+  let body = req.body;
+  if (req.file) {
+    body = {};
+    Object.keys(req.body).forEach(key => {
+      try {
+        body[key] = JSON.parse(req.body[key]);
+      } catch {
+        body[key] = req.body[key];
+      }
+    });
+  }
+
   const {
     img,
     description,
@@ -71,7 +84,7 @@ const validateUpdateProfile = (req, res, next) => {
     name,
     atsScore,
     userName,
-  } = req.body;
+  } = body;
 
   const hasAtLeastOneField =
     img !== undefined ||
@@ -92,7 +105,7 @@ const validateUpdateProfile = (req, res, next) => {
     });
   }
 
-  const error = validateProfileData(req.body);
+  const error = validateProfileData(body);
   if (error) {
     console.error("Profile Middleware Validation Error:", error);
     return res.status(400).json({ message: error });
@@ -120,7 +133,20 @@ const validateCreateProfile = async (req, res, next) => {
       });
     }
 
-    const error = validateProfileData(req.body);
+    // Parse body fields if multipart (file upload)
+    let body = req.body;
+    if (req.file) {
+      body = {};
+      Object.keys(req.body).forEach(key => {
+        try {
+          body[key] = JSON.parse(req.body[key]);
+        } catch {
+          body[key] = req.body[key];
+        }
+      });
+    }
+
+    const error = validateProfileData(body);
     if (error) return res.status(400).json({ message: error });
 
     next();
