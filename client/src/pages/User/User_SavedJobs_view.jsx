@@ -480,8 +480,14 @@ const SavedJobs = () => {
         setBookmarkedJobs(initialBookmarks);
 
       } catch (error) {
-        console.error("Error fetching jobs:", error);
-        toast.error("Failed to load saved jobs.");
+        if (error.response && error.response.status === 404) {
+          // If 404, it means no saved jobs were found for this user
+          setSavedJobs([]);
+          setBookmarkedJobs({});
+        } else {
+          console.error("Error fetching jobs:", error);
+          toast.error("Failed to load saved jobs.");
+        }
       } finally {
         setIsLoading(false);
       }

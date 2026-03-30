@@ -31,6 +31,7 @@ import CookiePolicy from './pages/CookiePolicy'
 import FeatureUserRegistration from './pages/FeatureUserRegistration'
 import FeatureResumeMatching from './pages/FeatureResumeMatching'
 import FeatureATSAnalytics from './pages/FeatureATSAnalytics'
+import Recruiter_Profile_view from './pages/Recruiter/Recruiter_Profile_view'
 import Candidate_Profile_View from './pages/User/Candidate_Profile_View'
 
 
@@ -216,6 +217,16 @@ function App() {
             >
               <Recruiter_Posted_Jobs_view />
             </ProtectedRoute>} />
+
+        <Route
+          path='/recruiter/profile'
+          element={
+            <ProtectedRoute
+              allowedRoles={['recruiter']}
+            >
+              <Recruiter_Profile_view />
+            </ProtectedRoute>}
+        />
 
 
 

@@ -135,7 +135,7 @@ const Navbar = ({ userData }) => {
         ],
         candidate: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
-            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Ctrl + AS" },
+            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Alt + A" },
             {
                 label: "Best Resumes",
                 href: "/candidate/best-resumes",
@@ -146,7 +146,7 @@ const Navbar = ({ userData }) => {
         ],
         user: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
-            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Ctrl + AS" },
+            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Alt + A" },
             {
                 label: "Best Resumes",
                 href: "/candidate/best-resumes",
@@ -203,13 +203,26 @@ const Navbar = ({ userData }) => {
 
     useEffect(() => {
         const onKeyDown = (e) => {
-            // only fire when Ctrl is held, not inside an input/textarea
-            if (!e.ctrlKey) return;
+            // only fire when Ctrl or Alt is held, not inside an input/textarea
+            if (!e.ctrlKey && !e.altKey) return;
             const tag = document.activeElement?.tagName;
             if (tag === "INPUT" || tag === "TEXTAREA") return;
             if (!isLoggedIn) return;
 
             const key = e.key.toLowerCase();
+
+            // Handle Alt + A for ATS Analyzer
+            if (e.altKey && key === "a") {
+                e.preventDefault();
+                if (userRole === "candidate" || userRole === "user") {
+                    navigate("/candidate/ats");
+                }
+                pendingKey.current = null;
+                return;
+            }
+
+            // From here on, enforce Ctrl modifier
+            if (!e.ctrlKey) return;
 
             if (key === "d") {
                 e.preventDefault();
@@ -255,7 +268,8 @@ const Navbar = ({ userData }) => {
             }
             if (key === "a") {
                 e.preventDefault();
-                navigate("/candidate/profile");
+                if (userRole === "recruiter") navigate("/recruiter/profile");
+                else navigate("/candidate/profile");
                 pendingKey.current = null;
                 return;
             }
