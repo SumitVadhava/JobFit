@@ -23,7 +23,6 @@ import { ToastContainer } from 'react-toastify'
 import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_view'
 import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './pages/Unauthorized'
-import ApplyJob from './pages/User/User_ApplyJob_view'
 import AboutUs from './pages/AboutUs'
 import ContactSupport from './pages/ContactSupport'
 import PrivacyPolicy from './pages/PrivacyPolicy'
@@ -32,8 +31,6 @@ import CookiePolicy from './pages/CookiePolicy'
 import FeatureUserRegistration from './pages/FeatureUserRegistration'
 import FeatureResumeMatching from './pages/FeatureResumeMatching'
 import FeatureATSAnalytics from './pages/FeatureATSAnalytics'
-import ScrollToTop from './components/ScrollToTop'
-import Recruiter_History from './pages/Recruiter/Recruiter_History'
 
 
 
@@ -41,7 +38,6 @@ import Recruiter_History from './pages/Recruiter/Recruiter_History'
 function App() {
   const { user, token, role } = useAuth();
   const isLoggedIn = !!user && !!token;
-
   const [userProp, setUserProp] = useState({
     userName: "",
     email: "",
@@ -80,7 +76,6 @@ function App() {
         theme="light"
       />
       <Navbar userData={userProp} />
-      <ScrollToTop />
       <Routes>
         <Route path='/' element={<HeroSection />} />
         <Route path='/login' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
@@ -94,7 +89,7 @@ function App() {
               <UserAnalytics />
             </ProtectedRoute>} />
         <Route
-          path='/candidate/ats'
+          path='/candidate/ats-analyzer'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -142,14 +137,6 @@ function App() {
               <Recruiter_CandidateProfile_view userProp={userProp} />
             </ProtectedRoute>} />
 
-        <Route
-          path='/candidate/apply/:jobId'
-          element={
-            <ProtectedRoute
-              allowedRoles={['candidate']}
-            >
-              <ApplyJob />
-            </ProtectedRoute>} />
 
         <Route
           path='/admin/dashboard'
@@ -209,16 +196,6 @@ function App() {
             >
               <Recruiter_Candidates_view />
             </ProtectedRoute>} />
-
-        <Route
-          path="/recruiter/history"
-          element={
-            <ProtectedRoute
-              allowedRoles={['recruiter']}
-            >
-              <Recruiter_History />
-            </ProtectedRoute>} />
-
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route
           path="/recruiter/postedjobs"
@@ -238,9 +215,7 @@ function App() {
         <Route path="/features/user-registration" element={<FeatureUserRegistration />} />
         <Route path="/features/resume-matching" element={<FeatureResumeMatching />} />
         <Route path="/features/ats-analytics" element={<FeatureATSAnalytics />} />
-
       </Routes>
-      
     </>
   )
 }

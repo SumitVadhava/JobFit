@@ -487,8 +487,6 @@ const Resumes = ({ atsData, setAtsData }) => {
     setResumes(sortedResumes);
   };
 
-
-
   // Auto-resize textarea based on content
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -529,7 +527,7 @@ const Resumes = ({ atsData, setAtsData }) => {
         }]);
         setFile(null);
         showToast(`Resume "${file.name}" uploaded successfully!`, 'success');
-        navigate('/user/ats');
+        navigate('/candidate/ats-analyzer');
       } else {
         showToast('Invalid response from server', 'error');
       }
