@@ -1,75 +1,86 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const candidateProfileSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'logins',
-    required: true
+    required: true,
+  },
+  userModel: {
+    type: String,
+    enum: ["logins", "google_logins"],
+    default: "logins",
+    required: true,
   },
   name: {
     type: String,
     required: false,
-    default: null
+    default: null,
   },
   email: {
     type: String,
     required: false,
-    default: null
+    default: null,
   },
   userName: {
     type: String,
     required: false,
-    default: null
+    default: null,
   },
   img: {
     type: String,
     required: false,
-    default: null
+    default: null,
   },
   resumeLink: {
     type: String,
     required: false,
-    default: null
+    default: null,
   },
   description: {
     type: String,
     required: false,
-    default: null
+    default: null,
   },
   atsScore: {
     type: Number,
     required: false,
-    default: 0
+    default: 0,
   },
   experience: {
-    type: [
-      {
-        jobTitle: { type: String, required: true },
-        companyName: { type: String, required: true },
-        role: { type: String, required: true },
-        expYear: { type: Number, required: true }
-      }
-    ],
-    default: []
+    type: Number,
+    min: 0,
+    max: 50,
+    required: false,
+    default: 0,
   },
   education: {
     type: [
       {
         degree: { type: String, required: true },
         university: { type: String, required: true },
-        yearOfPassing: { type: Number, required: true }
-      }
+        yearOfPassing: { type: Number, required: true },
+      },
     ],
-    default: []
+    default: [],
   },
   skills: {
     type: [
       {
-        skillName: { type: String, required: true }
-      }
+        skillName: { type: String, required: true },
+      },
     ],
-    default: []
-  }
+    default: [],
+  },
+  softSkills: {
+    type: [
+      {
+        skillName: { type: String, required: true },
+      },
+    ],
+    default: [],
+  },
 });
+
+candidateProfileSchema.index({ user: 1, userModel: 1 }, { unique: true });
 
 module.exports = mongoose.model("candidateProfile", candidateProfileSchema);

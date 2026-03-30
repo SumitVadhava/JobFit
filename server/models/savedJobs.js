@@ -4,7 +4,12 @@ const savedJobSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "logins",
+      required: true,
+    },
+    userModel: {
+      type: String,
+      enum: ["logins", "google_logins"],
+      default: "logins",
       required: true,
     },
     jobId: {
@@ -30,7 +35,7 @@ const savedJobSchema = new mongoose.Schema(
   },
 );
 
-savedJobSchema.index({ userId: 1, jobId: 1 }, { unique: true });
-savedJobSchema.index({ userId: 1, savedAt: -1 });
+savedJobSchema.index({ userId: 1, userModel: 1, jobId: 1 }, { unique: true });
+savedJobSchema.index({ userId: 1, userModel: 1, savedAt: -1 });
 
 module.exports = mongoose.model("saved_jobs", savedJobSchema);

@@ -268,8 +268,7 @@ const Navbar = ({ userData }) => {
             }
             if (key === "l") {
                 e.preventDefault();
-                logout();
-                navigate("/");
+                window.dispatchEvent(new Event('jobfit:signout-confirm'));
                 pendingKey.current = null;
                 return;
             }

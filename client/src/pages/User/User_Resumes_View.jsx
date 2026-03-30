@@ -250,34 +250,16 @@ const ResumeTable = ({ resumes, onViewFeedback, onDelete, onSort }) => {
               {[
                 { label: 'Resume Name', field: 'name' },
                 { label: 'Upload Date', field: 'uploadDate' },
-                // { label: 'Version', field: 'version' },
-                // { label: 'ATS Score', field: 'atsScore' }, 
                 { label: 'Actions', field: '' },
               ].map(({ label, field }) => (
                 <th
                   key={label}
                   className={`px-4 py-3 text-left text-[#111418] ${field ? 'w-[400px]' : 'w-60'
-                    } text-sm font-medium leading-normal ${field ? 'cursor-pointer hover:text-[#0c7ff2]' : ''}`}
+                    } text-sm font-medium leading-normal`}
                   onClick={field ? () => handleSort(field) : undefined}
                   aria-sort={sortField === field ? sortDirection : 'none'}
                 >
                   {label}
-                  {/* {sortField === field && (
-                    <svg
-                      className="inline-block w-4 h-4 ml-1"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="currentColor"
-                      viewBox="0 0 256 256"
-                    >
-                      <path
-                        d={
-                          sortDirection === 'asc'
-                            ? 'M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'
-                            : 'M213.66,165.66a8,8,0,0,1-11.32,0L128,91.31,53.66,165.66a8,8,0,0,1-11.32-11.32l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,213.66,165.66Z'
-                        }
-                      />
-                    </svg>
-                  )} */}
                 </th>
               ))}
             </tr>
@@ -291,29 +273,6 @@ const ResumeTable = ({ resumes, onViewFeedback, onDelete, onSort }) => {
                 <td className="h-[72px] px-4 py-2 w-[400px] text-[#60758a] text-sm font-normal leading-normal">
                   {resume.uploadDate}
                 </td>
-                {/* <td className="h-[72px] px-4 py-2 w-[400px] text-[#60758a] text-sm font-normal leading-normal">
-                  {resume.version}
-                </td> */}
-                {/* <td className="h-[72px] px-4 py-2 max-w-[400px] text-sm font-normal leading-normal">
-                  <div className="flex items-center gap-3">
-                    <div className="w-[88px] overflow-hidden rounded-sm bg-[#dbe0e6]">
-                      <div
-                        className="h-1 rounded-full bg-[#0c7ff2] transition-all duration-300"
-                        style={{ width: `${resume.atsScore}%` }}
-                      />
-                    </div>
-                    <p className="text-[#111418] text-sm font-medium leading-normal">{resume.atsScore}</p>
-                  </div>
-                  <div className='max-w-[80px] flex justify-center items-center'>
-                    <button
-                      onClick={() => onViewFeedback(resume)}
-                      className="text-[#60758a] hover:text-[#0c7ff2] transition-colors"
-                      aria-label={`View feedback for ${resume.name}`}
-                    >
-                      View
-                    </button>
-                  </div>
-                </td> */}
                 <td className="h-[72px] px-4 py-2 w-60 text-[#60758a] text-sm font-bold leading-normal tracking-[0.015em]">
                   <div className="">
 
@@ -555,12 +514,6 @@ const Resumes = ({ atsData, setAtsData }) => {
                 <p className="text-[#111418] tracking-tight text-2xl sm:text-[32px] font-bold leading-tight min-w-[200px] sm:min-w-72">
                   My Resumes
                 </p>
-                {/* <button
-                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#0c7ff2] text-white text-sm font-medium leading-normal hover:bg-[#0a6cd6] transition-colors"
-                  onClick={() => document.getElementById('file-upload').click()}
-                >
-                  <span className="truncate">Upload Resume</span>
-                </button> */}
                 <input
                   id="file-upload"
                   type="file"

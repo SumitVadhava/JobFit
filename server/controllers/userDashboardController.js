@@ -1,6 +1,43 @@
 const UserDashboard = require("../models/userDashboard");
 const AppliedJob = require("../models/appliedJobs");
 const SavedJob = require("../models/savedJobs");
+const Login = require("../models/login");
+const GoogleLogin = require("../models/google_login");
+const mongoose = require("mongoose");
+
+const USER_MODELS = {
+  LOGIN: "logins",
+  GOOGLE_LOGIN: "google_logins",
+};
+
+const resolveUserModelFromAuth = async (authUser) => {
+  const tokenUserModel = authUser?.userModel;
+  if (
+    tokenUserModel === USER_MODELS.LOGIN ||
+    tokenUserModel === USER_MODELS.GOOGLE_LOGIN
+  ) {
+    return tokenUserModel;
+  }
+
+  if (!authUser?.id || !mongoose.Types.ObjectId.isValid(authUser.id)) {
+    return null;
+  }
+
+  const [loginExists, googleLoginExists] = await Promise.all([
+    Login.exists({ _id: authUser.id }),
+    GoogleLogin.exists({ _id: authUser.id }),
+  ]);
+
+  if (loginExists) {
+    return USER_MODELS.LOGIN;
+  }
+
+  if (googleLoginExists) {
+    return USER_MODELS.GOOGLE_LOGIN;
+  }
+
+  return null;
+};
 
 exports.getUserDashboardData = async (req, res) => {
   try {
@@ -80,11 +117,19 @@ exports.getSavedJobsData = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const savedJobs = await SavedJob.find({ userId: req.user.id })
+    const userModel = await resolveUserModelFromAuth(req.user);
+    if (!userModel) {
+      return res.status(401).json({ message: "Authenticated user not found" });
+    }
+
+    const savedJobs = await SavedJob.find({
+      userId: req.user.id,
+      $or: [{ userModel }, { userModel: { $exists: false } }],
+    })
       .populate({
         path: "jobId",
         select:
-          "companyName jobTitle location department workPlaceType experience jobDescription img openings responsibilities",
+          "companyName jobTitle location department workPlaceType experience jobDescription img openings responsibilities qualifications",
       })
       .sort({ savedAt: -1 });
 
@@ -124,7 +169,15 @@ exports.getAppliedCompaniesData = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const applications = await AppliedJob.find({ userId: req.user.id })
+    const userModel = await resolveUserModelFromAuth(req.user);
+    if (!userModel) {
+      return res.status(401).json({ message: "Authenticated user not found" });
+    }
+
+    const applications = await AppliedJob.find({
+      userId: req.user.id,
+      userModel,
+    })
       .populate({
         path: "jobId",
         select:
@@ -144,6 +197,7 @@ exports.getAppliedCompaniesData = async (req, res) => {
         department: application.jobId.department,
         workPlaceType: application.jobId.workPlaceType,
         responsibilities: application.jobId.responsibilities,
+        qualifications: application.jobId.qualifications,
         img: application.jobId.img,
         openings: application.jobId.openings,
         status: application.status,

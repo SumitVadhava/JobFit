@@ -1,7 +1,16 @@
 const Profile = require("../models/candidateProfile");
 
 const validateProfileData = (body) => {
-  const { img, description, experience, education, skills, name, email } = body;
+  const {
+    img,
+    description,
+    experience,
+    education,
+    skills,
+    softSkills,
+    name,
+    email,
+  } = body;
 
   if (experience !== undefined) {
     if (!Array.isArray(experience)) return "experience must be an array";
@@ -29,8 +38,17 @@ const validateProfileData = (body) => {
   if (skills !== undefined) {
     if (!Array.isArray(skills)) return "skills must be an array";
     for (const skill of skills) {
-      if (typeof skill !== 'object' || !skill.skillName) {
+      if (typeof skill !== "object" || !skill.skillName) {
         return "Each skill item must be an object with: skillName";
+      }
+    }
+  }
+
+  if (softSkills !== undefined) {
+    if (!Array.isArray(softSkills)) return "softSkills must be an array";
+    for (const skill of softSkills) {
+      if (typeof skill !== "object" || !skill.skillName) {
+        return "Each softSkill item must be an object with: skillName";
       }
     }
   }
@@ -39,7 +57,16 @@ const validateProfileData = (body) => {
 };
 
 const validateUpdateProfile = (req, res, next) => {
-  const { img, description, experience, education, skills, name, email } = req.body;
+  const {
+    img,
+    description,
+    experience,
+    education,
+    skills,
+    softSkills,
+    name,
+    email,
+  } = req.body;
 
   const hasAtLeastOneField =
     img !== undefined ||
@@ -47,14 +74,14 @@ const validateUpdateProfile = (req, res, next) => {
     experience !== undefined ||
     education !== undefined ||
     skills !== undefined ||
+    softSkills !== undefined ||
     name !== undefined ||
     email !== undefined;
 
   if (!hasAtLeastOneField) {
     console.error("Profile Middleware Error: Missing required fields");
     return res.status(400).json({
-      message:
-        "Missing required fields: provide at least one field to update",
+      message: "Missing required fields: provide at least one field to update",
     });
   }
 
@@ -70,12 +97,16 @@ const validateUpdateProfile = (req, res, next) => {
 const validateCreateProfile = async (req, res, next) => {
   try {
     const userId = req.user ? req.user.id : null;
+    const userModel = req.user?.userModel || "logins";
 
     if (!userId) {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const existing = await Profile.findOne({ user: userId });
+    const existing = await Profile.findOne({
+      user: userId,
+      $or: [{ userModel }, { userModel: { $exists: false } }],
+    });
     if (existing) {
       return res.status(409).json({
         message: "Profile already exists. Use PUT to update it.",

@@ -173,7 +173,7 @@ const WorkplaceBadge = ({ type }) => {
 
 const RecruiterJobCard = ({ job, onViewApplicants }) => {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 transition-all duration-300 group">
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition-all duration-300 group">
       <div className="p-5 pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-4">
@@ -330,6 +330,8 @@ const CandidatesView = () => {
         resumeLink: candidate.profile?.resumeLink,
       }));
 
+      console.log(normalized);
+      
       setCandidates(normalized);
     } catch (err) {
       console.error("Error fetching candidates:", err);
@@ -1095,3 +1097,4 @@ const CandidatesView = () => {
 };
 
 export default CandidatesView;
+

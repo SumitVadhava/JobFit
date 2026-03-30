@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Settings, LogOut, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContexts';
@@ -8,15 +9,39 @@ const Avatar = ({ userData }) => {
     const navigate = useNavigate();
     const { logout } = useAuth();
     const [open, setOpen] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [signingOut, setSigningOut] = useState(false);
     const [hoverManage, setHM] = useState(false);
     const [hoverSignout, setHS] = useState(false);
+    const [hoverCancel, setHC] = useState(false);
     const ref = useRef(null);
 
+    const openConfirm = useCallback(() => {
+        setOpen(false);
+        setShowConfirm(true);
+    }, []);
+
+    const doLogout = useCallback(() => {
+        setSigningOut(true);
+        localStorage.clear();
+        setTimeout(() => {
+            logout();
+            navigate('/');
+        }, 1200);
+    }, [logout, navigate]);
+
     useEffect(() => {
-        const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        const h = (e) => { if (ref.current && !ref.current.contains(e.target) && !showConfirm) setOpen(false); };
         document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
-    }, []);
+    }, [showConfirm]);
+
+    /* Listen for Ctrl+L shortcut event dispatched from Navbar */
+    useEffect(() => {
+        const handler = () => openConfirm();
+        window.addEventListener('jobfit:signout-confirm', handler);
+        return () => window.removeEventListener('jobfit:signout-confirm', handler);
+    }, [openConfirm]);
 
     if (!userData) return null;
 
@@ -31,6 +56,7 @@ const Avatar = ({ userData }) => {
     const purpleBg = '#F5F0FF';
 
     return (
+        <>
         <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
 
             {/* ── Trigger button ── */}
@@ -168,7 +194,7 @@ const Avatar = ({ userData }) => {
 
                             {/* Sign out */}
                             <button
-                                onClick={() => { logout(); navigate('/'); }}
+                                onClick={openConfirm}
                                 onMouseEnter={() => setHS(true)}
                                 onMouseLeave={() => setHS(false)}
                                 style={{
@@ -219,6 +245,116 @@ const Avatar = ({ userData }) => {
                 </>
             )}
         </div>
+
+        {/* ── Sign-out confirmation modal ── */}
+        {showConfirm && typeof document !== 'undefined' && createPortal(
+            <div
+                onClick={() => setShowConfirm(false)}
+                style={{
+                    position: 'fixed', inset: 0, zIndex: 99999,
+                    background: 'rgba(15,10,30,0.55)',
+                    backdropFilter: 'blur(6px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '16px',
+                }}
+            >
+                <div
+                    onClick={e => e.stopPropagation()}
+                    style={{
+                        background: '#ffffff',
+                        borderRadius: '20px',
+                        width: '100%', maxWidth: '380px',
+                        padding: '32px 28px 24px',
+                        boxShadow: '0 20px 60px rgba(107,70,193,.25), 0 4px 16px rgba(0,0,0,.12)',
+                        border: '1px solid rgba(107,70,193,.12)',
+                        textAlign: 'center',
+                        animation: 'avatarSlideIn .2s ease',
+                    }}
+                >
+                    {/* Icon */}
+                    <div style={{
+                        width: '60px', height: '60px', borderRadius: '50%',
+                        background: 'linear-gradient(135deg,#fff1f2,#fee2e2)',
+                        border: '1.5px solid rgba(239,68,68,.2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 20px',
+                    }}>
+                        <LogOut size={26} style={{ color: '#ef4444' }} />
+                    </div>
+
+                    {/* Title */}
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#1e0a3c', marginBottom: '8px' }}>
+                        Sign out?
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#9b7db8', lineHeight: 1.5, marginBottom: '28px' }}>
+                        Are you sure you want to sign out of your account?
+                    </div>
+
+                    {/* Buttons */}
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                            onClick={() => setShowConfirm(false)}
+                            onMouseEnter={() => setHC(true)}
+                            onMouseLeave={() => setHC(false)}
+                            style={{
+                                flex: 1, padding: '11px', borderRadius: '12px',
+                                fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                                border: '1.5px solid rgba(107,70,193,.2)',
+                                background: hoverCancel ? '#F5F0FF' : '#fff',
+                                color: '#6B46C1',
+                                transition: 'all .15s ease',
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={doLogout}
+                            disabled={signingOut}
+                            style={{
+                                flex: 1, padding: '11px', borderRadius: '12px',
+                                fontSize: '14px', fontWeight: 600,
+                                cursor: signingOut ? 'not-allowed' : 'pointer',
+                                border: 'none',
+                                background: 'linear-gradient(135deg,#ef4444,#dc2626)',
+                                color: '#fff',
+                                boxShadow: '0 4px 12px rgba(239,68,68,.35)',
+                                transition: 'all .15s ease',
+                                display: 'flex', alignItems: 'center',
+                                justifyContent: 'center', gap: '8px',
+                                opacity: signingOut ? 0.85 : 1,
+                            }}
+                        >
+                            {signingOut ? (
+                                <>
+                                    <span style={{
+                                        width: '15px', height: '15px',
+                                        borderRadius: '50%',
+                                        border: '2px solid rgba(255,255,255,.35)',
+                                        borderTopColor: '#fff',
+                                        animation: 'avatarSpin .65s linear infinite',
+                                        display: 'inline-block', flexShrink: 0,
+                                    }} />
+                                    Signing out…
+                                </>
+                            ) : 'Sign out'}
+                        </button>
+                    </div>
+                </div>
+            </div>,
+            document.body
+        )}
+
+
+        <style>{`
+          @keyframes avatarSlideIn {
+            from { opacity: 0; transform: scale(.92) translateY(8px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+          }
+          @keyframes avatarSpin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+        </>
     );
 };
 

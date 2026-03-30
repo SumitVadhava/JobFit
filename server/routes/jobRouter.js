@@ -185,6 +185,37 @@ router.get(
 
 /**
  * @swagger
+ * /api/jobs/recruiter/{recruiterId}/candidates/unique-count:
+ *   get:
+ *     summary: Get total unique candidates across all jobs of a recruiter
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: recruiterId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Recruiter user ID (must match token user id)
+ *     responses:
+ *       200:
+ *         description: Unique candidates count retrieved successfully
+ *       400:
+ *         description: Invalid recruiter id
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - recruiter can access only own data
+ */
+router.get(
+  "/recruiter/:recruiterId/candidates/unique-count",
+  authorizeRole(ROLES.RECRUITER),
+  jobController.getUniqueCandidatesCountForRecruiter,
+);
+
+/**
+ * @swagger
  * /api/jobs/{id}/apply:
  *   post:
  *     summary: Apply for a job (candidate only)
