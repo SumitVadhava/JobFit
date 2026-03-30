@@ -10,7 +10,47 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
-const upload = multer({ storage });
+const fileFilter = (req, file, cb) => {
+  const isPdfMime = file.mimetype === "application/pdf";
+  const isPdfName = String(file.originalname || "")
+    .toLowerCase()
+    .endsWith(".pdf");
+
+  if (!isPdfMime || !isPdfName) {
+    return cb(new Error("Only PDF files are allowed"));
+  }
+
+  return cb(null, true);
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+const uploadResumeMiddleware = (req, res, next) => {
+  upload.single("pdf")(req, res, (error) => {
+    if (!error) {
+      return next();
+    }
+
+    if (
+      error instanceof multer.MulterError &&
+      error.code === "LIMIT_FILE_SIZE"
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Resume PDF must be 5MB or smaller" });
+    }
+
+    return res
+      .status(400)
+      .json({ message: error.message || "Invalid file upload" });
+  });
+};
 
 const {
   getProfile,
@@ -151,6 +191,6 @@ router.delete("/", deleteProfile);
  *       401:
  *         description: Unauthorized
  */
-router.post("/upload-resume", upload.single("pdf"), uploadResume);
+router.post("/upload-resume", uploadResumeMiddleware, uploadResume);
 
 module.exports = router;

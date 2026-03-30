@@ -29,7 +29,12 @@ const addSingupController = async (req, res) => {
     });
 
     const token = jwt.sign(
-      { id: newUser._id, email: newUser.email, role: newUser.role },
+      {
+        id: newUser._id,
+        email: newUser.email,
+        role: newUser.role,
+        userModel: "logins",
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN },
     );
@@ -41,7 +46,9 @@ const addSingupController = async (req, res) => {
 
     // Auto-create profile with name & email based on role
     if (role === ROLES.RECRUITER) {
-      const existingProfile = await RecruiterProfile.findOne({ user: newUser._id });
+      const existingProfile = await RecruiterProfile.findOne({
+        user: newUser._id,
+      });
       if (!existingProfile) {
         await RecruiterProfile.create({
           user: newUser._id,
@@ -52,7 +59,9 @@ const addSingupController = async (req, res) => {
       }
     } else {
       // candidate, user, or any other non-admin role
-      const existingProfile = await CandidateProfile.findOne({ user: newUser._id });
+      const existingProfile = await CandidateProfile.findOne({
+        user: newUser._id,
+      });
       if (!existingProfile) {
         await CandidateProfile.create({
           user: newUser._id,

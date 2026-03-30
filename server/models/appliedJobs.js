@@ -4,7 +4,12 @@ const appliedJobSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "logins",
+      required: true,
+    },
+    userModel: {
+      type: String,
+      enum: ["logins", "google_logins"],
+      default: "logins",
       required: true,
     },
     jobId: {

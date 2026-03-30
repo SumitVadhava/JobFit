@@ -166,6 +166,12 @@ const options = {
               example: "687c5aac240f88425de5edb1",
               description: "Recruiter owner id",
             },
+            recruiterModel: {
+              type: "string",
+              enum: ["logins", "google_logins"],
+              example: "google_logins",
+              description: "Recruiter account source model",
+            },
             jobTitle: { type: "string", example: "Software Engineer" },
             department: { type: "string", example: "Engineering" },
             openings: { type: "number", example: 3 },
@@ -253,6 +259,11 @@ const options = {
           properties: {
             _id: { type: "string", example: "689f1d7b2c9b4f0012a34567" },
             userId: { type: "string", example: "687c5aac240f88425de5edb1" },
+            userModel: {
+              type: "string",
+              enum: ["logins", "google_logins"],
+              example: "google_logins",
+            },
             jobId: { type: "string", example: "689f13f42c9b4f0012a34321" },
             status: {
               type: "string",
