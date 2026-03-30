@@ -21,14 +21,59 @@ import {
   TrendingUp,
   Sparkles,
   Activity,
+  FileText,
+  Building2,
+  Clock,
 } from "lucide-react";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const ACCENT = "#9c44fe";
-const ACCENT_LIGHT = "rgba(156,68,254,0.07)";
+const ACCENT       = "#9c44fe";
+const ACCENT_LIGHT  = "rgba(156,68,254,0.07)";
 const ACCENT_BORDER = "rgba(156,68,254,0.18)";
 
-// ─── StatCard (matches AdminAnalytics style) ──────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+/** Group resumes by "Mon 'YY" and compute avg score + count per month */
+const buildAtsHistory = (resumes) => {
+  if (!resumes || resumes.length === 0) return [];
+
+  // Sort oldest → newest so the chart reads left-to-right chronologically
+  const sorted = [...resumes].sort(
+    (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
+  );
+
+  const monthMap = {};
+  sorted.forEach((resume) => {
+    const date = new Date(resume.createdAt || Date.now());
+    const key = date.toLocaleString("default", {
+      month: "short",
+      year: "2-digit",
+    });
+    if (!monthMap[key]) monthMap[key] = { scores: [], count: 0 };
+    monthMap[key].scores.push(resume.atsScore || 0);
+    monthMap[key].count += 1;
+  });
+
+  return Object.entries(monthMap)
+    .slice(-8) // show at most the last 8 months
+    .map(([month, { scores, count }]) => ({
+      month,
+      score: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+      count,
+    }));
+};
+
+/** Format a date as relative "Xd ago / Xh ago / Xm ago" */
+const timeAgo = (dateStr) => {
+  if (!dateStr) return "Recently";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+};
+
+// ─── StatCard ─────────────────────────────────────────────────────────────────
 const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
@@ -38,10 +83,7 @@ const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
   >
     <div
       className="p-5 rounded-2xl border bg-white flex items-center gap-4 transition-all duration-300"
-      style={{
-        borderColor: "#F1F5F9",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-      }}
+      style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = ACCENT;
         e.currentTarget.style.boxShadow = `0 4px 16px ${ACCENT}18`;
@@ -61,9 +103,7 @@ const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
         <p className="text-[11px] uppercase tracking-wider font-semibold text-gray-400">
           {label}
         </p>
-        <p className="text-2xl font-black text-black mt-0.5 leading-none">
-          {value}
-        </p>
+        <p className="text-2xl font-black text-black mt-0.5 leading-none">{value}</p>
       </div>
     </div>
   </motion.div>
@@ -74,7 +114,7 @@ const ProfileProgress = ({ completion }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.45, delay: 0.5 }}
+    transition={{ duration: 0.45, delay: 0.45 }}
     className="bg-white rounded-2xl border p-5"
     style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
   >
@@ -83,10 +123,7 @@ const ProfileProgress = ({ completion }) => (
         <CheckCircle size={16} style={{ color: ACCENT }} />
         <span className="text-sm font-bold text-black">Profile Completion</span>
       </div>
-      <span
-        className="text-sm font-black"
-        style={{ color: ACCENT }}
-      >
+      <span className="text-sm font-black" style={{ color: ACCENT }}>
         {completion}%
       </span>
     </div>
@@ -96,28 +133,31 @@ const ProfileProgress = ({ completion }) => (
         style={{ background: `linear-gradient(90deg, ${ACCENT}, #bf7ffe)` }}
         initial={{ width: 0 }}
         animate={{ width: `${completion}%` }}
-        transition={{ duration: 1.2, ease: "easeOut", delay: 0.6 }}
+        transition={{ duration: 1.2, ease: "easeOut", delay: 0.55 }}
       />
     </div>
+    <p className="text-xs text-gray-400 mt-2">
+      {completion < 100
+        ? `${100 - completion}% left — complete your profile to improve job matches.`
+        : "Your profile is fully complete! Great job."}
+    </p>
   </motion.div>
 );
 
-// ─── Custom Tooltip for ATS chart ─────────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }) => {
+// ─── Custom Chart Tooltip ─────────────────────────────────────────────────────
+const ChartTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div
         className="rounded-xl px-4 py-3 text-sm shadow-lg border"
-        style={{
-          background: "#fff",
-          borderColor: ACCENT_BORDER,
-          minWidth: 140,
-        }}
+        style={{ background: "#fff", borderColor: ACCENT_BORDER, minWidth: 150 }}
       >
         <p className="font-semibold text-gray-500 text-xs mb-1">{label}</p>
         {payload.map((entry, i) => (
           <p key={i} className="font-bold" style={{ color: entry.color }}>
-            {entry.name === "score" ? `Score: ${entry.value}%` : `Count: ${entry.value}`}
+            {entry.name === "score"
+              ? `ATS Score: ${entry.value}%`
+              : `Resumes: ${entry.value}`}
           </p>
         ))}
       </div>
@@ -128,112 +168,131 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 function UserAnalytics() {
-  const [metrics, setMetrics] = useState({
-    profileCompletion: 0,
-    savedJobsCount: 0,
-    totalSkillsCount: 0,
-    bestAtsScore: 0,
-    jobsApplied: 0,
-    lastActive: "Today",
-  });
-
-  // ATS history: array of { month, score, count }
-  const [atsHistory, setAtsHistory] = useState([]);
+  // ── State ─────────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
-  const [activeAtsLine, setActiveAtsLine] = useState("score"); // "score" | "count"
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  // From /api/profile
+  const [profile, setProfile] = useState(null);
 
+  // From /api/resume/:userId
+  const [resumes, setResumes] = useState([]);
+
+  // From /api/user/savedJobs
+  const [savedJobsCount, setSavedJobsCount] = useState(0);
+
+  // From /api/user/applied-companies
+  const [applications, setApplications] = useState([]);
+
+  // Derived
+  const [atsHistory, setAtsHistory] = useState([]);
+  const [activeAtsLine, setActiveAtsLine] = useState("score");
+
+  // User from localStorage
+  const user = React.useMemo(
+    () => JSON.parse(localStorage.getItem("user") || "{}"),
+    []
+  );
+  const userId = user._id || user.id;
+
+  // ── Fetch all data ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const fetchAnalyticsData = async () => {
+    const fetchAll = async () => {
       try {
         setLoading(true);
-        const [profileRes, savedJobsRes, appliedRes, resumesRes] =
-          await Promise.all([
-            api.get("/profile").catch(() => null),
-            api.get("/user/savedJobs").catch(() => null),
-            api.get("/user/applied-companies").catch(() => null),
-            api.get("/user/resumeBuilder").catch(() => null),
-          ]);
 
-        const profile = profileRes?.data?.profile || {};
+        const [profileRes, savedRes, appliedRes, resumeRes] = await Promise.all([
+          api.get("/profile").catch(() => null),
+          api.get("/user/savedJobs").catch(() => null),
+          api.get("/user/applied-companies").catch(() => null),
+          userId
+            ? api.get(`/resume/${userId}`).catch(() => null)
+            : Promise.resolve(null),
+        ]);
 
-        // Profile completion
-        const fieldsToCheck = [
-          user?.userName,
-          user?.email,
-          profile.skills?.length > 0,
-          profile.resumeLink || profile.resumelink,
-          profile.img,
-          profile.experience && profile.experience !== "0-2 years",
-          profile.education?.length > 0,
-          profile.description,
-        ];
-        const filled = fieldsToCheck.filter(Boolean).length;
-        const completionPct = Math.round((filled / fieldsToCheck.length) * 100);
+        // Profile
+        const prof = profileRes?.data?.profile || {};
+        setProfile(prof);
 
-        // ATS history from resumes
-        const resumes = resumesRes?.data?.resumes || [];
-        const history = buildAtsHistory(resumes, profile);
+        // Saved jobs
+        setSavedJobsCount(savedRes?.data?.totalSavedJobs ?? 0);
 
-        setMetrics({
-          profileCompletion: completionPct || 0,
-          savedJobsCount: savedJobsRes?.data?.totalSavedJobs || 0,
-          totalSkillsCount: profile.skills?.length || 0,
-          bestAtsScore:
-            resumesRes?.data?.bestScore ||
-            profile.atsScore ||
-            (history.length
-              ? Math.max(...history.map((h) => h.score || 0))
-              : 0),
-          jobsApplied: appliedRes?.data?.totalApplications || 0,
-          lastActive: "Today",
-        });
+        // Applied jobs
+        const apps =
+          appliedRes?.data?.applications ||
+          appliedRes?.data?.appliedJobs ||
+          [];
+        setApplications(apps);
 
-        setAtsHistory(history);
-      } catch (error) {
-        console.error("Error fetching analytics data", error);
-        toast.error("Failed to load analytics.");
+        // Resumes — array of { _id, resumeName, resumeDate, atsScore, createdAt }
+        const resumeList =
+          resumeRes?.data?.resumes ||
+          resumeRes?.data ||
+          [];
+        const normalised = Array.isArray(resumeList) ? resumeList : [];
+        setResumes(normalised);
+
+        // Build ATS history from real resume data
+        setAtsHistory(buildAtsHistory(normalised));
+      } catch (err) {
+        console.error("Analytics fetch error:", err);
+        toast.error("Failed to load analytics data.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAnalyticsData();
-  }, []);
+    fetchAll();
+  }, [userId]);
 
-  // Build ATS history from resume data or generate demo data
-  const buildAtsHistory = (resumes, profile) => {
-    if (resumes && resumes.length > 0) {
-      // Group by month, pick best score per month, count submissions
-      const monthMap = {};
-      resumes.forEach((resume) => {
-        const date = new Date(resume.createdAt || Date.now());
-        const key = date.toLocaleString("default", { month: "short", year: "2-digit" });
-        if (!monthMap[key]) monthMap[key] = { scores: [], count: 0 };
-        monthMap[key].scores.push(resume.atsScore || 0);
-        monthMap[key].count++;
-      });
-      return Object.entries(monthMap)
-        .slice(-7)
-        .map(([month, { scores, count }]) => ({
-          month,
-          score: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
-          count,
-        }));
-    }
+  // ── Derived metrics ────────────────────────────────────────────────────────
+  const profileCompletion = React.useMemo(() => {
+    if (!profile && !user) return 0;
+    const checks = [
+      !!user?.userName,
+      !!user?.email,
+      (profile?.skills?.length ?? 0) > 0,
+      !!(profile?.resumeLink || profile?.resumelink),
+      !!profile?.img,
+      !!(profile?.experience && profile.experience !== "0-2 years"),
+      (profile?.education?.length ?? 0) > 0,
+      !!profile?.description,
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [profile, user]);
 
-    // Fallback: demo data
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
-    const base = profile.atsScore || 55;
-    return months.map((month, i) => ({
-      month,
-      score: Math.min(100, Math.max(30, base + Math.round((i - 3) * 4 + (Math.random() * 8 - 4)))),
-      count: Math.floor(Math.random() * 4) + 1,
-    }));
-  };
+  const bestAtsScore = React.useMemo(() => {
+    if (resumes.length === 0) return profile?.atsScore ?? 0;
+    return Math.max(...resumes.map((r) => r.atsScore || 0));
+  }, [resumes, profile]);
 
-  // ─── Loading State (matches AdminAnalytics) ─────────────────────────────────
+  const latestAtsScore = React.useMemo(() => {
+    if (atsHistory.length === 0) return bestAtsScore;
+    return atsHistory[atsHistory.length - 1].score;
+  }, [atsHistory, bestAtsScore]);
+
+  const totalAtsCount = resumes.length;
+  const skillsCount   = profile?.skills?.length ?? 0;
+  const appliedCount  = applications.length;
+
+  // Application status breakdown
+  const statusBreakdown = React.useMemo(() => {
+    const counts = { applied: 0, shortlisted: 0, rejected: 0, accepted: 0 };
+    applications.forEach((a) => {
+      if (counts[a.status] !== undefined) counts[a.status]++;
+    });
+    return counts;
+  }, [applications]);
+
+  // Recent 5 applications (sorted newest first)
+  const recentApplications = React.useMemo(
+    () =>
+      [...applications]
+        .sort((a, b) => new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0))
+        .slice(0, 5),
+    [applications]
+  );
+
+  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -243,17 +302,14 @@ function UserAnalytics() {
             style={{ borderColor: "#f3e8ff", borderTopColor: ACCENT }}
           />
           <p className="text-base font-medium text-gray-400 animate-pulse">
-            Loading analytics...
+            Loading your analytics...
           </p>
         </div>
       </div>
     );
   }
 
-  const latestScore =
-    atsHistory.length > 0 ? atsHistory[atsHistory.length - 1].score : metrics.bestAtsScore;
-  const totalAtsCount = atsHistory.reduce((s, h) => s + (h.count || 0), 0);
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#faf5ff_0%,_#ffffff_48%)]">
       <ToastContainer
@@ -269,7 +325,7 @@ function UserAnalytics() {
       <main className="min-w-0">
         <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-8">
 
-          {/* ── Header ─────────────────────────────────────────────────── */}
+          {/* ── Header ─────────────────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -285,7 +341,7 @@ function UserAnalytics() {
                 <span className="font-semibold" style={{ color: ACCENT }}>
                   {user?.userName || "User"}
                 </span>{" "}
-                — here's your performance overview.
+                — here's your real-time performance overview.
               </p>
             </div>
             <span
@@ -297,22 +353,22 @@ function UserAnalytics() {
             </span>
           </motion.div>
 
-          {/* ── Profile Completion ─────────────────────────────────────── */}
-          <ProfileProgress completion={metrics.profileCompletion} />
+          {/* ── Profile Completion ──────────────────────────────────────────── */}
+          <ProfileProgress completion={profileCompletion} />
 
-          {/* ── Stat Cards ─────────────────────────────────────────────── */}
+          {/* ── Stat Cards ─────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={Bookmark} label="Saved Jobs" value={metrics.savedJobsCount} delay={0} />
-            <StatCard icon={Briefcase} label="Applied" value={metrics.jobsApplied} delay={0.08} />
-            <StatCard icon={Code2} label="Skills" value={metrics.totalSkillsCount} delay={0.16} />
-            <StatCard icon={Star} label="Best ATS" value={`${metrics.bestAtsScore}%`} delay={0.24} />
+            <StatCard icon={Bookmark}  label="Saved Jobs"  value={savedJobsCount}           delay={0}    />
+            <StatCard icon={Briefcase} label="Applied"     value={appliedCount}              delay={0.08} />
+            <StatCard icon={Code2}     label="Skills"      value={skillsCount}               delay={0.16} />
+            <StatCard icon={Star}      label="Best ATS"    value={`${bestAtsScore}%`}        delay={0.24} />
           </div>
 
-          {/* ── ATS History Graph ──────────────────────────────────────── */}
+          {/* ── ATS History Graph ───────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.35 }}
+            transition={{ duration: 0.5, delay: 0.32 }}
             className="bg-white rounded-2xl border p-5 sm:p-6"
             style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}
           >
@@ -324,20 +380,20 @@ function UserAnalytics() {
                   ATS History
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Resume submissions · score trend over time
+                  Resume submissions · score trend over time (live from your account)
                 </p>
               </div>
 
-              {/* Quick stats chips */}
+              {/* Stats chips */}
               <div className="flex items-center gap-2 flex-wrap">
                 <div
                   className="rounded-xl border px-3 py-1.5 text-xs font-semibold"
                   style={{ borderColor: ACCENT_BORDER, color: ACCENT, background: ACCENT_LIGHT }}
                 >
-                  Latest: {latestScore}%
+                  Latest Score: {latestAtsScore}%
                 </div>
                 <div className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-600">
-                  Total Scans: {totalAtsCount}
+                  {totalAtsCount} resume{totalAtsCount !== 1 ? "s" : ""}
                 </div>
               </div>
             </div>
@@ -347,7 +403,7 @@ function UserAnalytics() {
               {[
                 { key: "score", label: "Score %" },
                 { key: "count", label: "Count" },
-                { key: "both", label: "Both" },
+                { key: "both",  label: "Both"    },
               ].map(({ key, label }) => (
                 <button
                   key={key}
@@ -364,88 +420,220 @@ function UserAnalytics() {
               ))}
             </div>
 
-            {/* Chart */}
-            <div style={{ height: 260 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={atsHistory}
-                  margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="gradScore" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={ACCENT} stopOpacity={0.22} />
-                      <stop offset="100%" stopColor={ACCENT} stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gradCount" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.22} />
-                      <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                  <XAxis
-                    dataKey="month"
-                    stroke="#CBD5E1"
-                    tick={{ fontSize: 11, fill: "#94A3B8" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    stroke="#CBD5E1"
-                    tick={{ fontSize: 11, fill: "#94A3B8" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
+            {/* Chart or empty state */}
+            {atsHistory.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-14 text-gray-400">
+                <FileText size={40} className="mb-3 opacity-30" />
+                <p className="text-sm font-medium">No resume data yet</p>
+                <p className="text-xs mt-1 text-gray-300">
+                  Upload a resume and run ATS analysis to see your score history here.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div style={{ height: 260 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={atsHistory}
+                      margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="gradScore" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%"   stopColor={ACCENT}   stopOpacity={0.22} />
+                          <stop offset="100%" stopColor={ACCENT}   stopOpacity={0}    />
+                        </linearGradient>
+                        <linearGradient id="gradCount" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%"   stopColor="#22d3ee" stopOpacity={0.22} />
+                          <stop offset="100%" stopColor="#22d3ee" stopOpacity={0}    />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                      <XAxis
+                        dataKey="month"
+                        stroke="#CBD5E1"
+                        tick={{ fontSize: 11, fill: "#94A3B8" }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        stroke="#CBD5E1"
+                        tick={{ fontSize: 11, fill: "#94A3B8" }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip content={<ChartTooltip />} />
 
-                  {(activeAtsLine === "score" || activeAtsLine === "both") && (
-                    <Area
-                      type="monotone"
-                      dataKey="score"
-                      name="score"
-                      stroke={ACCENT}
-                      strokeWidth={2.5}
-                      fill="url(#gradScore)"
-                      dot={{ r: 4, fill: ACCENT, stroke: "#fff", strokeWidth: 2 }}
-                      activeDot={{ r: 7, fill: ACCENT, stroke: "#fff", strokeWidth: 2 }}
-                      animationDuration={1200}
+                      {(activeAtsLine === "score" || activeAtsLine === "both") && (
+                        <Area
+                          type="monotone"
+                          dataKey="score"
+                          name="score"
+                          stroke={ACCENT}
+                          strokeWidth={2.5}
+                          fill="url(#gradScore)"
+                          dot={{ r: 4, fill: ACCENT, stroke: "#fff", strokeWidth: 2 }}
+                          activeDot={{ r: 7, fill: ACCENT, stroke: "#fff", strokeWidth: 2 }}
+                          animationDuration={1200}
+                        />
+                      )}
+
+                      {(activeAtsLine === "count" || activeAtsLine === "both") && (
+                        <Area
+                          type="monotone"
+                          dataKey="count"
+                          name="count"
+                          stroke="#22d3ee"
+                          strokeWidth={2.5}
+                          fill="url(#gradCount)"
+                          dot={{ r: 4, fill: "#22d3ee", stroke: "#fff", strokeWidth: 2 }}
+                          activeDot={{ r: 7, fill: "#22d3ee", stroke: "#fff", strokeWidth: 2 }}
+                          animationDuration={1200}
+                        />
+                      )}
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center gap-4 mt-3">
+                  <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                    <span
+                      className="w-3 h-3 rounded-full inline-block"
+                      style={{ background: ACCENT }}
                     />
-                  )}
-
-                  {(activeAtsLine === "count" || activeAtsLine === "both") && (
-                    <Area
-                      type="monotone"
-                      dataKey="count"
-                      name="count"
-                      stroke="#22d3ee"
-                      strokeWidth={2.5}
-                      fill="url(#gradCount)"
-                      dot={{ r: 4, fill: "#22d3ee", stroke: "#fff", strokeWidth: 2 }}
-                      activeDot={{ r: 7, fill: "#22d3ee", stroke: "#fff", strokeWidth: 2 }}
-                      animationDuration={1200}
-                    />
-                  )}
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Legend */}
-            <div className="flex items-center gap-4 mt-3">
-              <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                <span className="w-3 h-3 rounded-full inline-block" style={{ background: ACCENT }} />
-                ATS Score (%)
-              </span>
-              <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                <span className="w-3 h-3 rounded-full inline-block bg-cyan-400" />
-                Resume Count
-              </span>
-            </div>
+                    ATS Score (%)
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                    <span className="w-3 h-3 rounded-full inline-block bg-cyan-400" />
+                    Resume Count
+                  </span>
+                </div>
+              </>
+            )}
           </motion.div>
 
-          {/* ── Weekly Snapshot (mirrors AdminAnalytics style) ─────────── */}
+          {/* ── Recent Applications ─────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.45 }}
+            transition={{ duration: 0.5, delay: 0.42 }}
+            className="bg-white rounded-2xl border p-5 sm:p-6"
+            style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-black flex items-center gap-2">
+                <Clock size={16} style={{ color: ACCENT }} />
+                Recent Applications
+              </h3>
+              <span className="text-xs text-gray-400">
+                {appliedCount} total
+              </span>
+            </div>
+
+            {recentApplications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                <Briefcase size={36} className="mb-3 opacity-25" />
+                <p className="text-sm font-medium">No applications yet</p>
+                <p className="text-xs mt-1 text-gray-300">
+                  Start applying to jobs to track your progress here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentApplications.map((app, i) => {
+                  const statusColor = {
+                    applied:     { bg: "#f0fdf4", text: "#16a34a", border: "#bbf7d0" },
+                    shortlisted: { bg: "#eff6ff", text: "#2563eb", border: "#bfdbfe" },
+                    rejected:    { bg: "#fff1f2", text: "#dc2626", border: "#fecdd3" },
+                    accepted:    { bg: "#faf5ff", text: ACCENT,   border: ACCENT_BORDER },
+                  }[app.status] || { bg: "#f8fafc", text: "#64748b", border: "#e2e8f0" };
+
+                  return (
+                    <motion.div
+                      key={app.applicationId || i}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.45 + i * 0.07 }}
+                      className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
+                    >
+                      {/* Company logo / fallback */}
+                      {app.img ? (
+                        <img
+                          src={app.img}
+                          alt={app.companyName}
+                          className="w-10 h-10 rounded-xl object-cover border border-gray-100 shrink-0"
+                          onError={(e) => { e.target.style.display = "none"; }}
+                        />
+                      ) : (
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
+                          style={{ background: ACCENT }}
+                        >
+                          {(app.companyName || "?").charAt(0).toUpperCase()}
+                        </div>
+                      )}
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-black truncate">
+                          {app.jobTitle || "Unknown Role"}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1">
+                          <Building2 size={11} />
+                          {app.companyName || "—"}
+                          {app.location && ` · ${app.location}`}
+                        </p>
+                      </div>
+
+                      {/* Status badge */}
+                      <span
+                        className="hidden sm:inline text-xs font-bold px-2.5 py-1 rounded-full border shrink-0 capitalize"
+                        style={{
+                          background: statusColor.bg,
+                          color: statusColor.text,
+                          borderColor: statusColor.border,
+                        }}
+                      >
+                        {app.status || "applied"}
+                      </span>
+
+                      {/* Time */}
+                      <span className="text-xs text-gray-300 shrink-0">
+                        {timeAgo(app.appliedAt)}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Status breakdown mini strip */}
+            {appliedCount > 0 && (
+              <div className="mt-5 pt-4 border-t border-gray-100 grid grid-cols-4 gap-2">
+                {[
+                  { label: "Applied",     key: "applied",     color: "#16a34a" },
+                  { label: "Shortlisted", key: "shortlisted", color: "#2563eb" },
+                  { label: "Rejected",    key: "rejected",    color: "#dc2626" },
+                  { label: "Accepted",    key: "accepted",    color: ACCENT     },
+                ].map(({ label, key, color }) => (
+                  <div key={key} className="text-center">
+                    <p className="text-lg font-black" style={{ color }}>
+                      {statusBreakdown[key]}
+                    </p>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                      {label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+
+          {/* ── Profile Snapshot ───────────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.52 }}
             className="bg-white rounded-2xl border p-5"
             style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}
           >
@@ -458,10 +646,10 @@ function UserAnalytics() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Profile Score", value: `${metrics.profileCompletion}%` },
-                { label: "Best ATS", value: `${metrics.bestAtsScore}%` },
-                { label: "Jobs Saved", value: metrics.savedJobsCount },
-                { label: "Total Skills", value: metrics.totalSkillsCount },
+                { label: "Profile Score",    value: `${profileCompletion}%`  },
+                { label: "Best ATS",         value: `${bestAtsScore}%`       },
+                { label: "Jobs Saved",        value: savedJobsCount           },
+                { label: "Total Resumes",     value: totalAtsCount            },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -474,7 +662,37 @@ function UserAnalytics() {
                 </div>
               ))}
             </div>
+
+            {/* Skills chips */}
+            {profile?.skills?.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  Your Skills
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {profile.skills.slice(0, 14).map((s, i) => (
+                    <span
+                      key={i}
+                      className="text-xs font-semibold px-2.5 py-1 rounded-full border"
+                      style={{
+                        borderColor: ACCENT_BORDER,
+                        color: ACCENT,
+                        background: ACCENT_LIGHT,
+                      }}
+                    >
+                      {s.skillName || s}
+                    </span>
+                  ))}
+                  {profile.skills.length > 14 && (
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
+                      +{profile.skills.length - 14} more
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </motion.div>
+
         </div>
       </main>
     </div>

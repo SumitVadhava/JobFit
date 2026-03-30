@@ -146,7 +146,7 @@ const Navbar = ({ userData }) => {
         ],
         user: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
-            { label: "Resume Builder", href: "/candidate/resume", shortcut: "Ctrl + R" },
+            { label: "ATS Analyzer", href: "/candidate/ats-analyzer", shortcut: "Ctrl + A" },
             {
                 label: "Best Resumes",
                 href: "/candidate/best-resumes",
