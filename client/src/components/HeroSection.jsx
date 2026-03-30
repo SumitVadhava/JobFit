@@ -37,9 +37,9 @@ const HeroSection = () => {
         if (!role || role === "default") {
             navigate("/login");
         } else if (role === "recruiter") {
-            navigate("/recruiter/recruiter-dashboard");
+            navigate("/recruiter/dashboard");
         } else if (role === 'candidate' || role === 'user') {
-            navigate("/user/dashboard");
+            navigate("/candidate/dashboard");
         } else if (role === 'admin') {
             navigate("/admin/dashboard");
         } else {

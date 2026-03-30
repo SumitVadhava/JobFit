@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import Navbar from './components/Navbar'
-import GoogleOneTapLogin from './components/GoogleOneTapLogin'
 import { BrowserRouter, Route, Router, Routes } from 'react-router-dom'
 import HeroSection from './components/HeroSection'
 import AuthPage from './pages/AuthPage'
@@ -44,7 +41,6 @@ import Recruiter_History from './pages/Recruiter/Recruiter_History'
 function App() {
   const { user, token, role } = useAuth();
   const isLoggedIn = !!user && !!token;
-  // const [selectedResume, setSelectedResume] = useState(null);
 
   const [userProp, setUserProp] = useState({
     userName: "",
@@ -90,7 +86,7 @@ function App() {
         <Route path='/login' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
 
         <Route
-          path='/user/dashboard'
+          path='/candidate/dashboard'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -98,7 +94,7 @@ function App() {
               <UserAnalytics />
             </ProtectedRoute>} />
         <Route
-          path='/user/ats'
+          path='/candidate/ats'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -106,7 +102,7 @@ function App() {
               <AtsScreenBrackDown atsData={atsData} />
             </ProtectedRoute>} />
         <Route
-          path='/user/job-search'
+          path='/candidate/job-search'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -114,7 +110,7 @@ function App() {
               <JobSearch />
             </ProtectedRoute>} />
         <Route
-          path='/user/resume'
+          path='/candidate/resume'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -122,7 +118,7 @@ function App() {
               <Resumes atsData={atsData} setAtsData={setAtsData} />
             </ProtectedRoute>} />
         <Route
-          path='/user/saved-jobs'
+          path='/candidate/saved-jobs'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -130,7 +126,7 @@ function App() {
               <SavedJobs />
             </ProtectedRoute>} />
         <Route
-          path='/user/best-resumes'
+          path='/candidate/best-resumes'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -138,7 +134,7 @@ function App() {
               <User_Best_Resume_view />
             </ProtectedRoute>} />
         <Route
-          path='/user/profile'
+          path='/candidate/profile'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -147,7 +143,7 @@ function App() {
             </ProtectedRoute>} />
 
         <Route
-          path='/user/apply/:jobId'
+          path='/candidate/apply/:jobId'
           element={
             <ProtectedRoute
               allowedRoles={['candidate']}
@@ -190,7 +186,7 @@ function App() {
 
 
         <Route
-          path="/recruiter/recruiter-dashboard"
+          path="/recruiter/dashboard"
           element={
             <ProtectedRoute
               allowedRoles={['recruiter']}
@@ -198,7 +194,7 @@ function App() {
               <Recruiter_Analytics_view />
             </ProtectedRoute>} />
         <Route
-          path="/recruiter/recruiter-postjob"
+          path="/recruiter/post-job"
           element={
             <ProtectedRoute
               allowedRoles={['recruiter']}
@@ -206,7 +202,7 @@ function App() {
               <Recruiter_Post_view />
             </ProtectedRoute>} />
         <Route
-          path="/recruiter/recruiter-candidates"
+          path="/recruiter/candidates"
           element={
             <ProtectedRoute
               allowedRoles={['recruiter']}
@@ -215,7 +211,7 @@ function App() {
             </ProtectedRoute>} />
 
         <Route
-          path="/recruiter/recruiter-history"
+          path="/recruiter/history"
           element={
             <ProtectedRoute
               allowedRoles={['recruiter']}
@@ -225,7 +221,7 @@ function App() {
 
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route
-          path="/recruiter/recruiter-postedjobs"
+          path="/recruiter/postedjobs"
           element={
             <ProtectedRoute
               allowedRoles={['recruiter']}
@@ -233,23 +229,20 @@ function App() {
               <Recruiter_Posted_Jobs_view />
             </ProtectedRoute>} />
 
-        {/* Public footer pages */}
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactSupport />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/cookie-policy" element={<CookiePolicy />} />
 
-        {/* Feature detail pages */}
         <Route path="/features/user-registration" element={<FeatureUserRegistration />} />
         <Route path="/features/resume-matching" element={<FeatureResumeMatching />} />
         <Route path="/features/ats-analytics" element={<FeatureATSAnalytics />} />
 
       </Routes>
-      {/* <GoogleOneTapLogin /> */}
+      
     </>
   )
 }
 
 export default App
-

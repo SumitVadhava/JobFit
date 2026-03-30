@@ -7,8 +7,8 @@ export default function Unauthorized() {
 
   const handleGoToDashboard = () => {
     if (role === "admin") navigate("/admin/dashboard");
-    else if (role === "recruiter") navigate("/recruiter/recruiter-analytics");
-    else if (role === "candidate") navigate("/user/dashboard");
+    else if (role === "recruiter") navigate("/recruiter/dashboard");
+    else if (role === "candidate") navigate("/candidate/dashboard");
     else navigate("/");
   };
 
