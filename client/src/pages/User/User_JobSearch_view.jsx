@@ -322,12 +322,13 @@ const JobSearch = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
-          </div>
-          <p className="text-lg font-medium text-gray-600 animate-pulse">
+          <div
+            className="w-14 h-14 border-4 rounded-full animate-spin"
+            style={{ borderColor: "#f3e8ff", borderTopColor: "#9c44fe" }}
+          />
+          <p className="text-base font-medium text-gray-400 animate-pulse">
             Finding the best jobs for you...
           </p>
         </div>

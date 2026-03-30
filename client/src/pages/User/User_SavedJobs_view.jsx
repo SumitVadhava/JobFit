@@ -570,9 +570,16 @@ const SavedJobs = () => {
   // --- RENDER LOADING STATE ---
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-gray-50 items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-gray-600 font-medium">Loading your saved jobs...</p>
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="w-14 h-14 border-4 rounded-full animate-spin"
+            style={{ borderColor: "#f3e8ff", borderTopColor: "#9c44fe" }}
+          />
+          <p className="text-base font-medium text-gray-400 animate-pulse">
+            Loading your saved jobs...
+          </p>
+        </div>
       </div>
     );
   }
