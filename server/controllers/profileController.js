@@ -34,7 +34,7 @@ exports.createProfile = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const { img, description, experience, education, skills, name, email } = req.body;
+    const { img, description, experience, education, skills, softSkills, name, email } = req.body;
 
     const profile = await Profile.create({
       user: userId,
@@ -44,6 +44,7 @@ exports.createProfile = async (req, res) => {
       atsScore: 0,
       education: education || [],
       skills: skills || [],
+      softSkills: softSkills || [],
       name: name || null,
       email: email || null,
     });
@@ -62,7 +63,7 @@ exports.updateProfile = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const { img, description, experience, education, skills, name, email } = req.body;
+    const { img, description, experience, education, skills, softSkills, name, email } = req.body;
 
     // Filter out null, undefined, or empty strings so we only perform a partial update
     const updates = {};
@@ -71,6 +72,7 @@ exports.updateProfile = async (req, res) => {
     if (experience && Array.isArray(experience)) updates.experience = experience;
     if (education && Array.isArray(education)) updates.education = education;
     if (skills && Array.isArray(skills)) updates.skills = skills;
+    if (softSkills && Array.isArray(softSkills)) updates.softSkills = softSkills;
     if (name) updates.name = name;
     if (email) updates.email = email;
 

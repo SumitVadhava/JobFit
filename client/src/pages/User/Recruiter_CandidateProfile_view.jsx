@@ -225,7 +225,7 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
       institution: edu.university || "",
     })),
     techSkills: (profile?.skills || []).map(s => s.skillName || s),
-    softSkills: [],
+    softSkills: (profile?.softSkills || []).map(s => s.skillName || s),
     languages: [],
     atsScore: profile?.atsScore || 0,
     profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=0f172a&color=fff&size=200`,
@@ -259,6 +259,7 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
         };
       }),
     skills: data.techSkills.filter(s => s.trim()).map(s => ({ skillName: s })),
+    softSkills: data.softSkills.filter(s => s.trim()).map(s => ({ skillName: s })),
   });
 
   /* ── Fetch profile on mount ──────────────────────────────── */
