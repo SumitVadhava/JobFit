@@ -31,8 +31,13 @@ const AdminAnalytics = () => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const jobsRes = await api.get("/jobs");
-        setJobs(jobsRes.data.jobs || []);
+        const jobsRes = await api.get("/admin/jobs");
+        const fetchedJobs = jobsRes.data.data || [];
+        // Sort by createdAt descending to show most recent first
+        const sortedJobs = [...fetchedJobs].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setJobs(sortedJobs);
       } catch (err) {
         console.error("Error loading jobs:", err);
         toast.error("Failed to load jobs");
@@ -125,36 +130,6 @@ const AdminAnalytics = () => {
               delay={0.3}
               icon={Rocket}
             />
-          </div>
-
-          <div className="w-full mb-8">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-bold text-black flex items-center gap-2">
-                  <Sparkles size={16} className="text-[#9c44fe]" />
-                  Weekly Hiring Snapshot
-                </h3>
-                <span className="text-xs text-gray-400">Static Demo Data</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: "Interviews", value: 18 },
-                  { label: "Offers Sent", value: 7 },
-                  { label: "Offer Accept", value: "71%" },
-                  { label: "Time to Hire", value: "12d" },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-xl border border-gray-100 bg-gray-50 p-3"
-                  >
-                    <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
-                      {item.label}
-                    </p>
-                    <p className="text-xl font-black text-black mt-1">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           <div>

@@ -268,7 +268,8 @@ const Navbar = ({ userData }) => {
             }
             if (key === "a") {
                 e.preventDefault();
-                navigate("/candidate/profile");
+                if (userRole === "recruiter") navigate("/recruiter/profile");
+                else navigate("/candidate/profile");
                 pendingKey.current = null;
                 return;
             }
