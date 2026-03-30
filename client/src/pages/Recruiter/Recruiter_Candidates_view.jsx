@@ -19,39 +19,6 @@ import api from "../../api/api";
 /* ─────────────────── Constants ─────────────────── */
 const ACCENT = "#9c44fe";
 
-const DUMMY_APPLICATIONS = [
-  {
-    _id: "dummy-app-1",
-    name: "Aarav Sharma",
-    email: "aarav.sharma@example.com",
-    atsScore: 88,
-    qualifications:
-      "B.Tech in Computer Science with 3 years of full-stack development experience in React, Node.js, and MongoDB.",
-    experience: "3 years",
-    skills: ["React", "Node.js", "MongoDB", "TypeScript", "REST APIs"],
-  },
-  {
-    _id: "dummy-app-2",
-    name: "Priya Nair",
-    email: "priya.nair@example.com",
-    atsScore: 76,
-    qualifications:
-      "MCA graduate with strong backend fundamentals, database optimization knowledge, and cloud deployment exposure.",
-    experience: "2 years",
-    skills: ["Express.js", "PostgreSQL", "AWS", "Docker", "Redis"],
-  },
-  {
-    _id: "dummy-app-3",
-    name: "Rohit Verma",
-    email: "rohit.verma@example.com",
-    atsScore: 64,
-    qualifications:
-      "Software engineer focused on frontend engineering, component systems, accessibility, and performance tuning.",
-    experience: "1.5 years",
-    skills: ["JavaScript", "Tailwind CSS", "Redux", "Jest", "Vite"],
-  },
-];
-
 /* ─────────────── ATS Score Circle ──────────────── */
 const AtsScoreCircle = ({ score = 0, size = 64 }) => {
   const sw = 5;
@@ -263,7 +230,7 @@ const RecruiterJobCard = ({ job, onViewApplicants }) => {
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
-            <span>{job.openings || "N/A"} Openings</span>
+            <span>{job.openings ?? "N/A"} Openings</span>
           </div>
         </div>
 
@@ -338,30 +305,36 @@ const CandidatesView = () => {
   const fetchCandidates = useCallback(async (jobId) => {
     try {
       setCandidatesLoading(true);
-      // Adjust endpoint to match your API:
-      const res = await api.get(`/jobs/${jobId}/applications`);
-      const applications = res.data.applications || [];
+      const res = await api.get(`/jobs/${jobId}/candidates`);
+      const apiCandidates = res.data.candidates || [];
 
-      if (applications.length === 0) {
-        setCandidates(
-          DUMMY_APPLICATIONS.map((candidate) => ({
-            ...candidate,
-            _id: `${jobId}-${candidate._id}`,
-          })),
-        );
-        return;
-      }
+      const normalized = apiCandidates.map((candidate, index) => ({
+        _id:
+          candidate.applicationId ||
+          candidate.candidateId ||
+          `${jobId}-candidate-${index}`,
+        applicationId: candidate.applicationId,
+        candidateId: candidate.candidateId,
+        name: candidate.userName,
+        email: candidate.email,
+        status: candidate.status,
+        appliedAt: candidate.appliedAt,
+        atsScore: candidate.profile?.atsScore,
+        qualifications: candidate.profile?.qualifications,
+        experience: candidate.profile?.experience,
+        skills: Array.isArray(candidate.profile?.skills)
+          ? candidate.profile.skills.map((item) =>
+              typeof item === "string" ? item : item?.skillName,
+            )
+          : candidate.profile?.skills,
+        resumeLink: candidate.profile?.resumeLink,
+      }));
 
-      setCandidates(applications);
+      setCandidates(normalized);
     } catch (err) {
       console.error("Error fetching candidates:", err);
-      setCandidates(
-        DUMMY_APPLICATIONS.map((candidate) => ({
-          ...candidate,
-          _id: `${jobId}-${candidate._id}`,
-        })),
-      );
-      toast.info("Showing demo applications right now.");
+      setCandidates([]);
+      toast.error("Failed to load candidates. Please try again.");
     } finally {
       setCandidatesLoading(false);
     }
@@ -383,6 +356,15 @@ const CandidatesView = () => {
     setCandidates([]);
     setSearchQuery("");
     setCurrentPage(1);
+  }, []);
+
+  const handleViewResume = useCallback((candidate) => {
+    if (!candidate?.resumeLink) {
+      toast.info("Resume is not uploaded by user");
+      return;
+    }
+
+    window.open(candidate.resumeLink, "_blank", "noopener,noreferrer");
   }, []);
 
   /* ── Filter & Sort Candidates ── */
@@ -410,20 +392,22 @@ const CandidatesView = () => {
   );
 
   /* ── Stats ── */
+  const candidatesWithScore = candidates.filter(
+    (c) => typeof c.atsScore === "number" && Number.isFinite(c.atsScore),
+  );
+
   const avgScore =
-    candidates.length > 0
+    candidatesWithScore.length > 0
       ? Math.round(
-          candidates.reduce((sum, c) => sum + (c.atsScore || 0), 0) /
-            candidates.length,
+          candidatesWithScore.reduce((sum, c) => sum + c.atsScore, 0) /
+            candidatesWithScore.length,
         )
       : 0;
   const topScore =
-    candidates.length > 0
-      ? Math.max(...candidates.map((c) => c.atsScore || 0))
+    candidatesWithScore.length > 0
+      ? Math.max(...candidatesWithScore.map((c) => c.atsScore))
       : 0;
-  const highScoreCount = candidates.filter(
-    (c) => (c.atsScore || 0) >= 80,
-  ).length;
+  const highScoreCount = candidatesWithScore.filter((c) => c.atsScore >= 80).length;
 
   /* ── Filter Jobs ── */
   const filteredJobs = jobs.filter(
@@ -718,52 +702,76 @@ const CandidatesView = () => {
                                     {c.email}
                                   </p>
                                 )}
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  {c.status && (
+                                    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                      {c.status}
+                                    </span>
+                                  )}
+                                  {c.appliedAt && (
+                                    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-50 text-gray-600 border border-gray-200">
+                                      Applied {new Date(c.appliedAt).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                  {!c.resumeLink && (
+                                    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                      Candidate has not uploaded resume
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               {/* Score */}
                               <div className="shrink-0 flex flex-col items-center">
-                                <AtsScoreCircle
-                                  score={c.atsScore || 0}
-                                  size={60}
-                                />
-                                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-1">
-                                  ATS
-                                </span>
+                                {typeof c.atsScore === "number" &&
+                                Number.isFinite(c.atsScore) ? (
+                                  <>
+                                    <AtsScoreCircle score={c.atsScore} size={60} />
+                                    <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-1">
+                                      ATS
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-50 text-gray-500 border border-gray-200">
+                                    ATS N/A
+                                  </span>
+                                )}
                               </div>
                             </div>
 
                             {/* Qualifications Preview */}
-                            <div
-                              className="mt-4 p-4 rounded-xl border"
-                              style={{
-                                backgroundColor: `${ACCENT}06`,
-                                borderColor: `${ACCENT}12`,
-                              }}
-                            >
-                              <div className="flex items-center gap-2 mb-2">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="14"
-                                  height="14"
-                                  fill="#111827"
-                                  viewBox="0 0 256 256"
-                                >
-                                  <path d="M251.76,88.94l-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.74,78.51,216,128,216a130,130,0,0,0,48-8.76V240a8,8,0,0,0,16,0V199.51a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z" />
-                                </svg>
-                                <span
-                                  className="text-xs font-bold uppercase tracking-wider"
-                                  style={{ color: "#111827" }}
-                                >
-                                  Qualifications
-                                </span>
-                              </div>
-                              <p
-                                className={`text-sm text-gray-600 leading-relaxed ${!isExpanded ? "line-clamp-2" : ""}`}
+                            {c.qualifications && (
+                              <div
+                                className="mt-4 p-4 rounded-xl border"
+                                style={{
+                                  backgroundColor: `${ACCENT}06`,
+                                  borderColor: `${ACCENT}12`,
+                                }}
                               >
-                                {c.qualifications ||
-                                  "No qualifications provided"}
-                              </p>
-                            </div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    fill="#111827"
+                                    viewBox="0 0 256 256"
+                                  >
+                                    <path d="M251.76,88.94l-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.74,78.51,216,128,216a130,130,0,0,0,48-8.76V240a8,8,0,0,0,16,0V199.51a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z" />
+                                  </svg>
+                                  <span
+                                    className="text-xs font-bold uppercase tracking-wider"
+                                    style={{ color: "#111827" }}
+                                  >
+                                    Qualifications
+                                  </span>
+                                </div>
+                                <p
+                                  className={`text-sm text-gray-600 leading-relaxed ${!isExpanded ? "line-clamp-2" : ""}`}
+                                >
+                                  {c.qualifications}
+                                </p>
+                              </div>
+                            )}
 
                             {/* Expanded Details */}
                             <div
@@ -821,24 +829,27 @@ const CandidatesView = () => {
 
                             {/* Actions */}
                             <div className="flex flex-wrap items-center gap-2 mt-4">
-                              <button
-                                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:opacity-90 active:scale-[0.97]"
-                                style={{
-                                  background: "#111827",
-                                  boxShadow: "0 4px 14px rgba(17, 24, 39, 0.35)",
-                                }}
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="15"
-                                  height="15"
-                                  fill="currentColor"
-                                  viewBox="0 0 256 256"
+                              {c.resumeLink && (
+                                <button
+                                  onClick={() => handleViewResume(c)}
+                                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:opacity-90 active:scale-[0.97]"
+                                  style={{
+                                    background: "#111827",
+                                    boxShadow: "0 4px 14px rgba(17, 24, 39, 0.35)",
+                                  }}
                                 >
-                                  <path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z" />
-                                </svg>
-                                View Resume
-                              </button>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="15"
+                                    height="15"
+                                    fill="currentColor"
+                                    viewBox="0 0 256 256"
+                                  >
+                                    <path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z" />
+                                  </svg>
+                                  View Resume
+                                </button>
+                              )}
 
                               <button className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-green-600 border border-green-200 bg-white hover:bg-green-50 transition-all duration-300 active:scale-[0.97]">
                                 <svg
