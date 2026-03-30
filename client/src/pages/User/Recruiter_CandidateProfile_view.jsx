@@ -240,15 +240,24 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
     atsScore: data.atsScore || 0,
     experience: [{
       jobTitle: "Professional Experience",
-      expYear: data.totalExperience || 0,
+      // clamp to 0-99 so scroll-wheel accidents don't produce huge numbers
+      expYear: Math.min(Math.max(parseInt(data.totalExperience) || 0, 0), 99),
       companyName: "N/A",
       role: "Candidate",
     }],
-    education: data.education.map(edu => ({
-      degree: edu.degree,
-      university: edu.institution,
-      yearOfPassing: parseInt(edu.date) || 0,
-    })),
+    education: data.education
+      // skip entries where BOTH degree and institution are blank
+      .filter(edu => (edu.degree || edu.institution || "").trim())
+      .map(edu => {
+        const deg = (edu.degree || "").trim();
+        const inst = (edu.institution || "").trim();
+        return {
+          // if user left "Degree" blank but filled "Institution", use institution as degree
+          degree: deg || inst || "Other",
+          university: inst || deg || "Unknown",
+          yearOfPassing: parseInt(edu.date) || new Date().getFullYear(),
+        };
+      }),
     skills: data.techSkills.filter(s => s.trim()).map(s => ({ skillName: s })),
   });
 
