@@ -45,6 +45,43 @@ const uploadResumeMiddleware = (req, res, next) => {
   });
 };
 
+const imageFileFilter = (req, file, cb) => {
+  const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedMimes.includes(file.mimetype)) {
+    return cb(new Error("Only image files (JPEG, PNG, GIF, WebP) are allowed"));
+  }
+  return cb(null, true);
+};
+
+const uploadImage = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for images
+  },
+});
+
+const uploadProfilePhotoMiddleware = (req, res, next) => {
+  uploadImage.single("profilePhoto")(req, res, (error) => {
+    if (!error) {
+      return next();
+    }
+
+    if (
+      error instanceof multer.MulterError &&
+      error.code === "LIMIT_FILE_SIZE"
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Profile photo must be 5MB or smaller" });
+    }
+
+    return res
+      .status(400)
+      .json({ message: error.message || "Invalid image upload" });
+  });
+};
+
 const {
   getProfile,
   createProfile,
@@ -151,7 +188,7 @@ router.get("/", auth, authorizeRole(...USER_FACING_ROLES), getProfile);
  *       401:
  *         description: Unauthorized
  */
-router.post("/", auth, authorizeRole(...USER_FACING_ROLES), validateCreateProfile, createProfile);
+router.post("/", auth, authorizeRole(...USER_FACING_ROLES), uploadProfilePhotoMiddleware, validateCreateProfile, createProfile);
 
 /**
  * @swagger
@@ -175,7 +212,7 @@ router.post("/", auth, authorizeRole(...USER_FACING_ROLES), validateCreateProfil
  *       401:
  *         description: Unauthorized
  */
-router.put("/", auth, authorizeRole(...USER_FACING_ROLES), validateUpdateProfile, updateProfile);
+router.put("/", auth, authorizeRole(...USER_FACING_ROLES), uploadProfilePhotoMiddleware, validateUpdateProfile, updateProfile);
 
 /**
  * @swagger

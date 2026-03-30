@@ -82,7 +82,8 @@ const validateUpdateProfile = (req, res, next) => {
     softSkills !== undefined ||
     name !== undefined ||
     atsScore !== undefined ||
-    userName !== undefined;
+    userName !== undefined ||
+    req.file !== undefined; // Allow profile photo upload
 
   if (!hasAtLeastOneField) {
     console.error("Profile Middleware Error: Missing required fields");

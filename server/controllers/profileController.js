@@ -113,6 +113,20 @@ exports.createProfile = async (req, res) => {
       return res.status(401).json({ message: "Authenticated user not found" });
     }
 
+    // Parse body fields, handling both JSON and multipart
+    let body = req.body;
+    if (req.file) {
+      // For multipart, fields are strings, parse JSON ones
+      body = {};
+      Object.keys(req.body).forEach(key => {
+        try {
+          body[key] = JSON.parse(req.body[key]);
+        } catch {
+          body[key] = req.body[key];
+        }
+      });
+    }
+
     const {
       img,
       description,
@@ -122,12 +136,40 @@ exports.createProfile = async (req, res) => {
       softSkills,
       name,
       email,
-    } = req.body;
+    } = body;
+
+    // Handle profile photo upload
+    let profilePhotoUrl = img; // Use provided img if no file uploaded
+    if (req.file) {
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'profile_photos',
+              public_id: `user_${userId}_${Date.now()}`,
+              transformation: [
+                { width: 300, height: 300, crop: 'fill', gravity: 'face' },
+                { quality: 'auto' }
+              ]
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          stream.end(req.file.buffer);
+        });
+        profilePhotoUrl = result.secure_url;
+      } catch (uploadError) {
+        console.error('Cloudinary upload error:', uploadError);
+        return res.status(500).json({ message: 'Failed to upload profile photo' });
+      }
+    }
 
     const profile = await Profile.create({
       user: userId,
       userModel,
-      img: img || null,
+      img: profilePhotoUrl || null,
       description: description || null,
       experience: experience || "0-2 years",
       atsScore: 0,
@@ -157,6 +199,20 @@ exports.updateProfile = async (req, res) => {
       return res.status(401).json({ message: "Authenticated user not found" });
     }
 
+    // Parse body fields, handling both JSON and multipart
+    let body = req.body;
+    if (req.file) {
+      // For multipart, fields are strings, parse JSON ones
+      body = {};
+      Object.keys(req.body).forEach(key => {
+        try {
+          body[key] = JSON.parse(req.body[key]);
+        } catch {
+          body[key] = req.body[key];
+        }
+      });
+    }
+
     const {
       img,
       description,
@@ -167,11 +223,39 @@ exports.updateProfile = async (req, res) => {
       name,
       atsScore,
       userName,
-    } = req.body;
+    } = body;
+
+    // Handle profile photo upload
+    let profilePhotoUrl = img; // Use provided img if no file uploaded
+    if (req.file) {
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'profile_photos',
+              public_id: `user_${userId}_${Date.now()}`,
+              transformation: [
+                { width: 300, height: 300, crop: 'fill', gravity: 'face' },
+                { quality: 'auto' }
+              ]
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          stream.end(req.file.buffer);
+        });
+        profilePhotoUrl = result.secure_url;
+      } catch (uploadError) {
+        console.error('Cloudinary upload error:', uploadError);
+        return res.status(500).json({ message: 'Failed to upload profile photo' });
+      }
+    }
 
     // Filter out null, undefined, or empty strings so we only perform a partial update
     const updates = {};
-    if (img) updates.img = img;
+    if (profilePhotoUrl) updates.img = profilePhotoUrl;
     if (description) updates.description = description;
     if (experience) updates.experience = experience;
     if (education && Array.isArray(education)) updates.education = education;
