@@ -19,7 +19,6 @@ import Recruiter_Candidates_view from './pages/Recruiter/Recruiter_Candidates_vi
 import Recruiter_History from './pages/Recruiter/Recruiter_History';
 import { useAuth } from './contexts/AuthContexts'
 import User_Best_Resume_view from './pages/User/User_Best_Resume_view'
-import Recruiter_CandidateProfile_view from './pages/User/Recruiter_CandidateProfile_view'
 import { ToastContainer } from 'react-toastify'
 import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_view'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -32,6 +31,7 @@ import CookiePolicy from './pages/CookiePolicy'
 import FeatureUserRegistration from './pages/FeatureUserRegistration'
 import FeatureResumeMatching from './pages/FeatureResumeMatching'
 import FeatureATSAnalytics from './pages/FeatureATSAnalytics'
+import Candidate_Profile_View from './pages/User/Candidate_Profile_View'
 
 
 
@@ -133,9 +133,9 @@ function App() {
           path='/candidate/profile'
           element={
             <ProtectedRoute
-              allowedRoles={['candidate', 'recruiter']}
+              allowedRoles={['candidate']}
             >
-              <Recruiter_CandidateProfile_view userProp={userProp} />
+              <Candidate_Profile_View userProp={userProp} />
             </ProtectedRoute>} />
 
 
