@@ -3,15 +3,7 @@ import { motion } from "framer-motion";
 import api from "../../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
+
 import {
   Bookmark,
   Briefcase,
@@ -27,39 +19,63 @@ import {
 } from "lucide-react";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const ACCENT       = "#9c44fe";
-const ACCENT_LIGHT  = "rgba(156,68,254,0.07)";
+const ACCENT = "#9c44fe";
+const ACCENT_LIGHT = "rgba(156,68,254,0.07)";
 const ACCENT_BORDER = "rgba(156,68,254,0.18)";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 /** Group resumes by "Mon 'YY" and compute avg score + count per month */
-const buildAtsHistory = (resumes) => {
-  if (!resumes || resumes.length === 0) return [];
+const buildAtsHistory = (resumes, atsHistoryData = []) => {
+  const allScores = [];
 
-  // Sort oldest → newest so the chart reads left-to-right chronologically
-  const sorted = [...resumes].sort(
-    (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
-  );
-
-  const monthMap = {};
-  sorted.forEach((resume) => {
-    const date = new Date(resume.createdAt || Date.now());
-    const key = date.toLocaleString("default", {
-      month: "short",
-      year: "2-digit",
+  if (resumes && resumes.length > 0) {
+    resumes.forEach((r) => {
+      allScores.push({
+        score: r.atsScore || 0,
+        date: new Date(r.createdAt || r.resumeDate || Date.now())
+      });
     });
-    if (!monthMap[key]) monthMap[key] = { scores: [], count: 0 };
-    monthMap[key].scores.push(resume.atsScore || 0);
-    monthMap[key].count += 1;
-  });
+  }
 
-  return Object.entries(monthMap)
-    .slice(-8) // show at most the last 8 months
-    .map(([month, { scores, count }]) => ({
-      month,
-      score: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
-      count,
-    }));
+  if (atsHistoryData && atsHistoryData.length > 0) {
+    atsHistoryData.forEach((item) => {
+      allScores.push({
+        score: item.score || 0,
+        date: new Date(item.analyzedAt || Date.now())
+      });
+    });
+  }
+
+  if (allScores.length === 0) return [];
+
+  // Sort newest first
+  const sorted = allScores.sort((a, b) => b.date - a.date);
+
+  // Return the raw list formatted for the timeline
+  return sorted.slice(0, 15).map((item, i) => {
+    // Determine trend vs the previous item (which is older, so index i+1)
+    let trend = null;
+    if (i < sorted.length - 1) {
+      const prev = sorted[i + 1].score;
+      if (item.score > prev) trend = 'up';
+      else if (item.score < prev) trend = 'down';
+      else trend = 'same';
+    }
+    return {
+      id: i,
+      score: Math.round(item.score),
+      date: item.date,
+      dateStr: item.date.toLocaleString("en-US", {
+        timeZone: "UTC",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }),
+      trend
+    };
+  });
 };
 
 /** Format a date as relative "Xd ago / Xh ago / Xm ago" */
@@ -144,27 +160,7 @@ const ProfileProgress = ({ completion }) => (
   </motion.div>
 );
 
-// ─── Custom Chart Tooltip ─────────────────────────────────────────────────────
-const ChartTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div
-        className="rounded-xl px-4 py-3 text-sm shadow-lg border"
-        style={{ background: "#fff", borderColor: ACCENT_BORDER, minWidth: 150 }}
-      >
-        <p className="font-semibold text-gray-500 text-xs mb-1">{label}</p>
-        {payload.map((entry, i) => (
-          <p key={i} className="font-bold" style={{ color: entry.color }}>
-            {entry.name === "score"
-              ? `ATS Score: ${entry.value}%`
-              : `Resumes: ${entry.value}`}
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 function UserAnalytics() {
@@ -185,7 +181,7 @@ function UserAnalytics() {
 
   // Derived
   const [atsHistory, setAtsHistory] = useState([]);
-  const [activeAtsLine, setActiveAtsLine] = useState("score");
+  const [rawAtsHistory, setRawAtsHistory] = useState([]);
 
   // User from localStorage
   const user = React.useMemo(
@@ -200,13 +196,14 @@ function UserAnalytics() {
       try {
         setLoading(true);
 
-        const [profileRes, savedRes, appliedRes, resumeRes] = await Promise.all([
+        const [profileRes, savedRes, appliedRes, resumeRes, atsHistoryRes] = await Promise.all([
           api.get("/profile").catch(() => null),
           api.get("/user/savedJobs").catch(() => null),
           api.get("/user/applied-companies").catch(() => null),
           userId
             ? api.get(`/resume/${userId}`).catch(() => null)
             : Promise.resolve(null),
+          api.get("/atshistory").catch(() => null),
         ]);
 
         // Profile
@@ -231,8 +228,12 @@ function UserAnalytics() {
         const normalised = Array.isArray(resumeList) ? resumeList : [];
         setResumes(normalised);
 
-        // Build ATS history from real resume data
-        setAtsHistory(buildAtsHistory(normalised));
+        // ATS History from ATS analyzer
+        const atsData = atsHistoryRes?.data?.history || [];
+        setRawAtsHistory(atsData);
+
+        // Build ATS history from both resume data and ATS raw data
+        setAtsHistory(buildAtsHistory(normalised, atsData));
       } catch (err) {
         console.error("Analytics fetch error:", err);
         toast.error("Failed to load analytics data.");
@@ -261,18 +262,22 @@ function UserAnalytics() {
   }, [profile, user]);
 
   const bestAtsScore = React.useMemo(() => {
-    if (resumes.length === 0) return profile?.atsScore ?? 0;
-    return Math.max(...resumes.map((r) => r.atsScore || 0));
-  }, [resumes, profile]);
+    const resumeScores = resumes.map((r) => r.atsScore || 0);
+    const historyScores = rawAtsHistory.map((item) => item.score || 0);
+    const allScores = [...resumeScores, ...historyScores];
+
+    if (allScores.length === 0) return profile?.atsScore ?? 0;
+    return Math.max(...allScores);
+  }, [resumes, rawAtsHistory, profile]);
 
   const latestAtsScore = React.useMemo(() => {
     if (atsHistory.length === 0) return bestAtsScore;
-    return atsHistory[atsHistory.length - 1].score;
+    return atsHistory[0].score; // Newest is 0th thanks to sorting
   }, [atsHistory, bestAtsScore]);
 
-  const totalAtsCount = resumes.length;
-  const skillsCount   = profile?.skills?.length ?? 0;
-  const appliedCount  = applications.length;
+  const totalAtsCount = resumes.length + rawAtsHistory.length;
+  const skillsCount = profile?.skills?.length ?? 0;
+  const appliedCount = applications.length;
 
   // Application status breakdown
   const statusBreakdown = React.useMemo(() => {
@@ -358,10 +363,10 @@ function UserAnalytics() {
 
           {/* ── Stat Cards ─────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={Bookmark}  label="Saved Jobs"  value={savedJobsCount}           delay={0}    />
-            <StatCard icon={Briefcase} label="Applied"     value={appliedCount}              delay={0.08} />
-            <StatCard icon={Code2}     label="Skills"      value={skillsCount}               delay={0.16} />
-            <StatCard icon={Star}      label="Best ATS"    value={`${bestAtsScore}%`}        delay={0.24} />
+            <StatCard icon={Bookmark} label="Saved Jobs" value={savedJobsCount} delay={0} />
+            <StatCard icon={Briefcase} label="Applied" value={appliedCount} delay={0.08} />
+            <StatCard icon={Code2} label="Skills" value={skillsCount} delay={0.16} />
+            <StatCard icon={Star} label="Best ATS" value={`${bestAtsScore}%`} delay={0.24} />
           </div>
 
           {/* ── ATS History Graph ───────────────────────────────────────────── */}
@@ -398,29 +403,7 @@ function UserAnalytics() {
               </div>
             </div>
 
-            {/* Toggle */}
-            <div className="flex items-center gap-1 mb-4">
-              {[
-                { key: "score", label: "Score %" },
-                { key: "count", label: "Count" },
-                { key: "both",  label: "Both"    },
-              ].map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => setActiveAtsLine(key)}
-                  className="px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-200"
-                  style={
-                    activeAtsLine === key
-                      ? { background: ACCENT, color: "#fff" }
-                      : { background: "#F1F5F9", color: "#64748B" }
-                  }
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* Chart or empty state */}
+            {/* Timeline View */}
             {atsHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-14 text-gray-400">
                 <FileText size={40} className="mb-3 opacity-30" />
@@ -430,85 +413,60 @@ function UserAnalytics() {
                 </p>
               </div>
             ) : (
-              <>
-                <div style={{ height: 260 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={atsHistory}
-                      margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
+              <div className="relative pl-2 mt-2 max-h-[300px] overflow-y-auto pr-3" style={{ scrollbarWidth: 'thin' }}>
+                {/* Vertical Line */}
+                <div className="absolute left-[26px] top-4 bottom-4 w-px bg-gray-200" />
+
+                <div className="space-y-4 pt-1">
+                  {atsHistory.map((item, i) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.4 + (i * 0.05) }}
+                      className="relative flex items-start gap-4"
                     >
-                      <defs>
-                        <linearGradient id="gradScore" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%"   stopColor={ACCENT}   stopOpacity={0.22} />
-                          <stop offset="100%" stopColor={ACCENT}   stopOpacity={0}    />
-                        </linearGradient>
-                        <linearGradient id="gradCount" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%"   stopColor="#22d3ee" stopOpacity={0.22} />
-                          <stop offset="100%" stopColor="#22d3ee" stopOpacity={0}    />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                      <XAxis
-                        dataKey="month"
-                        stroke="#CBD5E1"
-                        tick={{ fontSize: 11, fill: "#94A3B8" }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        stroke="#CBD5E1"
-                        tick={{ fontSize: 11, fill: "#94A3B8" }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip content={<ChartTooltip />} />
+                      {/* Circle indicator */}
+                      <div
+                        className="relative z-10 w-11 h-11 rounded-full flex shrink-0 items-center justify-center text-white text-xs font-black border-4 border-white shadow-sm"
+                        style={{ background: item.score >= 75 ? '#16a34a' : item.score >= 50 ? '#eab308' : '#ef4444' }}
+                      >
+                        {item.score}%
+                      </div>
 
-                      {(activeAtsLine === "score" || activeAtsLine === "both") && (
-                        <Area
-                          type="monotone"
-                          dataKey="score"
-                          name="score"
-                          stroke={ACCENT}
-                          strokeWidth={2.5}
-                          fill="url(#gradScore)"
-                          dot={{ r: 4, fill: ACCENT, stroke: "#fff", strokeWidth: 2 }}
-                          activeDot={{ r: 7, fill: ACCENT, stroke: "#fff", strokeWidth: 2 }}
-                          animationDuration={1200}
-                        />
-                      )}
+                      {/* Content Card */}
+                      <div className="flex-1 bg-gray-50 rounded-xl p-3 border border-gray-100 mb-1 hover:shadow-sm hover:border-purple-200 transition-all duration-300">
+                        <div className="flex flex-wrap justify-between items-center gap-2 mb-1">
+                          <p className="text-sm font-bold text-gray-800">
+                            {item.score >= 75 ? "Excellent Match" : item.score >= 50 ? "Average Match" : "Needs Work"}
+                          </p>
+                        </div>
 
-                      {(activeAtsLine === "count" || activeAtsLine === "both") && (
-                        <Area
-                          type="monotone"
-                          dataKey="count"
-                          name="count"
-                          stroke="#22d3ee"
-                          strokeWidth={2.5}
-                          fill="url(#gradCount)"
-                          dot={{ r: 4, fill: "#22d3ee", stroke: "#fff", strokeWidth: 2 }}
-                          activeDot={{ r: 7, fill: "#22d3ee", stroke: "#fff", strokeWidth: 2 }}
-                          animationDuration={1200}
-                        />
-                      )}
-                    </AreaChart>
-                  </ResponsiveContainer>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-xs text-gray-500">
+                            Tested on {item.dateStr}
+                          </p>
+                          {item.trend === 'up' && (
+                            <span className="flex items-center text-[10px] text-green-700 font-bold bg-green-100/80 px-1.5 py-0.5 rounded">
+                              <TrendingUp size={11} className="mr-1" /> Improved
+                            </span>
+                          )}
+                          {item.trend === 'down' && (
+                            <span className="flex items-center text-[10px] text-red-700 font-bold bg-red-100/80 px-1.5 py-0.5 rounded">
+                              <Activity size={11} className="mr-1" /> Declined
+                            </span>
+                          )}
+                          {item.trend === 'same' && (
+                            <span className="flex items-center text-[10px] text-gray-500 font-bold bg-gray-200/60 px-1.5 py-0.5 rounded">
+                              <Activity size={11} className="mr-1" /> No Change
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-
-                {/* Legend */}
-                <div className="flex items-center gap-4 mt-3">
-                  <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                    <span
-                      className="w-3 h-3 rounded-full inline-block"
-                      style={{ background: ACCENT }}
-                    />
-                    ATS Score (%)
-                  </span>
-                  <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                    <span className="w-3 h-3 rounded-full inline-block bg-cyan-400" />
-                    Resume Count
-                  </span>
-                </div>
-              </>
+              </div>
             )}
           </motion.div>
 
@@ -542,10 +500,10 @@ function UserAnalytics() {
               <div className="space-y-3">
                 {recentApplications.map((app, i) => {
                   const statusColor = {
-                    applied:     { bg: "#f0fdf4", text: "#16a34a", border: "#bbf7d0" },
+                    applied: { bg: "#f0fdf4", text: "#16a34a", border: "#bbf7d0" },
                     shortlisted: { bg: "#eff6ff", text: "#2563eb", border: "#bfdbfe" },
-                    rejected:    { bg: "#fff1f2", text: "#dc2626", border: "#fecdd3" },
-                    accepted:    { bg: "#faf5ff", text: ACCENT,   border: ACCENT_BORDER },
+                    rejected: { bg: "#fff1f2", text: "#dc2626", border: "#fecdd3" },
+                    accepted: { bg: "#faf5ff", text: ACCENT, border: ACCENT_BORDER },
                   }[app.status] || { bg: "#f8fafc", text: "#64748b", border: "#e2e8f0" };
 
                   return (
@@ -598,9 +556,9 @@ function UserAnalytics() {
                       </span>
 
                       {/* Time */}
-                      <span className="text-xs text-gray-300 shrink-0">
+                      {/* <span className="text-xs text-gray-300 shrink-0">
                         {timeAgo(app.appliedAt)}
-                      </span>
+                      </span> */}
                     </motion.div>
                   );
                 })}
@@ -611,10 +569,10 @@ function UserAnalytics() {
             {appliedCount > 0 && (
               <div className="mt-5 pt-4 border-t border-gray-100 grid grid-cols-4 gap-2">
                 {[
-                  { label: "Applied",     key: "applied",     color: "#16a34a" },
+                  { label: "Applied", key: "applied", color: "#16a34a" },
                   { label: "Shortlisted", key: "shortlisted", color: "#2563eb" },
-                  { label: "Rejected",    key: "rejected",    color: "#dc2626" },
-                  { label: "Accepted",    key: "accepted",    color: ACCENT     },
+                  { label: "Rejected", key: "rejected", color: "#dc2626" },
+                  { label: "Accepted", key: "accepted", color: ACCENT },
                 ].map(({ label, key, color }) => (
                   <div key={key} className="text-center">
                     <p className="text-lg font-black" style={{ color }}>
@@ -625,70 +583,6 @@ function UserAnalytics() {
                     </p>
                   </div>
                 ))}
-              </div>
-            )}
-          </motion.div>
-
-          {/* ── Profile Snapshot ───────────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.52 }}
-            className="bg-white rounded-2xl border p-5"
-            style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-black flex items-center gap-2">
-                <TrendingUp size={16} style={{ color: ACCENT }} />
-                Profile Snapshot
-              </h3>
-              <span className="text-xs text-gray-400">Overview</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: "Profile Score",    value: `${profileCompletion}%`  },
-                { label: "Best ATS",         value: `${bestAtsScore}%`       },
-                { label: "Jobs Saved",        value: savedJobsCount           },
-                { label: "Total Resumes",     value: totalAtsCount            },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-xl border border-gray-100 bg-gray-50 p-3"
-                >
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
-                    {item.label}
-                  </p>
-                  <p className="text-xl font-black text-black mt-1">{item.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Skills chips */}
-            {profile?.skills?.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                  Your Skills
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {profile.skills.slice(0, 14).map((s, i) => (
-                    <span
-                      key={i}
-                      className="text-xs font-semibold px-2.5 py-1 rounded-full border"
-                      style={{
-                        borderColor: ACCENT_BORDER,
-                        color: ACCENT,
-                        background: ACCENT_LIGHT,
-                      }}
-                    >
-                      {s.skillName || s}
-                    </span>
-                  ))}
-                  {profile.skills.length > 14 && (
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
-                      +{profile.skills.length - 14} more
-                    </span>
-                  )}
-                </div>
               </div>
             )}
           </motion.div>
