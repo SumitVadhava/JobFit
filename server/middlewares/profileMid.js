@@ -13,17 +13,10 @@ const validateProfileData = (body) => {
   } = body;
 
   if (experience !== undefined) {
-    if (!Array.isArray(experience)) return "experience must be an array";
-    for (const exp of experience) {
-      if (
-        !exp.jobTitle ||
-        !exp.companyName ||
-        !exp.role ||
-        exp.expYear === undefined
-      ) {
-        return "Each experience item must have: jobTitle, companyName, role, expYear";
-      }
+    if (typeof experience !== "string") {
+      return "experience must be a string";
     }
+    return "experience must be a string like '0-2 years', '3-5 years', etc.";
   }
 
   if (education !== undefined) {
