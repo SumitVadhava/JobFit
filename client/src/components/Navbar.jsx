@@ -216,15 +216,15 @@ const Navbar = ({ userData }) => {
                 e.preventDefault();
                 if (userRole === "admin") navigate("/admin/dashboard");
                 else if (userRole === "recruiter")
-                    navigate("/recruiter/recruiter-analytics");
-                else navigate("/user/dashboard");
+                    navigate("/recruiter/dashboard");
+                else navigate("/candidate/dashboard");
                 pendingKey.current = null;
                 return;
             }
             if (key === "r" && pendingKey.current !== "b") {
                 e.preventDefault();
                 if (userRole === "candidate" || userRole === "user")
-                    navigate("/user/resume");
+                    navigate("/candidate/resume");
                 pendingKey.current = null;
                 return;
             }
@@ -236,7 +236,7 @@ const Navbar = ({ userData }) => {
                 e.preventDefault();
                 if (userRole === "admin") navigate("/admin/jobs");
                 else if (userRole === "candidate" || userRole === "user")
-                    navigate("/user/job-search");
+                    navigate("/candidate/job-search");
                 pendingKey.current = null;
                 return;
             }
@@ -249,14 +249,20 @@ const Navbar = ({ userData }) => {
             if (key === "c") {
                 e.preventDefault();
                 if (userRole === "recruiter")
-                    navigate("/recruiter/recruiter-candidates");
+                    navigate("/recruiter/candidates");
                 else if (userRole === "admin") navigate("/admin/companies");
                 pendingKey.current = null;
                 return;
             }
             if (key === "a") {
                 e.preventDefault();
-                navigate("/user/profile");
+                navigate("/candidate/profile");
+                pendingKey.current = null;
+                return;
+            }
+            if (key === "h" && userRole === "recruiter") {
+                e.preventDefault();
+                navigate("/recruiter/history");
                 pendingKey.current = null;
                 return;
             }
@@ -304,7 +310,7 @@ const Navbar = ({ userData }) => {
             if (key === "r" && pendingKey.current === "b") {
                 e.preventDefault();
                 if (userRole === "candidate" || userRole === "user")
-                    navigate("/user/best-resumes");
+                    navigate("/candidate/best-resumes");
                 pendingKey.current = null;
                 clearTimeout(seqTimer.current);
                 return;
@@ -312,14 +318,14 @@ const Navbar = ({ userData }) => {
             if (key === "j" && pendingKey.current === "s") {
                 e.preventDefault();
                 if (userRole === "candidate" || userRole === "user")
-                    navigate("/user/saved-jobs");
+                    navigate("/candidate/saved-jobs");
                 pendingKey.current = null;
                 clearTimeout(seqTimer.current);
                 return;
             }
             if (key === "j" && pendingKey.current === "p") {
                 e.preventDefault();
-                if (userRole === "recruiter") navigate("/recruiter/recruiter-postjob");
+                if (userRole === "recruiter") navigate("/recruiter/post-job");
                 pendingKey.current = null;
                 clearTimeout(seqTimer.current);
                 return;
@@ -459,7 +465,7 @@ const Navbar = ({ userData }) => {
                                     <div
                                         className="flex items-center space-x-3"
                                         onClick={() => {
-                                            navigate("/user/profile");
+                                            navigate("/candidate/profile");
                                             toggleDrawer();
                                         }}
                                     >

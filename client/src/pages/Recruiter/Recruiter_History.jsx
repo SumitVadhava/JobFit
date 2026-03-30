@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Eye,
   Briefcase,
@@ -19,10 +19,7 @@ import {
   GraduationCap,
   Monitor,
   X,
-  ExternalLink,
-  Calendar,
   FileText,
-  TrendingUp,
   Loader2,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";

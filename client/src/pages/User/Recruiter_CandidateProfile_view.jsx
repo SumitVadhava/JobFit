@@ -1,597 +1,7 @@
-// import React, { useState, useEffect } from "react";
-// import PropTypes from "prop-types";
-// import UserImage from '../../assets/user.png'
-
-// const Recruiter_CandidateProfile_view = ({ userProp }) => {
-//   const initialUserData = {
-//     name: userProp?.userName || "Sophia Bennett", // Fallback
-//     resumeSummary: "Highly skilled Senior Software Engineer with a passion for building robust backend architectures and mentoring junior developers.",
-//     experience: [
-//       { title: "Senior Software Engineer", date: "2018 - Present", company: "Tech Innovators Inc." },
-//       { title: "Software Engineer", date: "2016 - 2018", company: "CodeCrafters LLC" }
-//     ],
-//     education: [
-//       { degree: "B.S. in Computer Science", date: "2012 - 2016", institution: "University of Technology" }
-//     ],
-//     skills: ["Java", "Python", "JavaScript", "React", "Node.js", "AWS", "Agile"],
-//     atsScore: 92,
-//     profilePicture: userProp?.picture || UserImage
-//   };
-
-//   const [userData, setUserData] = useState(initialUserData);
-//   const [isEditing, setIsEditing] = useState(false);
-//   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-//   const [isUploading, setIsUploading] = useState(false);
-
-//   const galleryImages = [
-//     "https://lh3.googleusercontent.com/aida-public/AB6AXuB2dCLbbGFOs0LhlrrKsiG9NmWgnXeF7EPgMbKaUwyNyAfBO91eGWUlFNoy-bZFbgjsZc67nwF717JD7w2x8PZJkTMomMbQqhF07IjGfRNoQbo792dHDGL7YkWkrX9pDhZMpdcqPNpbAMeKQhUq4vf6c6NBahSYvJEhBu0WMdaBTJIvmbQuSOcCiZklTKF6El1ySBqn9MxnJOaMBFgfLL4DRCgnenfL4WuwLYja-Tmk0BpcDlG0um3FjgWtmtNbUd5s9R0qZAwzhA",
-//     "https://ui-avatars.com/api/?name=Sophia+Bennett&background=0D8ABC&color=fff",
-//     "https://ui-avatars.com/api/?name=User&background=random&color=fff"
-//   ];
-
-//   const handleInputChange = (field, value) => {
-//     setUserData({ ...userData, [field]: value });
-//   };
-
-//   const handleExperienceChange = (index, field, value) => {
-//     const updatedExperience = [...userData.experience];
-//     updatedExperience[index] = { ...updatedExperience[index], [field]: value };
-//     setUserData({ ...userData, experience: updatedExperience });
-//   };
-
-//   const handleEducationChange = (index, field, value) => {
-//     const updatedEducation = [...userData.education];
-//     updatedEducation[index] = { ...updatedEducation[index], [field]: value };
-//     setUserData({ ...userData, education: updatedEducation });
-//   };
-
-//   const handleSkillChange = (index, value) => {
-//     const updatedSkills = [...userData.skills];
-//     updatedSkills[index] = value;
-//     setUserData({ ...userData, skills: updatedSkills });
-//   };
-
-//   const addSkill = () => {
-//     setUserData({ ...userData, skills: [...userData.skills, ""] });
-//   };
-
-//   const removeSkill = (index) => {
-//     setUserData({
-//       ...userData,
-//       skills: userData.skills.filter((_, i) => i !== index),
-//     });
-//   };
-
-//   const addExperience = () => {
-//     setUserData({
-//       ...userData,
-//       experience: [...userData.experience, { title: "", date: "", company: "" }],
-//     });
-//   };
-
-//   const removeExperience = (index) => {
-//     setUserData({
-//       ...userData,
-//       experience: userData.experience.filter((_, i) => i !== index),
-//     });
-//   };
-
-//   const addEducation = () => {
-//     setUserData({
-//       ...userData,
-//       education: [...userData.education, { degree: "", date: "", institution: "" }],
-//     });
-//   };
-
-//   const removeEducation = (index) => {
-//     setUserData({
-//       ...userData,
-//       education: userData.education.filter((_, i) => i !== index),
-//     });
-//   };
-
-//   const handleSave = () => {
-//     if (!userData.name.trim()) {
-//       alert("Name is required");
-//       return;
-//     }
-//     console.log("Saving user profile...", userData);
-//     setIsEditing(false);
-//   };
-
-//   const selectProfilePicture = (imageUrl) => {
-//     setUserData({ ...userData, profilePicture: imageUrl });
-//     setIsGalleryOpen(false);
-//   };
-
-//   const handleImageUpload = (event) => {
-//     setIsUploading(true);
-//     const file = event.target.files[0];
-//     if (file && file.type.startsWith("image/")) {
-//       const reader = new FileReader();
-//       reader.onload = (e) => {
-//         setUserData({ ...userData, profilePicture: e.target.result });
-//         setIsGalleryOpen(false);
-//         setIsUploading(false);
-//       };
-//       reader.onerror = () => {
-//         alert("Error reading image file. Please try another image.");
-//         setIsUploading(false);
-//       };
-//       reader.readAsDataURL(file);
-//     } else {
-//       alert("Please select a valid image file.");
-//       setIsUploading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (userProp) {
-//       setUserData(prev => ({
-//         ...prev,
-//         name: userProp.userName || prev.name,
-//         profilePicture: userProp.picture || prev.profilePicture
-//       }));
-//     }
-//   }, [userProp]);
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 font-['Inter',sans-serif] pb-12">
-      
-//       {/* Top Banner & Header */}
-//       <div className="relative">
-//         <div className="h-48 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-b-3xl sm:rounded-b-[48px] shadow-lg relative overflow-hidden">
-//           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
-//           <div className="absolute top-8 left-8 w-64 h-64 bg-white/20 blur-3xl rounded-full"></div>
-//           <div className="absolute -bottom-16 right-16 w-48 h-48 bg-purple-500/30 blur-3xl rounded-full"></div>
-//         </div>
-
-//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-20 z-10">
-//           <div className="bg-white rounded-[32px] p-6 sm:p-8 shadow-xl border border-gray-100/50 flex flex-col sm:flex-row gap-6 sm:items-end sm:justify-between animate-fadeIn">
-            
-//             <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-end text-center sm:text-left">
-//               <div 
-//                 className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-[28px] border-[6px] border-white shadow-lg overflow-hidden group cursor-pointer shrink-0 bg-white"
-//                 onClick={() => isEditing && setIsGalleryOpen(true)}
-//               >
-//                 <img 
-//                   src={userData.profilePicture} 
-//                   alt="Profile" 
-//                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-//                 />
-                
-//                 {isEditing && (
-//                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
-//                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" className="text-white drop-shadow-md" viewBox="0 0 256 256">
-//                       <path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z" />
-//                     </svg>
-//                   </div>
-//                 )}
-//               </div>
-
-//               <div className="pb-2">
-//                 {isEditing ? (
-//                   <input
-//                     type="text"
-//                     value={userData.name}
-//                     onChange={(e) => handleInputChange("name", e.target.value)}
-//                     className="text-2xl sm:text-3xl font-extrabold text-gray-900 border-b-2 border-blue-500 focus:outline-none bg-blue-50/50 px-2 py-1 rounded-t-lg w-full text-center sm:text-left transition-colors"
-//                     placeholder="Your Name"
-//                   />
-//                 ) : (
-//                   <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900">{userData.name}</h1>
-//                 )}
-//                 <p className="text-gray-500 font-medium mt-1">{userData.experience.length > 0 ? userData.experience[0].title : "Professional Candidate"}</p>
-//               </div>
-//             </div>
-
-//             <div className="flex gap-3 w-full sm:w-auto mt-4 sm:mt-0 pb-2">
-//               {isEditing ? (
-//                 <>
-//                   <button
-//                     onClick={() => setIsEditing(false)}
-//                     className="flex-1 sm:flex-none h-11 px-6 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
-//                   >
-//                     Cancel
-//                   </button>
-//                   <button
-//                     onClick={handleSave}
-//                     className="flex-1 sm:flex-none flex items-center justify-center gap-2 h-11 px-6 bg-blue-600 shadow-lg shadow-blue-500/30 text-white font-semibold rounded-xl hover:bg-blue-700 hover:shadow-blue-500/40 transition-all active:scale-[0.98]"
-//                   >
-//                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-//                       <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-192,64a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,256q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l64-192A16,16,0,0,0,227.32,28.68ZM158.46,233.15l-37-78.23L153.37,123A8,8,0,0,0,142.05,111.7l-31.91,31.92L31.91,106.6Z" />
-//                     </svg>
-//                     Save Changes
-//                   </button>
-//                 </>
-//               ) : (
-//                 <button
-//                   onClick={() => setIsEditing(true)}
-//                   className="w-full sm:w-auto flex items-center justify-center gap-2 h-11 px-6 bg-gray-900 shadow-lg text-white font-semibold rounded-xl hover:bg-black hover:shadow-xl transition-all active:scale-[0.98]"
-//                 >
-//                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-//                     <path d="M227.32,73.37,182.63,28.69a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.32,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.69,147.32,64l12.68-12.69L204.69,96Z" />
-//                   </svg>
-//                   Edit Profile
-//                 </button>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-//         <div className="flex flex-col lg:flex-row gap-8">
-          
-//           {/* Main Content Area */}
-//           <div className="flex-1 space-y-8 animate-fadeIn" style={{ animationDelay: '100ms' }}>
-            
-//             {/* About Me Section */}
-//             <Section 
-//               title="About Me" 
-//               icon={<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z" />}
-//               color="text-blue-500"
-//             >
-//               {isEditing ? (
-//                 <textarea
-//                   value={userData.resumeSummary}
-//                   onChange={(e) => handleInputChange("resumeSummary", e.target.value)}
-//                   className="w-full min-h-[120px] rounded-2xl border border-gray-200 bg-gray-50/50 p-4 text-base text-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
-//                   placeholder="A short professional summary about yourself..."
-//                 />
-//               ) : (
-//                 <p className="text-gray-600 leading-relaxed text-base font-medium">
-//                   {userData.resumeSummary || <span className="text-gray-400 italic">No summary provided</span>}
-//                 </p>
-//               )}
-//             </Section>
-
-//             {/* Experience Section */}
-//             <Section 
-//               title="Experience" 
-//               icon={<path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />}
-//               color="text-indigo-500"
-//             >
-//               <div className="space-y-6">
-//                 {userData.experience.length === 0 && !isEditing && (
-//                   <p className="text-gray-400 italic font-medium">No experience mapped yet.</p>
-//                 )}
-//                 {userData.experience.map((exp, index) => (
-//                   <div key={index} className="relative pl-6 sm:pl-8 border-l-2 border-indigo-100 group">
-//                     <div className="absolute w-3 h-3 bg-indigo-500 rounded-full -left-[7px] top-1.5 ring-4 ring-indigo-50 transition-transform group-hover:scale-125"></div>
-                    
-//                     {isEditing ? (
-//                       <div className="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-100 flex flex-col gap-3 relative shadow-sm">
-//                         <button onClick={() => removeExperience(index)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors bg-white p-1 rounded-full shadow-sm">
-//                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>
-//                         </button>
-//                         <input
-//                           type="text"
-//                           value={exp.title}
-//                           onChange={(e) => handleExperienceChange(index, "title", e.target.value)}
-//                           className="text-lg font-bold text-gray-900 border-b-2 border-indigo-200 focus:border-indigo-500 bg-transparent focus:outline-none py-1 pr-8"
-//                           placeholder="Job Title"
-//                         />
-//                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-//                           <input
-//                             type="text"
-//                             value={exp.company}
-//                             onChange={(e) => handleExperienceChange(index, "company", e.target.value)}
-//                             className="text-gray-700 text-sm font-medium border border-gray-200 rounded-lg p-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white"
-//                             placeholder="Company Name"
-//                           />
-//                           <input
-//                             type="text"
-//                             value={exp.date}
-//                             onChange={(e) => handleExperienceChange(index, "date", e.target.value)}
-//                             className="text-gray-600 text-sm font-medium border border-gray-200 rounded-lg p-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 focus:outline-none bg-white"
-//                             placeholder="e.g. 2018 - Present"
-//                           />
-//                         </div>
-//                       </div>
-//                     ) : (
-//                       <div className="pr-4">
-//                         <h3 className="text-xl font-bold text-gray-900 leading-tight">{exp.title}</h3>
-//                         <div className="flex flex-wrap items-center gap-2 mt-1.5 text-sm">
-//                           <span className="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">{exp.company}</span>
-//                           <span className="text-gray-300">•</span>
-//                           <span className="text-gray-500 font-medium flex items-center gap-1">
-//                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/></svg>
-//                             {exp.date}
-//                           </span>
-//                         </div>
-//                       </div>
-//                     )}
-//                   </div>
-//                 ))}
-                
-//                 {isEditing && (
-//                   <button
-//                     onClick={addExperience}
-//                     className="inline-flex items-center gap-2 mt-2 h-10 px-5 bg-indigo-50 text-indigo-700 font-bold rounded-xl hover:bg-indigo-100 transition-colors border-2 border-dashed border-indigo-200 hover:border-indigo-300"
-//                   >
-//                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg>
-//                     Add Experience
-//                   </button>
-//                 )}
-//               </div>
-//             </Section>
-
-//             {/* Education Section */}
-//             <Section 
-//               title="Education" 
-//               icon={<path d="M251.76,88.94l-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87V168a8,8,0,0,0,16,0V126.41l39.76,21.2A88.16,88.16,0,0,0,80,216a8,8,0,0,0,16,0,72,72,0,0,1,144,0,8,8,0,0,0,16,0,88.16,88.16,0,0,0-7.76-68.39L251.76,103.06A8,8,0,0,0,251.76,88.94ZM128,42l106.88,57L128,155.94,21.12,99Z" />}
-//               color="text-purple-500"
-//             >
-//               <div className="space-y-6">
-//                 {userData.education.length === 0 && !isEditing && (
-//                   <p className="text-gray-400 italic font-medium">No education found.</p>
-//                 )}
-//                 {userData.education.map((edu, index) => (
-//                   <div key={index} className="relative pl-6 sm:pl-8 border-l-2 border-purple-100 group">
-//                     <div className="absolute w-3 h-3 bg-purple-500 rounded-full -left-[7px] top-1.5 ring-4 ring-purple-50 transition-transform group-hover:scale-125"></div>
-                    
-//                     {isEditing ? (
-//                       <div className="bg-gray-50 p-4 sm:p-5 rounded-2xl border border-gray-100 flex flex-col gap-3 relative shadow-sm">
-//                         <button onClick={() => removeEducation(index)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors bg-white p-1 rounded-full shadow-sm">
-//                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>
-//                         </button>
-//                         <input
-//                           type="text"
-//                           value={edu.degree}
-//                           onChange={(e) => handleEducationChange(index, "degree", e.target.value)}
-//                           className="text-lg font-bold text-gray-900 border-b-2 border-purple-200 focus:border-purple-500 bg-transparent focus:outline-none py-1 pr-8"
-//                           placeholder="Degree Name"
-//                         />
-//                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-//                           <input
-//                             type="text"
-//                             value={edu.institution}
-//                             onChange={(e) => handleEducationChange(index, "institution", e.target.value)}
-//                             className="text-gray-700 text-sm font-medium border border-gray-200 rounded-lg p-2.5 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 focus:outline-none bg-white"
-//                             placeholder="Institution"
-//                           />
-//                           <input
-//                             type="text"
-//                             value={edu.date}
-//                             onChange={(e) => handleEducationChange(index, "date", e.target.value)}
-//                             className="text-gray-600 text-sm font-medium border border-gray-200 rounded-lg p-2.5 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 focus:outline-none bg-white"
-//                             placeholder="e.g. 2012 - 2016"
-//                           />
-//                         </div>
-//                       </div>
-//                     ) : (
-//                       <div className="pr-4">
-//                         <h3 className="text-xl font-bold text-gray-900 leading-tight">{edu.degree}</h3>
-//                         <div className="flex flex-wrap items-center gap-2 mt-1.5 text-sm">
-//                           <span className="font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">{edu.institution}</span>
-//                           <span className="text-gray-300">•</span>
-//                           <span className="text-gray-500 font-medium flex items-center gap-1">
-//                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/></svg>
-//                             {edu.date}
-//                           </span>
-//                         </div>
-//                       </div>
-//                     )}
-//                   </div>
-//                 ))}
-                
-//                 {isEditing && (
-//                   <button
-//                     onClick={addEducation}
-//                     className="inline-flex items-center gap-2 mt-2 h-10 px-5 bg-purple-50 text-purple-700 font-bold rounded-xl hover:bg-purple-100 transition-colors border-2 border-dashed border-purple-200 hover:border-purple-300"
-//                   >
-//                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg>
-//                     Add Education
-//                   </button>
-//                 )}
-//               </div>
-//             </Section>
-
-//             {/* Skills Section */}
-//             <Section 
-//               title="Skills" 
-//               icon={<path d="M224,115.55V208a16,16,0,0,1-16,16H163.09A119.83,119.83,0,0,1,128,240a120.24,120.24,0,0,1-35.09-5.18h0A119.83,119.83,0,0,1,92.91,224H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,7.24-13.38L120.59,48.61a16,16,0,0,1,14.82,0l81.35,53.56A16,16,0,0,1,224,115.55Z" />}
-//               color="text-emerald-500"
-//             >
-//               {userData.skills.length === 0 && !isEditing ? (
-//                 <p className="text-gray-400 italic font-medium">No skills listed.</p>
-//               ) : (
-//                 <div className="flex flex-wrap gap-2.5">
-//                   {userData.skills.map((skill, index) => (
-//                     <div 
-//                       key={index} 
-//                       className={`h-10 flex items-center justify-center font-semibold rounded-xl transition-all shadow-sm ${
-//                         isEditing 
-//                           ? "pl-1 pr-3 bg-white border border-gray-200 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10" 
-//                           : "px-5 bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
-//                       }`}
-//                     >
-//                       {isEditing ? (
-//                         <div className="flex items-center gap-1.5 h-full">
-//                           <input
-//                             type="text"
-//                             value={skill}
-//                             onChange={(e) => handleSkillChange(index, e.target.value)}
-//                             className="h-full bg-transparent w-24 sm:w-32 text-sm font-semibold text-gray-900 focus:outline-none pl-3"
-//                             placeholder="Skill..."
-//                           />
-//                           <button 
-//                             onClick={() => removeSkill(index)} 
-//                             className="w-6 h-6 flex items-center justify-center rounded-md bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-//                           >
-//                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>
-//                           </button>
-//                         </div>
-//                       ) : (
-//                         skill
-//                       )}
-//                     </div>
-//                   ))}
-                  
-//                   {isEditing && (
-//                     <button
-//                       onClick={addSkill}
-//                       className="h-10 px-4 flex items-center gap-1.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors border border-transparent hover:border-gray-300"
-//                     >
-//                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg>
-//                       Add
-//                     </button>
-//                   )}
-//                 </div>
-//               )}
-//             </Section>
-//           </div>
-
-//           {/* Sidebar */}
-//           <div className="w-full lg:w-80 shrink-0 animate-fadeIn" style={{ animationDelay: '500ms' }}>
-//             {/* ATS Score Preview */}
-//             <div className={`p-8 shadow-xl relative overflow-hidden group transition-all duration-300 ${
-//               isEditing ? 'bg-white rounded-[32px] border border-gray-100' : 'bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[32px] text-white'
-//             }`}>
-//               {!isEditing && <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>}
-              
-//               <div className="relative z-10 flex flex-col items-center">
-//                 <p className={`font-semibold mb-2 uppercase tracking-wider text-sm ${isEditing ? 'text-gray-500' : 'text-blue-100'}`}>Current ATS Score</p>
-                
-//                 {isEditing ? (
-//                   <div className="relative w-full max-w-[150px] mt-2 mb-4">
-//                     <input
-//                       type="number"
-//                       value={userData.atsScore}
-//                       onChange={(e) => handleInputChange("atsScore", parseInt(e.target.value) || 0)}
-//                       className="text-5xl font-black text-blue-600 border-b-[3px] border-blue-200 focus:border-blue-500 bg-center bg-blue-50 w-full text-center py-2 focus:outline-none rounded-t-lg transition-colors"
-//                       min="0"
-//                       max="100"
-//                     />
-//                     <div className="absolute bottom-4 right-4 text-xl font-bold text-blue-400">%</div>
-//                   </div>
-//                 ) : (
-//                   <>
-//                     <div className="flex items-baseline gap-1 select-none">
-//                       <span className="text-6xl font-black tracking-tighter">{userData.atsScore}</span>
-//                       <span className="text-2xl font-bold opacity-70">%</span>
-//                     </div>
-                    
-//                     <div className="w-full bg-black/20 rounded-full h-3 mt-6 overflow-hidden backdrop-blur-sm border border-white/10">
-//                       <div 
-//                         className="bg-gradient-to-r from-emerald-400 to-green-300 h-full rounded-full transition-all duration-1000 ease-out" 
-//                         style={{ width: `${userData.atsScore}%` }}
-//                       ></div>
-//                     </div>
-//                   </>
-//                 )}
-                
-//                 <p className={`text-sm mt-5 text-center font-medium leading-relaxed ${isEditing ? 'text-gray-500' : 'text-blue-50/90'}`}>
-//                   {isEditing ? "Update your target ATS score manually." : "Your profile is optimized and matching well with recent applied roles."}
-//                 </p>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Gallery Modal */}
-//       {isGalleryOpen && (
-//         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-fadeIn">
-//           <div className="bg-white p-6 sm:p-8 rounded-[32px] max-w-xl w-full shadow-2xl relative">
-//             <button
-//               onClick={() => setIsGalleryOpen(false)}
-//               className="absolute top-6 right-6 text-gray-400 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
-//             >
-//               ✕
-//             </button>
-            
-//             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-//               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="text-blue-500" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM40,56H216v90.75l-46.06-46.06a16,16,0,0,0-22.63,0L96,152l-14.06-14.06a16,16,0,0,0-22.63,0L40,157.25ZM216,200H40V179.88l30.63-30.63a8,8,0,0,1,11.31,0L96,163.31l51.31-51.31a8,8,0,0,1,11.32,0L216,158.63V200ZM104,96h0a16,16,0,0,1-16-16V80a16,16,0,0,1,16-16h0A16,16,0,0,1,120,80v0A16,16,0,0,1,104,96Z"/></svg>
-//               Choose Profile Picture
-//             </h2>
-            
-//             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-//               {galleryImages.map((image, index) => (
-//                 <div key={index} className="relative aspect-square group">
-//                   <img
-//                     src={image}
-//                     alt={`Gallery option ${index + 1}`}
-//                     className="w-full h-full object-cover rounded-[20px] cursor-pointer"
-//                     onClick={() => selectProfilePicture(image)}
-//                   />
-//                   <div className={`absolute inset-0 border-[4px] rounded-[20px] pointer-events-none transition-colors ${
-//                     userData.profilePicture === image ? 'border-blue-500' : 'border-black/0 group-hover:border-black/10'
-//                   }`}></div>
-                  
-//                   {userData.profilePicture === image && (
-//                     <div className="absolute top-2 right-2 bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-sm">
-//                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>
-//                     </div>
-//                   )}
-//                 </div>
-//               ))}
-//             </div>
-            
-//             <div className="relative w-full h-32 border-2 border-dashed border-gray-300 hover:border-blue-400 bg-gray-50 rounded-[20px] flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer overflow-hidden">
-//               <input
-//                 type="file"
-//                 accept="image/*"
-//                 onChange={handleImageUpload}
-//                 disabled={isUploading}
-//                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-//               />
-              
-//               {isUploading ? (
-//                 <div className="flex flex-col items-center gap-2">
-//                   <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-//                   <p className="text-sm font-semibold text-blue-600">Uploading...</p>
-//                 </div>
-//               ) : (
-//                 <>
-//                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" className="text-gray-400" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM40,56H216V200H40ZM168,104a16,16,0,1,1-16-16A16,16,0,0,1,168,104Zm-21.66,45.66a8,8,0,0,1,0,11.31l-40,40a8,8,0,0,1-11.31,0l-24-24a8,8,0,0,1,11.31-11.31L100.69,183l34.34-34.34A8,8,0,0,1,146.34,149.66Z"/></svg>
-//                   <div className="text-center px-4">
-//                     <p className="text-sm font-semibold text-gray-700">Upload a custom image</p>
-//                     <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
-//                   </div>
-//                 </>
-//               )}
-//             </div>
-            
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// const Section = ({ title, icon, color, children }) => (
-//   <div className="bg-white rounded-[32px] p-6 sm:p-8 shadow-xl border border-gray-100 overflow-hidden relative">
-//     <div className={`absolute top-0 right-0 w-32 h-32 ${color.replace('text-', 'bg-')}/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2`}></div>
-    
-//     <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-//       <div className={`p-2 rounded-xl bg-gray-50 border border-gray-100 ${color} shadow-sm`}>
-//         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256">
-//           {icon}
-//         </svg>
-//       </div>
-//       {title}
-//     </h2>
-//     <div className="relative z-10">
-//       {children}
-//     </div>
-//   </div>
-// );
-
-// Section.propTypes = {
-//   title: PropTypes.string.isRequired,
-//   icon: PropTypes.node.isRequired,
-//   color: PropTypes.string.isRequired,
-//   children: PropTypes.node.isRequired,
-// };
-
-// export default Recruiter_CandidateProfile_view;
-
-
-
-
 import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContexts";
+import api from "../../api/api";
 
 /* ── ATS Circular Gauge ─────────────────────────────────────── */
 const AtsGauge = ({ score }) => {
@@ -635,31 +45,31 @@ const Ic = ({ d, size = 16 }) => (
 );
 
 const ICONS = {
-  edit:     "M227.32,73.37,182.63,28.69a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.32,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.69,147.32,64l12.68-12.69L204.69,96Z",
-  save:     "M227.32,28.68a16,16,0,0,0-15.66-4.08l-192,64a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,256q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l64-192A16,16,0,0,0,227.32,28.68ZM158.46,233.15l-37-78.23L153.37,123A8,8,0,0,0,142.05,111.7l-31.91,31.92L31.91,106.6Z",
-  camera:   "M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z",
-  x:        "M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z",
-  plus:     "M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z",
-  clock:    "M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z",
-  upload:   "M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H216V144a8,8,0,0,1,16,0ZM93.66,77.66,120,51.31V144a8,8,0,0,0,16,0V51.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,77.66Z",
-  share:    "M229.66,109.66l-48,48a8,8,0,0,1-11.32-11.32L204.69,112H165a88,88,0,0,0-85.23,65.89,8,8,0,0,1-15.49-4A104,104,0,0,1,165,96H204.69L170.34,61.66a8,8,0,0,1,11.32-11.32l48,48A8,8,0,0,1,229.66,109.66Z",
-  about:    "M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z",
-  brief:    "M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z",
-  grad:     "M251.76,88.94l-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87V168a8,8,0,0,0,16,0V126.41l39.76,21.2A88.16,88.16,0,0,0,80,216a8,8,0,0,0,16,0,72,72,0,0,1,144,0,8,8,0,0,0,16,0,88.16,88.16,0,0,0-7.76-68.39L251.76,103.06A8,8,0,0,0,251.76,88.94ZM128,42l106.88,57L128,155.94,21.12,99Z",
-  skills:   "M224,115.55V208a16,16,0,0,1-16,16H163.09A119.83,119.83,0,0,1,128,240a120.24,120.24,0,0,1-35.09-5.18h0A119.83,119.83,0,0,1,92.91,224H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,7.24-13.38L120.59,48.61a16,16,0,0,1,14.82,0l81.35,53.56A16,16,0,0,1,224,115.55Z",
-  lang:     "M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM215.82,120H171.8a183.08,183.08,0,0,0-5.83-48H199.1A88.16,88.16,0,0,1,215.82,120ZM128,40.16a166.75,166.75,0,0,1,27,31.84H101A166.75,166.75,0,0,1,128,40.16ZM89.92,72h32a183.08,183.08,0,0,1,5.83,48H40.2A88.18,88.18,0,0,1,89.92,72ZM40.18,136H83.82a183.08,183.08,0,0,0,5.83,48H56.91A88.16,88.16,0,0,1,40.18,136Zm87.82,79.84a166.75,166.75,0,0,1-27-31.84h54A166.75,166.75,0,0,1,128,215.84Zm43.91-31.84h33.12a183.08,183.08,0,0,1-5.83-48H172A88.18,88.18,0,0,1,171.91,184Z",
-  copy:     "M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z",
-  check:    "M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z",
-  cpu:      "M208,136h-8V120h8a8,8,0,0,0,0-16h-8V96a16,16,0,0,0-16-16H168V72a8,8,0,0,0-16,0V80H136V72a8,8,0,0,0-16,0V80H104V72a8,8,0,0,0-16,0V80H80A16,16,0,0,0,64,96v8H56a8,8,0,0,0,0,16h8v16H56a8,8,0,0,0,0,16h8v8a16,16,0,0,0,16,16h8v8a8,8,0,0,0,16,0v-8h16v8a8,8,0,0,0,16,0v-8h16v8a8,8,0,0,0,16,0v-8h8a16,16,0,0,0,16-16v-8h8a8,8,0,0,0,0-16Zm-24,24H80V96H184v64Zm-56-48H112a8,8,0,0,0,0,16h12v12a8,8,0,0,0,16,0V128h12a8,8,0,0,0,0-16Z",
-  heart:    "M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94a62,62,0,0,1,116-23.22A62,62,0,0,1,240,94Z",
+  edit: "M227.32,73.37,182.63,28.69a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.32,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.69,147.32,64l12.68-12.69L204.69,96Z",
+  save: "M227.32,28.68a16,16,0,0,0-15.66-4.08l-192,64a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,256q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l64-192A16,16,0,0,0,227.32,28.68ZM158.46,233.15l-37-78.23L153.37,123A8,8,0,0,0,142.05,111.7l-31.91,31.92L31.91,106.6Z",
+  camera: "M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z",
+  x: "M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z",
+  plus: "M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z",
+  clock: "M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z",
+  upload: "M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H216V144a8,8,0,0,1,16,0ZM93.66,77.66,120,51.31V144a8,8,0,0,0,16,0V51.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,77.66Z",
+  share: "M229.66,109.66l-48,48a8,8,0,0,1-11.32-11.32L204.69,112H165a88,88,0,0,0-85.23,65.89,8,8,0,0,1-15.49-4A104,104,0,0,1,165,96H204.69L170.34,61.66a8,8,0,0,1,11.32-11.32l48,48A8,8,0,0,1,229.66,109.66Z",
+  about: "M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z",
+  brief: "M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z",
+  grad: "M251.76,88.94l-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87V168a8,8,0,0,0,16,0V126.41l39.76,21.2A88.16,88.16,0,0,0,80,216a8,8,0,0,0,16,0,72,72,0,0,1,144,0,8,8,0,0,0,16,0,88.16,88.16,0,0,0-7.76-68.39L251.76,103.06A8,8,0,0,0,251.76,88.94ZM128,42l106.88,57L128,155.94,21.12,99Z",
+  skills: "M224,115.55V208a16,16,0,0,1-16,16H163.09A119.83,119.83,0,0,1,128,240a120.24,120.24,0,0,1-35.09-5.18h0A119.83,119.83,0,0,1,92.91,224H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,7.24-13.38L120.59,48.61a16,16,0,0,1,14.82,0l81.35,53.56A16,16,0,0,1,224,115.55Z",
+  lang: "M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM215.82,120H171.8a183.08,183.08,0,0,0-5.83-48H199.1A88.16,88.16,0,0,1,215.82,120ZM128,40.16a166.75,166.75,0,0,1,27,31.84H101A166.75,166.75,0,0,1,128,40.16ZM89.92,72h32a183.08,183.08,0,0,1,5.83,48H40.2A88.18,88.18,0,0,1,89.92,72ZM40.18,136H83.82a183.08,183.08,0,0,0,5.83,48H56.91A88.16,88.16,0,0,1,40.18,136Zm87.82,79.84a166.75,166.75,0,0,1-27-31.84h54A166.75,166.75,0,0,1,128,215.84Zm43.91-31.84h33.12a183.08,183.08,0,0,1-5.83-48H172A88.18,88.18,0,0,1,171.91,184Z",
+  copy: "M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z",
+  check: "M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z",
+  cpu: "M208,136h-8V120h8a8,8,0,0,0,0-16h-8V96a16,16,0,0,0-16-16H168V72a8,8,0,0,0-16,0V80H136V72a8,8,0,0,0-16,0V80H104V72a8,8,0,0,0-16,0V80H80A16,16,0,0,0,64,96v8H56a8,8,0,0,0,0,16h8v16H56a8,8,0,0,0,0,16h8v8a16,16,0,0,0,16,16h8v8a8,8,0,0,0,16,0v-8h16v8a8,8,0,0,0,16,0v-8h16v8a8,8,0,0,0,16,0v-8h8a16,16,0,0,0,16-16v-8h8a8,8,0,0,0,0-16Zm-24,24H80V96H184v64Zm-56-48H112a8,8,0,0,0,0,16h12v12a8,8,0,0,0,16,0V128h12a8,8,0,0,0,0-16Z",
+  heart: "M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94a62,62,0,0,1,116-23.22A62,62,0,0,1,240,94Z",
 };
 
 /* ── Section Card ───────────────────────────────────────────── */
 const ACCENT = {
-  blue:    { headerBg: "from-blue-50 to-white",   iconBg: "bg-blue-50 text-blue-600 border-blue-100",   dot: "bg-indigo-500", company: "bg-blue-50 text-blue-700" },
-  indigo:  { headerBg: "from-indigo-50 to-white", iconBg: "bg-indigo-50 text-indigo-600 border-indigo-100", dot: "bg-indigo-500", company: "bg-indigo-50 text-indigo-700" },
-  violet:  { headerBg: "from-violet-50 to-white", iconBg: "bg-violet-50 text-violet-600 border-violet-100", dot: "bg-violet-500", company: "bg-violet-50 text-violet-700" },
-  emerald: { headerBg: "from-emerald-50 to-white",iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100", dot: "bg-emerald-500", company: "bg-emerald-50 text-emerald-700" },
+  blue: { headerBg: "from-blue-50 to-white", iconBg: "bg-blue-50 text-blue-600 border-blue-100", dot: "bg-indigo-500", company: "bg-blue-50 text-blue-700" },
+  indigo: { headerBg: "from-indigo-50 to-white", iconBg: "bg-indigo-50 text-indigo-600 border-indigo-100", dot: "bg-indigo-500", company: "bg-indigo-50 text-indigo-700" },
+  violet: { headerBg: "from-violet-50 to-white", iconBg: "bg-violet-50 text-violet-600 border-violet-100", dot: "bg-violet-500", company: "bg-violet-50 text-violet-700" },
+  emerald: { headerBg: "from-emerald-50 to-white", iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100", dot: "bg-emerald-500", company: "bg-emerald-50 text-emerald-700" },
 };
 
 const Section = ({ icon, label, accent = "blue", children }) => {
@@ -680,12 +90,12 @@ const Section = ({ icon, label, accent = "blue", children }) => {
 /* ── Skill Pill (view) ─────────────────────────────────────── */
 const SkillPill = ({ label, color = "slate" }) => {
   const map = {
-    slate:   "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200",
-    blue:    "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100",
+    slate: "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200",
+    blue: "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100",
     emerald: "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100",
-    violet:  "bg-violet-50 text-violet-700 border-violet-100 hover:bg-violet-100",
-    rose:    "bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100",
-    amber:   "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100",
+    violet: "bg-violet-50 text-violet-700 border-violet-100 hover:bg-violet-100",
+    rose: "bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100",
+    amber: "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100",
   };
   return (
     <span className={`inline-flex items-center text-xs font-600 font-semibold px-3 py-1.5 rounded-lg border transition-colors duration-150 ${map[color]}`}>
@@ -715,12 +125,12 @@ const EditableSkill = ({ value, onChange, onRemove, placeholder }) => (
 /* ── Add button ─────────────────────────────────────────────── */
 const AddBtn = ({ onClick, label, color = "slate" }) => {
   const map = {
-    blue:    "border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100",
-    indigo:  "border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100",
-    violet:  "border-violet-200 bg-violet-50 text-violet-600 hover:bg-violet-100",
+    blue: "border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100",
+    indigo: "border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100",
+    violet: "border-violet-200 bg-violet-50 text-violet-600 hover:bg-violet-100",
     emerald: "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100",
-    rose:    "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100",
-    slate:   "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100",
+    rose: "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100",
+    slate: "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100",
   };
   return (
     <button
@@ -749,62 +159,201 @@ const EditCard = ({ onRemove, children }) => (
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════ */
 const Recruiter_CandidateProfile_view = ({ userProp }) => {
+
+  const { id: paramId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Determine if viewing own profile or someone else's
+  const isOwnProfile = !paramId || (user && (paramId === user._id || paramId === user.id));
+
+  const emptyProfile = {
+    name: "",
+    email: "",
+    resumeSummary: "",
+    totalExperience: 0,
+    education: [],
+    techSkills: [],
+    softSkills: [],
+    languages: [],
+    atsScore: 0,
+    profilePicture: "",
+  };
+
   const initial = {
     name: userProp?.userName || "Sophia Bennett",
     resumeSummary:
       "Highly skilled Senior Software Engineer with a passion for building robust backend architectures and mentoring junior developers. 8+ years of experience delivering high-quality, scalable systems across fintech and SaaS.",
-    experience: [
-      { title: "Senior Software Engineer", date: "2018 – Present",  company: "Tech Innovators Inc." },
-      { title: "Software Engineer",        date: "2016 – 2018",     company: "CodeCrafters LLC"     },
-    ],
+    totalExperience: 8,
     education: [
       { degree: "B.S. in Computer Science", date: "2012 – 2016", institution: "University of Technology" },
     ],
     techSkills: ["Java", "Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL"],
     softSkills: ["Leadership", "Communication", "Problem Solving", "Agile", "Mentoring"],
-    languages:  ["English (Native)", "Spanish (Intermediate)"],
+    languages: ["English (Native)", "Spanish (Intermediate)"],
     atsScore: 92,
     profilePicture: userProp?.picture || "https://ui-avatars.com/api/?name=Sophia+Bennett&background=0f172a&color=fff&size=200",
   };
 
-  const [data, setData]       = useState(initial);
+  const [data, setData] = useState(initial);
+
   const [editing, setEditing] = useState(false);
   const [gallery, setGallery] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [saved, setSaved]     = useState(false);
-  const [shared, setShared]   = useState(false);
-  const [activeSkillTab, setActiveSkillTab] = useState("tech"); // "tech" | "soft"
+  const [saved, setSaved] = useState(false);
+  const [shared, setShared] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeSkillTab, setActiveSkillTab] = useState("tech");
 
   const galleryImages = [
-    "https://ui-avatars.com/api/?name=Sophia+Bennett&background=0f172a&color=fff&size=200",
-    "https://ui-avatars.com/api/?name=SB&background=2563eb&color=fff&size=200",
-    "https://ui-avatars.com/api/?name=Sophia&background=7c3aed&color=fff&size=200",
-    "https://ui-avatars.com/api/?name=SB&background=059669&color=fff&size=200",
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=0f172a&color=fff&size=200`,
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=2563eb&color=fff&size=200`,
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=7c3aed&color=fff&size=200`,
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=059669&color=fff&size=200`,
   ];
 
-  const set    = (f, v)          => setData(p => ({ ...p, [f]: v }));
-  const setExp = (i, f, v)       => { const a = [...data.experience]; a[i] = { ...a[i], [f]: v }; set("experience", a); };
-  const setEdu = (i, f, v)       => { const a = [...data.education];  a[i] = { ...a[i], [f]: v }; set("education",  a); };
-  const setArr = (field, i, v)   => { const a = [...data[field]]; a[i] = v; set(field, a); };
-  const removeArr = (field, i)   => set(field, data[field].filter((_, x) => x !== i));
-  const addArr    = (field, val) => set(field, [...data[field], val]);
+  /* ── Helper to map API response into component state ────── */
+  const mapProfileToState = (profile, userName, userEmail, userPicture) => ({
+    name: userName || "",
+    email: userEmail || "",
+    resumeSummary: profile?.description || "",
+    totalExperience: profile?.experience?.[0]?.expYear || 0,
+    education: (profile?.education || []).map(edu => ({
+      degree: edu.degree || "",
+      date: edu.yearOfPassing ? `${edu.yearOfPassing}` : "",
+      institution: edu.university || "",
+    })),
+    techSkills: (profile?.skills || []).map(s => s.skillName || s),
+    softSkills: [],
+    languages: [],
+    atsScore: profile?.atsScore || 0,
+    profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=0f172a&color=fff&size=200`,
+  });
 
-  const handleSave = () => {
+  /* ── Helper to map state back to API shape ────────────── */
+  const mapStateToApi = () => ({
+    img: data.profilePicture || null,
+    description: data.resumeSummary || null,
+    atsScore: data.atsScore || 0,
+    experience: [{
+      jobTitle: "Professional Experience",
+      expYear: data.totalExperience || 0,
+      companyName: "N/A",
+      role: "Candidate",
+    }],
+    education: data.education.map(edu => ({
+      degree: edu.degree,
+      university: edu.institution,
+      yearOfPassing: parseInt(edu.date) || 0,
+    })),
+    skills: data.techSkills.filter(s => s.trim()).map(s => ({ skillName: s })),
+  });
+
+  /* ── Fetch profile on mount ──────────────────────────────── */
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        let response;
+        let profile = null;
+        try {
+          if (isOwnProfile) {
+            response = await api.get("/profile");
+          } else {
+            response = await api.get(`/profile/${paramId}`);
+          }
+          if (response) profile = response.data.profile;
+        } catch (e) {
+          // Ignore API error and fallback to dummy data
+        }
+
+        // Get user info — for own profile use userProp/auth, for others use populated data
+        const userName = isOwnProfile
+          ? (userProp?.userName || user?.userName || user?.name || "")
+          : (profile?.user?.userName || profile?.user?.name || "User");
+        const userEmail = isOwnProfile
+          ? (userProp?.email || user?.email || "")
+          : (profile?.user?.email || "");
+        const userPicture = isOwnProfile
+          ? (userProp?.picture || user?.picture || "")
+          : (profile?.user?.picture || "");
+
+        if (profile) {
+          setData(mapProfileToState(profile, userName, userEmail, userPicture));
+        } else if (isOwnProfile) {
+          // Fallback to initial dummy data if no profile or backend is disabled
+          setData(p => ({ ...initial, name: userName || initial.name, email: userEmail, profilePicture: userPicture || initial.profilePicture }));
+        } else {
+          setError("Profile not found.");
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        // If profile not found (404), show dummy data or empty state
+        if (err.response?.status === 404 && isOwnProfile) {
+          setData(initial);
+        } else if (!isOwnProfile) {
+          setError("Profile not found.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [paramId, isOwnProfile]);
+
+  useEffect(() => {
+    if (userProp) setData(p => ({ ...p, name: userProp.userName || p.name, profilePicture: userProp.picture || p.profilePicture }));
+  }, [userProp]);
+
+
+  const set = (f, v) => setData(p => ({ ...p, [f]: v }));
+  const setExp = (i, f, v) => { const a = [...data.experience]; a[i] = { ...a[i], [f]: v }; set("experience", a); };
+  const setEdu = (i, f, v) => { const a = [...data.education]; a[i] = { ...a[i], [f]: v }; set("education", a); };
+  const setArr = (field, i, v) => { const a = [...data[field]]; a[i] = v; set(field, a); };
+  const removeArr = (field, i) => set(field, data[field].filter((_, x) => x !== i));
+  const addArr = (field, val) => set(field, [...data[field], val]);
+
+  const handleSave = async () => {
     if (!data.name.trim()) return alert("Name is required");
-    setEditing(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  };
+    try {
+      await api.put("/profile", mapStateToApi());
+      setEditing(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error("Error saving profile:", err);
+      // If profile doesn't exist yet, create it
+      if (err.response?.status === 404) {
+        try {
+          await api.post("/profile", mapStateToApi());
+          setEditing(false);
+          setSaved(true);
+          setTimeout(() => setSaved(false), 2500);
+        } catch (createErr) {
+          console.error("Error creating profile:", createErr);
+          alert("Failed to save profile. Please try again.");
+        }
+      } else {
+        alert("Failed to save profile. Please try again.");
+      }
+    }
+  }
 
   /* Native Share API ─────────────────────────────────────────── */
   const handleShare = async () => {
+    const userId = paramId || user?._id || user?.id || "";
+    const profileUrl = `${window.location.origin}/user/profile/${userId}`;
     const shareData = {
       title: `${data.name} — Candidate Profile`,
-      text:  `Check out ${data.name}'s profile: ${data.experience[0]?.title || "Professional"} · ATS Score ${data.atsScore}%`,
-      url:   window.location.href,
+      text: `Check out ${data.name}'s profile: ${data.totalExperience !== 0 ? data.totalExperience + " years" : "Fresher"} · ATS Score ${data.atsScore}%`,
+      url: profileUrl,
     };
     if (navigator.share) {
-      try { await navigator.share(shareData); } catch {}
+      try { await navigator.share(shareData); } catch { }
     } else {
       await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
       setShared(true);
@@ -817,15 +366,35 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
     const file = e.target.files[0];
     if (file?.type.startsWith("image/")) {
       const r = new FileReader();
-      r.onload  = ev => { set("profilePicture", ev.target.result); setGallery(false); setUploading(false); };
-      r.onerror = ()  => { alert("Upload failed."); setUploading(false); };
+      r.onload = ev => { set("profilePicture", ev.target.result); setGallery(false); setUploading(false); };
+      r.onerror = () => { alert("Upload failed."); setUploading(false); };
       r.readAsDataURL(file);
     } else { alert("Invalid image."); setUploading(false); }
   };
 
-  useEffect(() => {
-    if (userProp) setData(p => ({ ...p, name: userProp.userName || p.name, profilePicture: userProp.picture || p.profilePicture }));
-  }, [userProp]);
+  /* ── Loading State ────────────────────────────────────────── */
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
+          <p className="text-lg font-medium text-gray-600 animate-pulse">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Error State ──────────────────────────────────────────── */
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="text-center">
+          <p className="text-lg font-medium text-red-500 mb-4">{error}</p>
+          <button onClick={() => navigate(-1)} className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-700 transition-colors">Go Back</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -881,7 +450,7 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{data.name}</h1>
               )}
               <p className="text-sm font-medium text-slate-500 mt-0.5">
-                {data.experience[0]?.title || "Professional Candidate"}
+                {data.email}
               </p>
               <div className="flex flex-wrap gap-2 mt-2.5">
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 tracking-wide">● Available</span>
@@ -925,12 +494,14 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                   >
                     <Ic d={ICONS.share} size={14} /> Share
                   </button>
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl transition-all hover:-translate-y-px shadow-md"
-                  >
-                    <Ic d={ICONS.edit} size={14} /> Edit Profile
-                  </button>
+                  {isOwnProfile && (
+                    <button
+                      onClick={() => setEditing(true)}
+                      className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl transition-all hover:-translate-y-px shadow-md"
+                    >
+                      <Ic d={ICONS.edit} size={14} /> Edit Profile
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -964,44 +535,30 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
               {/* Experience */}
               <div className="anim-up d180">
                 <Section icon="brief" label="Experience" accent="indigo">
-                  <div className="flex flex-col gap-4">
-                    {data.experience.length === 0 && !editing && <p className="text-sm italic text-slate-400">No experience added.</p>}
-                    {data.experience.map((exp, i) => (
-                      <div key={i} className="flex gap-4 items-start">
-                        {/* Timeline dot + line */}
-                        <div className="flex flex-col items-center pt-1 shrink-0">
-                          <div className="w-3 h-3 rounded-full bg-indigo-500 ring-4 ring-indigo-50" />
-                          {i < data.experience.length - 1 && <div className="w-px flex-1 mt-1 bg-indigo-100 min-h-[28px]" />}
-                        </div>
-                        {editing ? (
-                          <EditCard onRemove={() => set("experience", data.experience.filter((_, x) => x !== i))}>
-                            <input
-                              className="font-bold text-sm text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 outline-none pb-1 pr-8 w-full transition-colors"
-                              value={exp.title} onChange={e => setExp(i, "title", e.target.value)} placeholder="Job Title"
-                            />
-                            <div className="grid grid-cols-2 gap-2">
-                              <input className="text-xs text-slate-700 bg-white border border-slate-200 focus:border-indigo-400 rounded-lg px-3 py-2 outline-none transition-colors"
-                                value={exp.company} onChange={e => setExp(i, "company", e.target.value)} placeholder="Company" />
-                              <input className="text-xs text-slate-700 bg-white border border-slate-200 focus:border-indigo-400 rounded-lg px-3 py-2 outline-none transition-colors"
-                                value={exp.date}    onChange={e => setExp(i, "date",    e.target.value)} placeholder="e.g. 2018 – Present" />
-                            </div>
-                          </EditCard>
-                        ) : (
-                          <div className="pb-1">
-                            <h3 className="text-sm font-bold text-slate-900">{exp.title}</h3>
-                            <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                              <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700">{exp.company}</span>
-                              <span className="w-1 h-1 rounded-full bg-slate-300" />
-                              <span className="flex items-center gap-1 text-xs text-slate-500 font-medium">
-                                <Ic d={ICONS.clock} size={12} />{exp.date}
-                              </span>
-                            </div>
-                          </div>
-                        )}
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 italic font-bold">
+                        {data.totalExperience}
                       </div>
-                    ))}
-                    {editing && (
-                      <AddBtn onClick={() => addArr("experience", { title: "", date: "", company: "" })} label="Add Experience" color="indigo" />
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">Total Years of Experience</p>
+                        <p className="text-xs text-slate-500 font-medium">Accumulated across all roles</p>
+                      </div>
+                    </div>
+                    {editing ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number" min={0}
+                          className="w-20 text-center text-lg font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 focus:border-indigo-500 rounded-xl px-2 py-2 outline-none transition-colors"
+                          value={data.totalExperience || 0}
+                          onChange={e => set("totalExperience", parseInt(e.target.value) || 0)}
+                        />
+                        <span className="text-sm font-bold text-slate-400">Yrs</span>
+                      </div>
+                    ) : (
+                      <span className="text-lg font-black text-indigo-600">
+                        {data.totalExperience !== 0 ? data.totalExperience + " years" : "Fresher"}
+                      </span>
                     )}
                   </div>
                 </Section>
@@ -1028,7 +585,7 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                               <input className="text-xs text-slate-700 bg-white border border-slate-200 focus:border-violet-400 rounded-lg px-3 py-2 outline-none transition-colors"
                                 value={edu.institution} onChange={e => setEdu(i, "institution", e.target.value)} placeholder="Institution" />
                               <input className="text-xs text-slate-700 bg-white border border-slate-200 focus:border-violet-400 rounded-lg px-3 py-2 outline-none transition-colors"
-                                value={edu.date}        onChange={e => setEdu(i, "date",        e.target.value)} placeholder="e.g. 2012 – 2016" />
+                                value={edu.date} onChange={e => setEdu(i, "date", e.target.value)} placeholder="e.g. 2012 – 2016" />
                             </div>
                           </EditCard>
                         ) : (
@@ -1058,25 +615,23 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                   {/* Tab Switcher */}
                   <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit mb-5">
                     {[
-                      { key: "tech", label: "Technical", icon: ICONS.cpu,   color: "text-blue-600"   },
+                      { key: "tech", label: "Technical", icon: ICONS.cpu, color: "text-blue-600" },
                       { key: "soft", label: "Soft Skills", icon: ICONS.heart, color: "text-rose-500" },
                     ].map(tab => (
                       <button
                         key={tab.key}
                         onClick={() => setActiveSkillTab(tab.key)}
-                        className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 ${
-                          activeSkillTab === tab.key
+                        className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 ${activeSkillTab === tab.key
                             ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
                             : "text-slate-500 hover:text-slate-700"
-                        }`}
+                          }`}
                       >
                         <span className={activeSkillTab === tab.key ? tab.color : ""}>
                           <Ic d={tab.icon} size={13} />
                         </span>
                         {tab.label}
-                        <span className={`ml-0.5 text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                          activeSkillTab === tab.key ? "bg-slate-100 text-slate-600" : "bg-slate-200 text-slate-400"
-                        }`}>
+                        <span className={`ml-0.5 text-xs px-1.5 py-0.5 rounded-full font-bold ${activeSkillTab === tab.key ? "bg-slate-100 text-slate-600" : "bg-slate-200 text-slate-400"
+                          }`}>
                           {tab.key === "tech" ? data.techSkills.length : data.softSkills.length}
                         </span>
                       </button>
@@ -1151,8 +706,8 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                   {data.atsScore >= 80
                     ? "Profile is highly optimised for current roles."
                     : data.atsScore >= 60
-                    ? "Good match — a few gaps to address."
-                    : "Consider enriching this profile further."}
+                      ? "Good match — a few gaps to address."
+                      : "Consider enriching this profile further."}
                 </p>
               </div>
 
@@ -1161,10 +716,9 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                 <p className="text-xs font-bold tracking-widest uppercase text-slate-400 mb-4">Overview</p>
                 <ul className="flex flex-col gap-3">
                   {[
-                    { label: "Experience",      val: `${data.experience.length} role${data.experience.length !== 1 ? "s" : ""}` },
-                    { label: "Education",       val: `${data.education.length} degree${data.education.length !== 1 ? "s" : ""}` },
-                    { label: "Technical Skills",val: `${data.techSkills.length}` },
-                    { label: "Soft Skills",     val: `${data.softSkills.length}` },
+                    { label: "Education", val: `${data.education.length} degree${data.education.length !== 1 ? "s" : ""}` },
+                    { label: "Technical Skills", val: `${data.techSkills.length}` },
+                    { label: "Soft Skills", val: `${data.softSkills.length}` },
                   ].map(({ label, val }) => (
                     <li key={label} className="flex justify-between items-center text-sm">
                       <span className="text-slate-500">{label}</span>
@@ -1205,9 +759,8 @@ const Recruiter_CandidateProfile_view = ({ userProp }) => {
                   <button
                     key={i}
                     onClick={() => { set("profilePicture", img); setGallery(false); }}
-                    className={`relative aspect-square rounded-full overflow-hidden border-2 transition-all hover:scale-105 ${
-                      data.profilePicture === img ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200 hover:border-blue-300"
-                    }`}
+                    className={`relative aspect-square rounded-full overflow-hidden border-2 transition-all hover:scale-105 ${data.profilePicture === img ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200 hover:border-blue-300"
+                      }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                     {data.profilePicture === img && (

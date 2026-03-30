@@ -5,10 +5,10 @@ import { useAuth } from '../contexts/AuthContexts';
 import UserImage from '../assets/user.png';
 
 const Avatar = ({ userData }) => {
-    const navigate   = useNavigate();
+    const navigate = useNavigate();
     const { logout } = useAuth();
-    const [open, setOpen]       = useState(false);
-    const [hoverManage, setHM]  = useState(false);
+    const [open, setOpen] = useState(false);
+    const [hoverManage, setHM] = useState(false);
     const [hoverSignout, setHS] = useState(false);
     const ref = useRef(null);
 
@@ -20,13 +20,13 @@ const Avatar = ({ userData }) => {
 
     if (!userData) return null;
 
-    const name  = userData.userName || 'User Name';
-    const email = userData.email    || 'user@email.com';
-    const pic   = userData.picture  || UserImage;
+    const name = userData.userName || 'User Name';
+    const email = userData.email || 'user@email.com';
+    const pic = userData.picture || UserImage;
 
     /* ── shared style tokens ── */
     const radius = '16px';
-    const purple  = '#6B46C1';
+    const purple = '#6B46C1';
     const purpleL = '#A78BFA';
     const purpleBg = '#F5F0FF';
 
@@ -118,49 +118,53 @@ const Avatar = ({ userData }) => {
                         <div style={{ padding: '8px' }}>
 
                             {/* Manage account */}
-                            <Link
-                                to="/user/profile"
-                                state={userData}
-                                onClick={() => setOpen(false)}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '12px',
-                                    padding: '10px 10px', borderRadius: '10px',
-                                    textDecoration: 'none',
-                                    background: hoverManage ? 'rgba(107,70,193,.04)' : 'transparent',
-                                    border: `1px solid ${hoverManage ? 'rgba(107,70,193,.07)' : 'transparent'}`,
-                                    transition: 'all .15s ease',
-                                    cursor: 'pointer',
-                                }}
-                                onMouseEnter={() => setHM(true)}
-                                onMouseLeave={() => setHM(false)}
-                            >
-                                {/* icon box */}
-                                <div style={{
-                                    width: '34px', height: '34px', borderRadius: '8px',
-                                    background: purpleBg, border: '1px solid rgba(107,70,193,.15)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0,
-                                }}>
-                                    <Settings size={16} style={{ color: purple }} />
-                                </div>
-                                <span style={{ flex: 1, fontSize: '14px', fontWeight: 500, color: '#1e0a3c' }}>
-                                    Manage account
-                                </span>
-                                <span style={{
-                                    fontSize: '11px', color: purpleL, fontWeight: 500,
-                                    background: purpleBg, padding: '2px 7px',
-                                    borderRadius: '5px', border: '1px solid rgba(107,70,193,.15)',
-                                    whiteSpace: 'nowrap',
-                                }}>
-                                    Ctrl + A
-                                </span>
-                            </Link>
+                            {userData.role !== "admin" &&
+                                (
+                                    <div>
+                                        <Link
+                                            to="/user/profile"
+                                            state={userData}
+                                            onClick={() => setOpen(false)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '12px',
+                                                padding: '10px 10px', borderRadius: '10px',
+                                                textDecoration: 'none',
+                                                background: hoverManage ? 'rgba(107,70,193,.04)' : 'transparent',
+                                                border: `1px solid ${hoverManage ? 'rgba(107,70,193,.07)' : 'transparent'}`,
+                                                transition: 'all .15s ease',
+                                                cursor: 'pointer',
+                                            }}
+                                            onMouseEnter={() => setHM(true)}
+                                            onMouseLeave={() => setHM(false)}
+                                        >
+                                            {/* icon box */}
+                                            <div style={{
+                                                width: '34px', height: '34px', borderRadius: '8px',
+                                                background: purpleBg, border: '1px solid rgba(107,70,193,.15)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                flexShrink: 0,
+                                            }}>
+                                                <Settings size={16} style={{ color: purple }} />
+                                            </div>
+                                            <span style={{ flex: 1, fontSize: '14px', fontWeight: 500, color: '#1e0a3c' }}>
+                                                Manage account
+                                            </span>
+                                            <span style={{
+                                                fontSize: '11px', color: purpleL, fontWeight: 500,
+                                                background: purpleBg, padding: '2px 7px',
+                                                borderRadius: '5px', border: '1px solid rgba(107,70,193,.15)',
+                                                whiteSpace: 'nowrap',
+                                            }}>
+                                                Ctrl + A
+                                            </span>
+                                        </Link>
 
-                            {/* divider */}
-                            <div style={{
-                                height: '1px', margin: '4px 2px',
-                                background: 'linear-gradient(90deg, transparent, #e9d5ff 40%, #fbcfe8 65%, transparent)',
-                            }} />
+                                        <div style={{
+                                            height: '1px', margin: '4px 2px',
+                                            background: 'linear-gradient(90deg, transparent, #e9d5ff 40%, #fbcfe8 65%, transparent)',
+                                        }} />
+                                    </div>
+                                )}
 
                             {/* Sign out */}
                             <button

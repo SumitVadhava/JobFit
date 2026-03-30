@@ -182,6 +182,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
 
         const status = "active";
         console.log(userName, email, password, status, role, recruiterKey);
+        role = "recruiter"
 
         const response = await api.post("/login", { email, password, role, recruiterKey });
         console.log(response.data);
@@ -279,14 +280,14 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
           email: response.data.user.email,
           sub: response.data.user.google_id,
           picture: response.data.user.picture,
-          role: role,
+          role: response.data.user.role,
         });
 
         // onClose();
         navigate("/");
 
 
-        
+
 
       } catch (err) {
         console.error("Failed to fetch user info", err);
@@ -424,7 +425,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
             </span>
           </div>
           {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
-          {role === "recruiter" && (
+          {/* {role === "recruiter" && (
             <div>
               <div className="flex flex-col">
                 <label className="text-[#151717] font-semibold">Recruiter Key</label>
@@ -450,7 +451,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
               </div>
               {errors.recruiterKey && <div className="text-red-500 text-sm">{errors.recruiterKey}</div>}
             </div>
-          )}
+          )} */}
           <button
             type="submit"
             disabled={isSubmitting || isOtpLoading}

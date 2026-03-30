@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, MessageSquare, Clock, CheckCircle, MapPin, SendHorizonal } from "lucide-react";
+import { ArrowLeft, Mail, MessageSquare, Clock, CheckCircle, MapPin, SendHorizonal, Send } from "lucide-react";
 
 const ContactSupport = () => {
   const navigate = useNavigate();
@@ -179,7 +179,7 @@ const ContactSupport = () => {
                   type="submit"
                   className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-900 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                 >
-                  <SendHorizonal size={18} />
+                  <Send size={18} />
                   Send Message
                 </button>
               </form>
