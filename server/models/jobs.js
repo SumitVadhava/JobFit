@@ -75,3 +75,5 @@ const jobSchema = new mongoose.Schema(
     timestamps: false,
   },
 );
+
+module.exports = mongoose.model("jobs", jobSchema);
