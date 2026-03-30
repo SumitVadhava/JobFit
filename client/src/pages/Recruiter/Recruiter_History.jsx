@@ -203,7 +203,7 @@ const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
-            <span>{job.openings || "N/A"} Openings</span>
+            <span>{job.openings ?? "N/A"} Openings</span>
           </div>
         </div>
 
@@ -308,7 +308,7 @@ const JobDetailModal = ({ job, isOpen, onClose }) => {
                 <span>OPENINGS</span>
               </div>
               <p className="text-sm font-semibold text-gray-900">
-                {job.openings || "Not specified"}
+                {job.openings ?? "Not specified"}
               </p>
             </div>
           </div>
@@ -371,7 +371,7 @@ const EditJobModal = ({ job, isOpen, onClose, onUpdate }) => {
       setFormData({
         jobTitle: job.jobTitle || "",
         department: job.department || "",
-        openings: job.openings || "",
+        openings: job.openings ?? "",
         experience: job.experience || "",
         responsibilities: job.responsibilities || "",
         qualifications: job.qualifications || "",
@@ -396,9 +396,22 @@ const EditJobModal = ({ job, isOpen, onClose, onUpdate }) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const payload = { ...formData, openings: Number(formData.openings) };
+      const normalizedOpenings =
+        formData.openings === "" ? 0 : Number(formData.openings);
+
+      if (!Number.isFinite(normalizedOpenings) || normalizedOpenings < 0) {
+        toast.error("Openings must be a valid non-negative number");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const payload = {
+        ...formData,
+        openings: normalizedOpenings,
+      };
       const res = await api.put(`/jobs/${job._id}`, payload);
       onUpdate(res.data.job);
+      toast.success("Job updated successfully");
       onClose();
     } catch (error) {
       console.error("Update failed", error);
@@ -438,7 +451,7 @@ const EditJobModal = ({ job, isOpen, onClose, onUpdate }) => {
             </div>
             <div className="col-span-1">
               <label className="block text-xs font-semibold text-gray-500 mb-1">Openings</label>
-              <input required type="number" name="openings" value={formData.openings} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+              <input required type="number" min="0" step="1" name="openings" value={formData.openings} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
             </div>
             <div className="col-span-1">
               <label className="block text-xs font-semibold text-gray-500 mb-1">Workplace Type</label>
@@ -645,7 +658,10 @@ const Recruiter_History = () => {
   const totalJobs = jobs.length;
   const pendingJobs = jobs.filter((j) => j.adminReview === "pending").length;
   const reviewedJobs = jobs.filter((j) => j.adminReview === "reviewed").length;
-  const totalOpenings = jobs.reduce((sum, j) => sum + (j.openings || 0), 0);
+  const totalOpenings = jobs.reduce(
+    (sum, j) => sum + (Number(j.openings) || 0),
+    0
+  );
 
   // Handlers
   const handleViewDetails = (job) => {
@@ -687,8 +703,13 @@ const Recruiter_History = () => {
   };
 
   const handleUpdateJob = (updatedJob) => {
+    const normalizedUpdatedJob = {
+      ...updatedJob,
+      openings: Number(updatedJob.openings) || 0,
+    };
+
     setJobs((prev) =>
-      prev.map((j) => (j._id === updatedJob._id ? updatedJob : j))
+      prev.map((j) => (j._id === normalizedUpdatedJob._id ? normalizedUpdatedJob : j))
     );
   };
 
