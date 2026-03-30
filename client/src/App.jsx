@@ -23,6 +23,14 @@ import { ToastContainer } from 'react-toastify'
 import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_view'
 import ProtectedRoute from './components/ProtectedRoute'
 import Unauthorized from './pages/Unauthorized'
+import AboutUs from './pages/AboutUs'
+import ContactSupport from './pages/ContactSupport'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
+import CookiePolicy from './pages/CookiePolicy'
+import FeatureUserRegistration from './pages/FeatureUserRegistration'
+import FeatureResumeMatching from './pages/FeatureResumeMatching'
+import FeatureATSAnalytics from './pages/FeatureATSAnalytics'
 
 
 

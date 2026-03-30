@@ -14,11 +14,19 @@ const savedJobSchema = new mongoose.Schema(
     },
     savedAt: {
       type: Date,
-      default: Date.now,
+      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+    },
+    createdAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+    },
+    updatedAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
     },
   },
   {
-    timestamps: true,
+    timestamps: false,
   },
 );
 

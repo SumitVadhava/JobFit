@@ -367,6 +367,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
                   placeholder="Enter your Name"
                   className="ml-2.5 w-full h-full rounded-xl border-none focus:outline-none bg-white"
                   type="text"
+                  autoComplete="name"
                 />
               </div>
               {errors.userName && <div className="text-red-500 text-sm">{errors.userName}</div>}
@@ -393,6 +394,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
               placeholder="Enter your Email"
               className="ml-2.5 w-full h-full rounded-xl border-none focus:outline-none bg-white"
               type="email"
+              autoComplete="username"
             />
           </div>
           {errors.email && <div className="text-red-500 text-sm">{errors.email}</div>}
@@ -416,6 +418,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
               placeholder="Enter your Password"
               className="ml-2.5 w-full h-full rounded-xl border-none focus:outline-none bg-white"
               type={showPassword ? "text" : "password"}
+              autoComplete={isLogin ? "current-password" : "new-password"}
             />
             <span
               onClick={() => setShowPassword(!showPassword)}

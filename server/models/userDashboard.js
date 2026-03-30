@@ -27,10 +27,19 @@ const userDashboardSchema = new mongoose.Schema(
       of: Number,
       default: {},
     },
+    createdAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+    },
+    updatedAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+    },
   },
   {
     strict: false,
     minimize: false,
+    timestamps: false,
   },
 );
 
@@ -48,6 +57,6 @@ module.exports = mongoose.model("userDashboard", userDashboardSchema);
  *                  "interviewCalls": 3,
  *                  "profileViews": 57,
  *                  "resumeMatchAvg": 78.5
- *                }
- *              }
+ *               }
+ *
  */

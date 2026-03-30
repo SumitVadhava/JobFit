@@ -21,13 +21,21 @@ const appliedJobSchema = new mongoose.Schema(
       type: Date,
       default: () => {
         const now = new Date();
-        const istOffset = 5.5 * 60 * 60 * 1000; 
+        const istOffset = 5.5 * 60 * 60 * 1000;
         return new Date(now.getTime() + istOffset);
       },
     },
+    createdAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+    },
+    updatedAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+    },
   },
   {
-    timestamps: true,
+    timestamps: false,
   },
 );
 
