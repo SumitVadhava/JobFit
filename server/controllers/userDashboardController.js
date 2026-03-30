@@ -129,7 +129,7 @@ exports.getSavedJobsData = async (req, res) => {
       .populate({
         path: "jobId",
         select:
-          "companyName jobTitle location department workPlaceType experience jobDescription img openings responsibilities",
+          "companyName jobTitle location department workPlaceType experience jobDescription img openings responsibilities qualifications",
       })
       .sort({ savedAt: -1 });
 
@@ -197,6 +197,7 @@ exports.getAppliedCompaniesData = async (req, res) => {
         department: application.jobId.department,
         workPlaceType: application.jobId.workPlaceType,
         responsibilities: application.jobId.responsibilities,
+        qualifications: application.jobId.qualifications,
         img: application.jobId.img,
         openings: application.jobId.openings,
         status: application.status,
