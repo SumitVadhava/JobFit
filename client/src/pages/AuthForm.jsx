@@ -225,9 +225,13 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
           role: postUser.role,
         });
         setIsLogin(true);
-        navigate("/");
+        setTimeout(() => {
+          if (responserole === "admin") navigate("/admin/dashboard");
+          else if (responserole === "recruiter")
+            navigate("/recruiter/dashboard");
+          else navigate("/candidate/dashboard");
+        }, 1200);
       }
-      // await new Promise((resolve) => setTimeout(resolve, 2000));
       console.log("Form submitted!");
       setErrors({});
     } catch (error) {
@@ -284,7 +288,9 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         });
 
         // onClose();
-        navigate("/");
+        if (response.data.user.role === "admin") navigate("/admin/dashboard");
+        else if (response.data.user.role === "recruiter") navigate("/recruiter/dashboard");
+        else navigate("/candidate/dashboard");
 
 
 
@@ -464,6 +470,11 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
               <div className="flex items-center justify-center">
                 <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
                 Sending OTP...
+              </div>
+            ) : isSubmitting ? (
+              <div className="flex items-center justify-center">
+                <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
+                {isLogin ? "Logging in..." : "Please wait..."}
               </div>
             ) : (
               <>{isLogin ? "Login" : "Sign Up"}</>

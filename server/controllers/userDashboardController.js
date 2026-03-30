@@ -147,6 +147,7 @@ exports.getSavedJobsData = async (req, res) => {
         workPlaceType: entry.jobId.workPlaceType,
         experience: entry.jobId.experience,
         jobDescription: entry.jobId.jobDescription,
+        qualifications: entry.jobId.qualifications,
         img: entry.jobId.img,
         savedAt: entry.savedAt,
       }));
