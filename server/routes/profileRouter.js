@@ -58,6 +58,7 @@ const {
   updateProfile,
   deleteProfile,
   uploadResume,
+  getProfileById,
 } = require("../controllers/profileController");
 
 const {
@@ -65,12 +66,48 @@ const {
   validateUpdateProfile,
 } = require("../middlewares/profileMid");
 
+const auth = require("../middlewares/auth");
+const authorizeRole = require("../middlewares/authorizeRole");
+const { USER_FACING_ROLES } = require("../utils/roles");
+
 /**
  * @swagger
  * tags:
  *   name: Profile
  *   description: User profile management (requires JWT)
  */
+
+/**
+ * @swagger
+ * /api/profile/{id}:
+ *   get:
+ *     summary: Get a user's profile by user ID (no authentication required)
+ *     tags: [Profile]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     responses:
+ *       200:
+ *         description: User profile data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 profile:
+ *                   $ref: '#/components/schemas/Profile'
+ *       400:
+ *         description: Invalid user ID
+ *       404:
+ *         description: Profile not found
+ */
+router.get("/:id", getProfileById);
 
 /**
  * @swagger
@@ -97,7 +134,7 @@ const {
  *       404:
  *         description: Profile not found
  */
-router.get("/", getProfile);
+router.get("/", auth, authorizeRole(...USER_FACING_ROLES), getProfile);
 
 /**
  * @swagger
@@ -121,7 +158,7 @@ router.get("/", getProfile);
  *       401:
  *         description: Unauthorized
  */
-router.post("/", validateCreateProfile, createProfile);
+router.post("/", auth, authorizeRole(...USER_FACING_ROLES), validateCreateProfile, createProfile);
 
 /**
  * @swagger
@@ -145,7 +182,7 @@ router.post("/", validateCreateProfile, createProfile);
  *       401:
  *         description: Unauthorized
  */
-router.put("/", validateUpdateProfile, updateProfile);
+router.put("/", auth, authorizeRole(...USER_FACING_ROLES), validateUpdateProfile, updateProfile);
 
 /**
  * @swagger
@@ -163,7 +200,7 @@ router.put("/", validateUpdateProfile, updateProfile);
  *       401:
  *         description: Unauthorized
  */
-router.delete("/", deleteProfile);
+router.delete("/", auth, authorizeRole(...USER_FACING_ROLES), deleteProfile);
 
 /**
  * @swagger
@@ -191,6 +228,6 @@ router.delete("/", deleteProfile);
  *       401:
  *         description: Unauthorized
  */
-router.post("/upload-resume", uploadResumeMiddleware, uploadResume);
+router.post("/upload-resume", auth, authorizeRole(...USER_FACING_ROLES), uploadResumeMiddleware, uploadResume);
 
 module.exports = router;

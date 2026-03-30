@@ -28,7 +28,9 @@ api.interceptors.response.use(
     // You can handle global errors here, like logging out on 401
     if (error.response && error.response.status === 401) {
       console.error("Unauthorized! Redirecting to login...");
-      // Optional: localStorage.clear(); window.location.href = "/login";
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }

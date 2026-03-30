@@ -7,7 +7,11 @@ exports.getDashboardData = async (req, res) => {
   try {
     const dashboardData = await AdminDashboard.findOne({});
     if (!dashboardData) {
-      return res.status(404).json({ message: "Dashboard data not found" });
+      return res.status(404).json({
+        error: true,
+        message: "Dashboard data not found",
+        data: null,
+      });
     }
     res.status(200).json({
       error: false,

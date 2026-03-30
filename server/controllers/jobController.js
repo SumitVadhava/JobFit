@@ -13,6 +13,8 @@ const USER_MODELS = {
   GOOGLE_LOGIN: "google_logins",
 };
 
+const getISTDate = () => new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+
 const resolveUserModelFromAuth = async (authUser) => {
   const tokenUserModel = authUser?.userModel;
   if (
@@ -218,6 +220,10 @@ exports.getAllJobs = async (req, res) => {
 
 exports.getJobById = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid job id" });
+    }
+
     const job = await Job.findById(req.params.id);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
@@ -244,6 +250,10 @@ exports.applyForJob = async (req, res) => {
     const job = await Job.findById(jobId);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (Number(job.openings) <= 0) {
+      return res.status(409).json({ message: "No openings available" });
     }
 
     const application = await AppliedJob.create({
@@ -450,6 +460,7 @@ exports.getCandidatesByJobId = async (req, res) => {
           userName: application.candidateUser.userName,
           email: application.candidateUser.email,
           status: application.status,
+          isHired: Boolean(application.isHired),
           appliedAt: application.appliedAt,
           profile: profile
             ? {
@@ -552,6 +563,7 @@ exports.getCandidatesForRecruiterJobs = async (req, res) => {
           userName: application.candidateUser.userName,
           email: application.candidateUser.email,
           status: application.status,
+          isHired: Boolean(application.isHired),
           appliedAt: application.appliedAt,
           profile: profile
             ? {
@@ -653,8 +665,191 @@ exports.getUniqueCandidatesCountForRecruiter = async (req, res) => {
   }
 };
 
+exports.getUniqueCandidatesCountForAdmin = async (req, res) => {
+  try {
+    const principal = await resolveAuthenticatedPrincipal(req.user);
+    if (!principal) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (principal.role !== ROLES.ADMIN) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: admin access required" });
+    }
+
+    const totalJobs = await Job.countDocuments({});
+
+    if (totalJobs === 0) {
+      return res.status(200).json({
+        message: "No jobs found",
+        totalJobs: 0,
+        uniqueCandidates: 0,
+      });
+    }
+
+    const uniqueCandidateAggregate = await AppliedJob.aggregate([
+      {
+        $project: {
+          userId: 1,
+          userModel: {
+            $ifNull: ["$userModel", USER_MODELS.LOGIN],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            userId: "$userId",
+            userModel: "$userModel",
+          },
+        },
+      },
+      {
+        $count: "total",
+      },
+    ]);
+
+    const uniqueCandidates = uniqueCandidateAggregate[0]?.total || 0;
+
+    return res.status(200).json({
+      message: "Admin unique candidates count retrieved successfully",
+      totalJobs,
+      uniqueCandidates,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.hireCandidateForJob = async (req, res) => {
+  try {
+    const { jobId, applicationId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job id" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(applicationId)) {
+      return res.status(400).json({ message: "Invalid application id" });
+    }
+
+    const principal = await resolveAuthenticatedPrincipal(req.user);
+    if (!principal) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const ownershipFilter = buildRecruiterOwnershipFilter(principal);
+    const job = await Job.findOne({ _id: jobId, ...ownershipFilter })
+      .select("_id openings")
+      .lean();
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const application = await AppliedJob.findOne({ _id: applicationId, jobId })
+      .select("_id jobId status isHired")
+      .lean();
+
+    if (!application) {
+      return res
+        .status(404)
+        .json({ message: "Application not found for this job" });
+    }
+
+    if (application.isHired) {
+      return res
+        .status(409)
+        .json({ message: "Candidate is already hired for this job" });
+    }
+
+    if (Number(job.openings) <= 0) {
+      return res.status(409).json({ message: "No openings available" });
+    }
+
+    const now = getISTDate();
+
+    const updatedJob = await Job.findOneAndUpdate(
+      {
+        _id: jobId,
+        ...ownershipFilter,
+        openings: { $gt: 0 },
+      },
+      {
+        $inc: { openings: -1 },
+        $set: { updatedAt: now },
+      },
+      { new: true },
+    )
+      .select("_id openings")
+      .lean();
+
+    if (!updatedJob) {
+      return res.status(409).json({ message: "No openings available" });
+    }
+
+    const hiredApplication = await AppliedJob.findOneAndUpdate(
+      {
+        _id: applicationId,
+        jobId,
+        isHired: false,
+      },
+      {
+        $set: {
+          isHired: true,
+          status: "accepted",
+          updatedAt: now,
+        },
+      },
+      { new: true },
+    ).lean();
+
+    if (!hiredApplication) {
+      await Job.findByIdAndUpdate(jobId, {
+        $inc: { openings: 1 },
+        $set: { updatedAt: now },
+      });
+
+      return res
+        .status(409)
+        .json({ message: "Unable to hire candidate. Please retry." });
+    }
+
+    let removedUnhiredApplications = 0;
+    if (updatedJob.openings === 0) {
+      const cleanupResult = await AppliedJob.deleteMany({
+        jobId,
+        isHired: false,
+      });
+      removedUnhiredApplications = cleanupResult.deletedCount || 0;
+    }
+
+    return res.status(200).json({
+      message: "Candidate hired successfully",
+      data: {
+        jobId,
+        applicationId,
+        openingsLeft: updatedJob.openings,
+        isHired: true,
+        removedUnhiredApplications,
+      },
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
 exports.updateJob = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid job id" });
+    }
+
     const existingJob = await Job.findById(req.params.id);
     if (!existingJob) {
       return res.status(404).json({ message: "Job not found" });
@@ -698,7 +893,6 @@ exports.updateJob = async (req, res) => {
         department,
         openings,
         experience,
-        openings,
         responsibilities,
         qualifications,
         companyName,
@@ -761,6 +955,10 @@ exports.updateJobAdminReview = async (req, res) => {
 
 exports.deleteJob = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid job id" });
+    }
+
     const principal = await resolveAuthenticatedPrincipal(req.user);
     if (!principal) {
       return res.status(401).json({ message: "Unauthorized" });
