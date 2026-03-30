@@ -263,7 +263,7 @@ exports.getCandidatesByJobId = async (req, res) => {
       .filter(Boolean);
 
     const profiles = await Profile.find({ user: { $in: candidateIds } })
-      .select("user img atsScore skills")
+      .select("user img atsScore skills experience resumeLink")
       .lean();
 
     const profileByUserId = new Map(
@@ -286,6 +286,8 @@ exports.getCandidatesByJobId = async (req, res) => {
                 img: profile.img,
                 atsScore: profile.atsScore,
                 skills: profile.skills,
+                experience: profile.experience,
+                resumeLink: profile.resumeLink,
               }
             : null,
         };
@@ -436,6 +438,7 @@ exports.updateJob = async (req, res) => {
       {
         jobTitle,
         department,
+        openings,
         experience,
         responsibilities,
         qualifications,

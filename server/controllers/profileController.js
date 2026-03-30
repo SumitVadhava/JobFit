@@ -1,6 +1,7 @@
 const Profile = require("../models/candidateProfile");
 const cloudinary = require("../config/cloudinary");
 const handleError = (res, error, defaultMessage = "Server error") => {
+  console.error("Profile Controller Error:", error);
   if (error.name === "ValidationError") {
     return res.status(400).json({ message: error.message, errors: error.errors });
   }
@@ -33,16 +34,18 @@ exports.createProfile = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const { img, description, experience, atsScore, education, skills } = req.body;
+    const { img, description, experience, education, skills, name, email } = req.body;
 
     const profile = await Profile.create({
       user: userId,
       img: img || null,
       description: description || null,
       experience: experience || [],
-      atsScore: atsScore || 0,
+      atsScore: 0,
       education: education || [],
       skills: skills || [],
+      name: name || null,
+      email: email || null,
     });
 
     res.status(201).json({ message: "Profile created successfully", profile });
@@ -59,12 +62,22 @@ exports.updateProfile = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const { img, description, atsScore, experience, education, skills } = req.body;
+    const { img, description, experience, education, skills, name, email } = req.body;
+
+    // Filter out null, undefined, or empty strings so we only perform a partial update
+    const updates = {};
+    if (img) updates.img = img;
+    if (description) updates.description = description;
+    if (experience && Array.isArray(experience)) updates.experience = experience;
+    if (education && Array.isArray(education)) updates.education = education;
+    if (skills && Array.isArray(skills)) updates.skills = skills;
+    if (name) updates.name = name;
+    if (email) updates.email = email;
 
     const updatedProfile = await Profile.findOneAndUpdate(
       { user: userId },
-      { img, description, atsScore, experience, education, skills },
-      { new: true, upsert: true, runValidators: true },
+      { $set: updates },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
     );
 
     res.status(200).json({
