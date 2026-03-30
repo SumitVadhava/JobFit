@@ -16,7 +16,6 @@ const validateProfileData = (body) => {
     if (typeof experience !== "string") {
       return "experience must be a string";
     }
-    return "experience must be a string like '0-2 years', '3-5 years', etc.";
   }
 
   if (education !== undefined) {
@@ -50,6 +49,18 @@ const validateProfileData = (body) => {
 };
 
 const validateUpdateProfile = (req, res, next) => {
+  // Disallow updating email and role in PUT requests
+  if (req.body.email !== undefined) {
+    return res.status(400).json({
+      message: "Cannot update email. This is an immutable field.",
+    });
+  }
+  if (req.body.role !== undefined) {
+    return res.status(400).json({
+      message: "Cannot update role. This is an immutable field.",
+    });
+  }
+
   const {
     img,
     description,
@@ -58,7 +69,8 @@ const validateUpdateProfile = (req, res, next) => {
     skills,
     softSkills,
     name,
-    email,
+    atsScore,
+    userName,
   } = req.body;
 
   const hasAtLeastOneField =
@@ -69,7 +81,8 @@ const validateUpdateProfile = (req, res, next) => {
     skills !== undefined ||
     softSkills !== undefined ||
     name !== undefined ||
-    email !== undefined;
+    atsScore !== undefined ||
+    userName !== undefined;
 
   if (!hasAtLeastOneField) {
     console.error("Profile Middleware Error: Missing required fields");

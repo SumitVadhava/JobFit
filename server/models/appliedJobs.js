@@ -22,6 +22,10 @@ const appliedJobSchema = new mongoose.Schema(
       enum: ["applied", "shortlisted", "rejected", "hired"],
       default: "applied",
     },
+    isHired: {
+      type: Boolean,
+      default: false,
+    },
     appliedAt: {
       type: Date,
       default: () => {
@@ -47,5 +51,6 @@ const appliedJobSchema = new mongoose.Schema(
 appliedJobSchema.index({ userId: 1, jobId: 1 }, { unique: true });
 appliedJobSchema.index({ userId: 1, appliedAt: -1 });
 appliedJobSchema.index({ jobId: 1, appliedAt: -1 });
+appliedJobSchema.index({ jobId: 1, isHired: 1 });
 
 module.exports = mongoose.model("applied_jobs", appliedJobSchema);

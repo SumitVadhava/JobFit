@@ -179,7 +179,8 @@ exports.updateProfile = async (req, res) => {
       skills,
       softSkills,
       name,
-      email,
+      atsScore,
+      userName,
     } = req.body;
 
     // Filter out null, undefined, or empty strings so we only perform a partial update
@@ -192,7 +193,8 @@ exports.updateProfile = async (req, res) => {
     if (softSkills && Array.isArray(softSkills))
       updates.softSkills = softSkills;
     if (name) updates.name = name;
-    if (email) updates.email = email;
+    if (userName) updates.userName = userName;
+    if (atsScore !== undefined) updates.atsScore = atsScore;
 
     const updatedProfile = await Profile.findOneAndUpdate(
       buildProfileFilter(userId, userModel),
