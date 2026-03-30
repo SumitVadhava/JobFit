@@ -192,9 +192,9 @@ const OTPDemo = ({
                 if (responserole === "admin") {
                     navigate("/admin/dashboard");
                 } else if (responserole === "recruiter") {
-                    navigate("/recruiter/recruiter-dashboard");
+                    navigate("/recruiter/dashboard");
                 } else {
-                    navigate("/user/dashboard");
+                    navigate("/candidate/dashboard");
                 }
             }
             onClose();
