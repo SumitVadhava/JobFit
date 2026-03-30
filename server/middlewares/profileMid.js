@@ -1,7 +1,7 @@
 const Profile = require("../models/candidateProfile");
 
 const validateProfileData = (body) => {
-  const { img, description, experience, atsScore, education, skills } = body;
+  const { img, description, experience, education, skills, name, email } = body;
 
   if (experience !== undefined) {
     if (!Array.isArray(experience)) return "experience must be an array";
@@ -35,33 +35,34 @@ const validateProfileData = (body) => {
     }
   }
 
-  if (atsScore !== undefined && typeof atsScore !== 'number') {
-    return "atsScore must be a number";
-  }
-
   return null;
 };
 
 const validateUpdateProfile = (req, res, next) => {
-  const { img, description, experience, atsScore, education, skills } = req.body;
+  const { img, description, experience, education, skills, name, email } = req.body;
 
   const hasAtLeastOneField =
     img !== undefined ||
     description !== undefined ||
     experience !== undefined ||
-    atsScore !== undefined ||
     education !== undefined ||
-    skills !== undefined;
+    skills !== undefined ||
+    name !== undefined ||
+    email !== undefined;
 
   if (!hasAtLeastOneField) {
+    console.error("Profile Middleware Error: Missing required fields");
     return res.status(400).json({
       message:
-        "Missing required fields: provide at least one of img, description, experience, atsScore, education, or skills",
+        "Missing required fields: provide at least one field to update",
     });
   }
 
   const error = validateProfileData(req.body);
-  if (error) return res.status(400).json({ message: error });
+  if (error) {
+    console.error("Profile Middleware Validation Error:", error);
+    return res.status(400).json({ message: error });
+  }
 
   next();
 };
