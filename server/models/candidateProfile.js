@@ -47,7 +47,7 @@ const candidateProfileSchema = new mongoose.Schema({
     default: 0,
   },
   experience: {
-    type: string,
+    type: String,
     required: false,
     default: "0-2 years",
   },
