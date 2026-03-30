@@ -851,7 +851,7 @@ const Candidate_Profile_View = ({ userProp }) => {
                       <p className="text-[13px] text-slate-500 mt-0.5">Create a job-winning resume with our simple resume builder</p>
                     </div>
                   </div>
-                  <button onClick={() => navigate("/user/resume")} className="text-[13px] font-bold text-blue-600 hover:text-blue-800 transition-colors px-2 whitespace-nowrap outline-none">
+                  <button onClick={() => navigate("/candidate/best-resumes")} className="text-[13px] font-bold text-blue-600 hover:text-blue-800 transition-colors px-2 whitespace-nowrap outline-none">
                     Create resume
                   </button>
                 </div>

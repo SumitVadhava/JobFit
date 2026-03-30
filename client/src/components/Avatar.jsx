@@ -148,7 +148,7 @@ const Avatar = ({ userData }) => {
                                 (
                                     <div>
                                         <Link
-                                            to="/candidate/profile"
+                                            to={userData.role === "recruiter" ? "/recruiter/profile" : "/candidate/profile"}
                                             state={userData}
                                             onClick={() => setOpen(false)}
                                             style={{

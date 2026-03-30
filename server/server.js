@@ -126,8 +126,6 @@ app.use(
 );
 app.use(
   "/api/profile",
-  auth,
-  authorizeRole(...USER_FACING_ROLES),
   profileRouter,
 );
 app.use("/api/resume", auth, authorizeRole(...USER_FACING_ROLES), resumeRoute);

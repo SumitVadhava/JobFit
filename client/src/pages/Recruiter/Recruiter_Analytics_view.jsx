@@ -28,7 +28,6 @@ import {
 } from "lucide-react";
 import api from "../../api/api";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 const ACCENT = "#9c44fe";
 const ACCENT_LIGHT = "rgba(156,68,254,0.07)";
 const ACCENT_BORDER = "rgba(156,68,254,0.18)";
@@ -69,7 +68,6 @@ const formatBackendDateTime = (timestamp) => {
   return `${day} ${monthName} ${year}, ${timePart}`;
 };
 
-// ─── StatCard (matches AdminAnalytics / User Analytics style) ─────────────────
 const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
@@ -110,7 +108,6 @@ const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
   </motion.div>
 );
 
-// ─── Company Logo ──────────────────────────────────────────────────────────────
 const CompanyLogo = ({ src, name, size = "w-11 h-11" }) => {
   const [err, setErr] = useState(false);
   const initial = (name || "J").charAt(0).toUpperCase();
@@ -167,7 +164,6 @@ const CandidateAvatar = ({ src, name, size = "w-10 h-10" }) => {
   );
 };
 
-// ─── Custom Tooltip for Bar Chart ─────────────────────────────────────────────
 const BarTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -191,18 +187,16 @@ const BarTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-const RecruiterAnalytics = () => {
+const Recruiter_Analytics_view = () => {
   const [jobs, setJobs] = useState([]);
   const [allCandidates, setAllCandidates] = useState([]);
-  const [perJobData, setPerJobData] = useState([]); // [{ jobTitle, applicants }]
+  const [perJobData, setPerJobData] = useState([]);
   const [candidateSummary, setCandidateSummary] = useState({
     totalJobs: 0,
     totalCandidates: 0,
   });
   const [loading, setLoading] = useState(true);
 
-  // grab recruiter id from localStorage
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user._id || user.id;
 
@@ -216,17 +210,14 @@ const RecruiterAnalytics = () => {
       try {
         setLoading(true);
 
-        // 1) all recruiter jobs
-        const jobsRes = await api
-          .get(`/jobs/recruiter/${userId}`)
-          .catch(() => null);
+        const jobsRes = await api.get(`/jobs/recruiter/${userId}`).catch(() => null);
         const recruiterJobs = jobsRes?.data?.jobs || [];
         setJobs(recruiterJobs);
 
-        // 2) all candidates across recruiter jobs
         const allCandRes = await api
           .get(`/jobs/recruiter/${userId}/candidates`)
           .catch(() => null);
+
         const totalCandidates = Number(allCandRes?.data?.totalCandidates) || 0;
         const totalJobsFromCandidatesApi =
           Number(allCandRes?.data?.totalJobs) || recruiterJobs.length;
@@ -239,7 +230,6 @@ const RecruiterAnalytics = () => {
         });
         setAllCandidates(candidates);
 
-        // 3) per-job applicant count from recruiter candidates API response
         if (recruiterJobs.length > 0) {
           const byJob = candidates.reduce((acc, candidate) => {
             const jobId = candidate.jobId;
@@ -291,7 +281,6 @@ const RecruiterAnalytics = () => {
     fetchAll();
   }, [userId]);
 
-  // ─── Derived stats ─────────────────────────────────────────────────────────
   const totalJobs = candidateSummary.totalJobs || jobs.length;
   const totalApplications =
     candidateSummary.totalCandidates ||
@@ -304,7 +293,6 @@ const RecruiterAnalytics = () => {
     null,
   );
 
-  // Recent 5 applications — from allCandidates
   const recentApplications = [...allCandidates]
     .sort(
       (a, b) =>
@@ -324,7 +312,6 @@ const RecruiterAnalytics = () => {
       img: job.img,
     }));
 
-  // ─── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -355,7 +342,6 @@ const RecruiterAnalytics = () => {
 
       <main className="min-w-0">
         <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-8">
-          {/* ── Header ─────────────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -367,7 +353,7 @@ const RecruiterAnalytics = () => {
                 Recruiter Dashboard
               </h1>
               <p className="text-sm text-gray-500 mt-1">
-                Recruitment overview — jobs, applications & top performers.
+                Recruitment overview - jobs, applications and top performers.
               </p>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600">
@@ -376,7 +362,6 @@ const RecruiterAnalytics = () => {
             </span>
           </motion.div>
 
-          {/* ── Stat Cards ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             <StatCard
               icon={Briefcase}
@@ -398,7 +383,6 @@ const RecruiterAnalytics = () => {
             />
           </div>
 
-          {/* ── Applications Per Job — Bar Chart ───────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -459,7 +443,7 @@ const RecruiterAnalytics = () => {
                       tickLine={false}
                       interval={0}
                       tickFormatter={(v) =>
-                        v.length > 12 ? v.slice(0, 12) + "…" : v
+                        v.length > 12 ? `${v.slice(0, 12)}...` : v
                       }
                     />
                     <YAxis
@@ -493,7 +477,6 @@ const RecruiterAnalytics = () => {
             )}
           </motion.div>
 
-          {/* ── Top Performing Job (Pie Chart) ─────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -597,7 +580,6 @@ const RecruiterAnalytics = () => {
             )}
           </motion.div>
 
-          {/* ── Recent Applications ────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -627,7 +609,8 @@ const RecruiterAnalytics = () => {
             ) : (
               <div className="space-y-3">
                 {recentApplications.map((app, i) => {
-                  const candidateName = app.name || app.userName || "Unknown Candidate";
+                  const candidateName =
+                    app.name || app.userName || "Unknown Candidate";
 
                   const candidateAvatarSrc =
                     app.profileImage ||
@@ -642,7 +625,6 @@ const RecruiterAnalytics = () => {
                     "";
 
                   const applicationTime = app.appliedAt || app.createdAt;
-
                   const formattedDateTime = formatBackendDateTime(applicationTime);
 
                   return (
@@ -653,21 +635,21 @@ const RecruiterAnalytics = () => {
                       transition={{ duration: 0.3, delay: 0.5 + i * 0.07 }}
                       className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
                     >
-                      {/* Avatar */}
-                      <CandidateAvatar src={candidateAvatarSrc} name={candidateName} />
+                      <CandidateAvatar
+                        src={candidateAvatarSrc}
+                        name={candidateName}
+                      />
 
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-black truncate">
                           {candidateName}
                         </p>
                         <p className="text-xs text-gray-400 truncate mt-0.5">
-                          {app.email || "—"}
-                          {app.jobTitle && ` · ${app.jobTitle}`}
+                          {app.email || "-"}
+                          {app.jobTitle && ` - ${app.jobTitle}`}
                         </p>
                       </div>
 
-                      {/* ATS score badge */}
                       {app.atsScore != null && (
                         <span
                           className="hidden sm:inline text-xs font-bold px-2.5 py-1 rounded-full border shrink-0"
@@ -681,27 +663,21 @@ const RecruiterAnalytics = () => {
                         </span>
                       )}
 
-                      {/* Time */}
                       <span className="text-xs text-gray-300 shrink-0">
                         {formattedDateTime}
                       </span>
 
-                      <ArrowRight
-                        size={15}
-                        className="text-gray-300 shrink-0"
-                      />
+                      <ArrowRight size={15} className="text-gray-300 shrink-0" />
                     </motion.div>
                   );
                 })}
               </div>
             )}
           </motion.div>
-
-          {/* ── Quick Snapshot (4 mini tiles matching admin style) ─────── */}
         </div>
       </main>
     </div>
   );
 };
 
-export default RecruiterAnalytics;
+export default Recruiter_Analytics_view;

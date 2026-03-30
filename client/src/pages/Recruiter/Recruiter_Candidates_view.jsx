@@ -776,7 +776,7 @@ const CandidatesView = () => {
                             )}
 
                             {/* Expanded Details */}
-                            {/* <div
+                            <div
                               className={`overflow-hidden transition-all duration-500 ease-in-out ${
                                 isExpanded
                                   ? "max-h-[400px] opacity-100 mt-4"
@@ -827,7 +827,7 @@ const CandidatesView = () => {
                                   </div>
                                 )}
                               </div>
-                            </div> */}
+                            </div>
 
                             {/* Actions */}
                             <div className="flex flex-wrap items-center gap-2 mt-4">
@@ -1097,3 +1097,4 @@ const CandidatesView = () => {
 };
 
 export default CandidatesView;
+

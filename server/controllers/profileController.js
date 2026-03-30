@@ -95,6 +95,25 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+exports.getProfileById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const profile = await Profile.findOne({ user: id });
+    if (!profile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    res.status(200).json({ message: "Profile retrieved successfully", profile });
+  } catch (error) {
+    handleError(res, error, "Error retrieving profile");
+  }
+};
+
 exports.createProfile = async (req, res) => {
   try {
     const userId = req.user ? req.user.id : null;
@@ -124,7 +143,7 @@ exports.createProfile = async (req, res) => {
       userModel,
       img: img || null,
       description: description || null,
-      experience: experience || [],
+      experience: experience || "0-2 years",
       atsScore: 0,
       education: education || [],
       skills: skills || [],
@@ -160,21 +179,22 @@ exports.updateProfile = async (req, res) => {
       skills,
       softSkills,
       name,
-      email,
+      atsScore,
+      userName,
     } = req.body;
 
     // Filter out null, undefined, or empty strings so we only perform a partial update
     const updates = {};
     if (img) updates.img = img;
     if (description) updates.description = description;
-    if (experience && Array.isArray(experience))
-      updates.experience = experience;
+    if (experience) updates.experience = experience;
     if (education && Array.isArray(education)) updates.education = education;
     if (skills && Array.isArray(skills)) updates.skills = skills;
     if (softSkills && Array.isArray(softSkills))
       updates.softSkills = softSkills;
     if (name) updates.name = name;
-    if (email) updates.email = email;
+    if (userName) updates.userName = userName;
+    if (atsScore !== undefined) updates.atsScore = atsScore;
 
     const updatedProfile = await Profile.findOneAndUpdate(
       buildProfileFilter(userId, userModel),
