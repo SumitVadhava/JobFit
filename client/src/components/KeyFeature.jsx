@@ -349,47 +349,75 @@ const KeyFeatures = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto px-4">
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 max-w-sm">
-              <img src={Profile} />
-              <h3 className="text-xl font-semibold text-purple-800 mb-4">
-                User Registration & Profiles
+            {/* Card 1 */}
+            <Link
+              to="/features/user-registration"
+              className="group bg-white p-6 rounded-xl shadow-md border border-transparent hover:border-purple-300 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer block"
+            >
+              <div className="overflow-hidden rounded-lg mb-4">
+                <img
+                  src={Profile}
+                  className="w-full transition-transform duration-400 group-hover:scale-105"
+                />
+              </div>
+              <h3 className="text-xl font-semibold text-purple-800 mb-4 group-hover:text-purple-600 transition-colors duration-300">
+                User Registration &amp; Profiles
               </h3>
               <p className="text-gray-600 mb-6 leading-relaxed">
                 Sign up via email, create profiles with personal info,
                 job/hiring preferences for job seekers, recruiters, and admins.
               </p>
-              <Link to="/features/user-registration" className="inline-block bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium">
+              <span className="inline-block bg-purple-700 text-white px-6 py-2 rounded-lg font-medium group-hover:bg-purple-600 group-hover:-translate-y-0.5 group-hover:shadow-lg transition-all duration-200">
                 Learn More
-              </Link>
-            </div>
+              </span>
+            </Link>
 
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 max-w-sm">
-              <img src={JobOffer} />
-              <h3 className="text-xl font-semibold text-purple-800 mb-4">
-                Resume & Job Matching
+            {/* Card 2 */}
+            <Link
+              to="/features/resume-matching"
+              className="group bg-white p-6 rounded-xl shadow-md border border-transparent hover:border-purple-300 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer block"
+            >
+              <div className="overflow-hidden rounded-lg mb-4">
+                <img
+                  src={JobOffer}
+                  className="w-full transition-transform duration-400 group-hover:scale-105"
+                />
+              </div>
+              <h3 className="text-xl font-semibold text-purple-800 mb-4 group-hover:text-purple-600 transition-colors duration-300">
+                Resume &amp; Job Matching
               </h3>
               <p className="text-gray-600 mb-6 leading-relaxed">
                 Upload resumes/PDFs, extract skills/experience, match with job
                 descriptions, and calculate ATS scores (out of 100).
               </p>
-              <Link to="/features/resume-matching" className="inline-block bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium">
+              <span className="inline-block bg-purple-700 text-white px-6 py-2 rounded-lg font-medium group-hover:bg-purple-600 group-hover:-translate-y-0.5 group-hover:shadow-lg transition-all duration-200">
                 Learn More
-              </Link>
-            </div>
+              </span>
+            </Link>
 
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 max-w-sm">
-              <img src={Data_Extraction} />
-              <h3 className="text-xl font-semibold text-purple-800 mb-4">
+            {/* Card 3 */}
+            <Link
+              to="/features/ats-analytics"
+              id="user-review"
+              className="group bg-white p-6 rounded-xl shadow-md border border-transparent hover:border-purple-300 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer block"
+            >
+              <div className="overflow-hidden rounded-lg mb-4">
+                <img
+                  src={Data_Extraction}
+                  className="w-full transition-transform duration-400 group-hover:scale-105"
+                />
+              </div>
+              <h3 className="text-xl font-semibold text-purple-800 mb-4 group-hover:text-purple-600 transition-colors duration-300">
                 ATS Score Analytics
               </h3>
               <p className="text-gray-600 mb-6 leading-relaxed">
                 Track ATS scores over time, view breakdowns (keywords, skills),
                 and get actionable feedback to improve resumes.
               </p>
-              <Link to="/features/ats-analytics" className="inline-block bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 transition-colors duration-200 font-medium" id="user-review">
+              <span className="inline-block bg-purple-700 text-white px-6 py-2 rounded-lg font-medium group-hover:bg-purple-600 group-hover:-translate-y-0.5 group-hover:shadow-lg transition-all duration-200">
                 Learn More
-              </Link>
-            </div>
+              </span>
+            </Link>
           </div>
         </section>
       </div>
