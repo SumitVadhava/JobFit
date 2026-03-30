@@ -135,7 +135,7 @@ const Navbar = ({ userData }) => {
         ],
         candidate: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
-            { label: "Resume Builder", href: "/candidate/resume", shortcut: "Ctrl + R" },
+            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Ctrl + AS" },
             {
                 label: "Best Resumes",
                 href: "/candidate/best-resumes",
@@ -146,7 +146,7 @@ const Navbar = ({ userData }) => {
         ],
         user: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
-            { label: "ATS Analyzer", href: "/candidate/ats-analyzer", shortcut: "Ctrl + A" },
+            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Ctrl + AS" },
             {
                 label: "Best Resumes",
                 href: "/candidate/best-resumes",
@@ -211,7 +211,6 @@ const Navbar = ({ userData }) => {
 
             const key = e.key.toLowerCase();
 
-            // ── single-key shortcuts ──────────────────────────
             if (key === "d") {
                 e.preventDefault();
                 if (userRole === "admin") navigate("/admin/dashboard");
@@ -326,6 +325,14 @@ const Navbar = ({ userData }) => {
             if (key === "j" && pendingKey.current === "p") {
                 e.preventDefault();
                 if (userRole === "recruiter") navigate("/recruiter/post-job");
+                pendingKey.current = null;
+                clearTimeout(seqTimer.current);
+                return;
+            }
+
+            if (key === "a" && pendingKey.current === "s") {
+                e.preventDefault();
+                if (userRole === "candidate" || userRole === "user") navigate("/candidate/ats");
                 pendingKey.current = null;
                 clearTimeout(seqTimer.current);
                 return;
