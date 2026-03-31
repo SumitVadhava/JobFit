@@ -26,6 +26,7 @@ const ICONS = {
   lang: "M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM215.82,120H171.8a183.08,183.08,0,0,0-5.83-48H199.1A88.16,88.16,0,0,1,215.82,120ZM128,40.16a166.75,166.75,0,0,1,27,31.84H101A166.75,166.75,0,0,1,128,40.16ZM89.92,72h32a183.08,183.08,0,0,1,5.83,48H40.2A88.18,88.18,0,0,1,89.92,72ZM40.18,136H83.82a183.08,183.08,0,0,0,5.83,48H56.91A88.16,88.16,0,0,1,40.18,136Zm87.82,79.84a166.75,166.75,0,0,1-27-31.84h54A166.75,166.75,0,0,1,128,215.84Zm43.91-31.84h33.12a183.08,183.08,0,0,1-5.83-48H172A88.18,88.18,0,0,1,171.91,184Z",
   copy: "M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z",
   check: "M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z",
+  loading: "M224,128a96,96,0,0,1-192,0,8,8,0,0,1,8-8h16a80,80,0,0,1,160,0,8,8,0,0,1-8,8Z",
   cpu: "M208,136h-8V120h8a8,8,0,0,0,0-16h-8V96a16,16,0,0,0-16-16H168V72a8,8,0,0,0-16,0V80H136V72a8,8,0,0,0-16,0V80H104V72a8,8,0,0,0-16,0V80H80A16,16,0,0,0,64,96v8H56a8,8,0,0,0,0,16h8v16H56a8,8,0,0,0,0,16h8v8a16,16,0,0,0,16,16h8v8a8,8,0,0,0,16,0v-8h16v8a8,8,0,0,0,16,0v-8h16v8a8,8,0,0,0,16,0v-8h8a16,16,0,0,0,16-16v-8h8a8,8,0,0,0,0-16Zm-24,24H80V96H184v64Zm-56-48H112a8,8,0,0,0,0,16h12v12a8,8,0,0,0,16,0V128h12a8,8,0,0,0,0-16Z",
   heart: "M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94a62,62,0,0,1,116-23.22A62,62,0,0,1,240,94Z",
   globe: "M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM128,40c11.08,0,25.9,18,34,88-8.1,70-22.92,88-34,88s-25.9-18-34-88C102.1,58,116.92,40,128,40ZM40.2,128c1.38-23.95,11.23-45.54,26.54-61.64C77.41,84.18,85.25,108.21,87.82,120H40.2Zm0,16h47.62c-2.57,11.79-10.41,35.82-21.08,53.64C51.43,181.54,41.58,159.95,40.2,144Zm120.89,53.64c-10.67-17.82-18.51-41.85-21.08-53.64h47.62C186.25,168.05,176.4,189.64,161.09,197.64ZM168.2,120c2.57-11.79,10.41-35.82,21.08-53.64,15.31,16.1,25.16,37.69,26.54,61.64H168.2Z",
@@ -98,6 +99,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
   const [editing, setEditing] = useState(false);
   const [gallery, setGallery] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [shared, setShared] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -199,6 +201,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
 
   const handleSave = async () => {
     if (!data.name.trim()) return alert("Name is required");
+    setSaving(true);
     const payload = mapStateToApi();
 
     let formData = null;
@@ -258,6 +261,8 @@ const Recruiter_Profile_view = ({ userProp }) => {
       } else {
         alert(`Failed to save profile.\n\nServer error: ${serverMsg}`);
       }
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -418,9 +423,19 @@ const Recruiter_Profile_view = ({ userProp }) => {
                   </button>
                   <button
                     onClick={handleSave}
-                    className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all hover:-translate-y-px shadow-md shadow-blue-200"
+                    disabled={saving}
+                    className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-xl transition-all hover:-translate-y-px shadow-md shadow-blue-200 disabled:cursor-not-allowed"
                   >
-                    <Ic d={ICONS.save} size={14} /> Save Changes
+                    {saving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Ic d={ICONS.save} size={14} /> Save Changes
+                      </>
+                    )}
                   </button>
                 </>
               ) : (
