@@ -296,7 +296,7 @@ const Candidate_Profile_View = ({ userProp }) => {
 
   const { id: paramId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = !paramId || (user && (paramId === user._id || paramId === user.id));
@@ -503,6 +503,7 @@ const Candidate_Profile_View = ({ userProp }) => {
 
   const handleSave = async () => {
     if (!data.name.trim()) return toast.error("Name is required");
+    setUploading(true);
     const payload = mapStateToApi();
 
     let formData = null;
@@ -521,7 +522,18 @@ const Candidate_Profile_View = ({ userProp }) => {
       const config = formData ? {
         headers: { 'Content-Type': 'multipart/form-data' }
       } : {};
-      await api.put("/profile", formData || payload, config);
+      const response = await api.put("/profile", formData || payload, config);
+      
+      const updatedProfile = response.data?.profile;
+      
+      // Update global auth state to reflect changes in Navbar/Avatar
+      const picToSync = updatedProfile?.img || data.profilePicture;
+      updateUser({
+        userName: data.name,
+        picture: picToSync,
+        img: picToSync
+      });
+
       setEditing(false);
       setSaved(true);
       setProfilePhotoFile(null); // Clear the file after save
@@ -531,6 +543,8 @@ const Candidate_Profile_View = ({ userProp }) => {
       console.error("Error saving profile:", err);
       const serverMsg = err.response?.data?.message || err.response?.data?.error || err.message;
       toast.error(`Error saving profile: ${serverMsg}`);
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -721,9 +735,19 @@ const Candidate_Profile_View = ({ userProp }) => {
                   </button>
                   <button
                     onClick={handleSave}
-                    className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all hover:-translate-y-px shadow-md shadow-blue-200"
+                    disabled={uploading}
+                    className={`inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all hover:-translate-y-px shadow-md shadow-blue-200 ${uploading ? "opacity-80 cursor-not-allowed" : ""}`}
                   >
-                    <Ic d={ICONS.save} size={14} /> Save Changes
+                    {uploading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Ic d={ICONS.save} size={14} /> <span>Save Changes</span>
+                      </>
+                    )}
                   </button>
                 </>
               ) : (

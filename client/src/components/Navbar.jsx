@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Bell, Menu, X } from "lucide-react"; // optional icons
 import logo from "../assets/logo.png";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import Avatar from "./Avatar";
+import UserDropdown from "./UserDropdown";
 import { useAuth } from "../contexts/AuthContexts";
 import { FiLogOut } from "react-icons/fi";
 
@@ -194,8 +194,7 @@ const Navbar = ({ userData }) => {
         navigate("/");
     };
 
-    const userRole = isLoggedIn ? userData.role : "default";
-    // const userRole = "admin"
+    const userRole = isLoggedIn ? (user?.role || "default") : "default";
 
     /* ── Global keyboard shortcuts ── */
     const pendingKey = useRef(null); // first key of a 2-key sequence
@@ -408,13 +407,7 @@ const Navbar = ({ userData }) => {
                                     <Bell />
                                 </div> */}
                             <div>
-                                <Avatar userData={{
-                                    userName: userData.userName,
-                                    email: userData.email,
-                                    sub: userData.sub,
-                                    picture: userData.picture,
-                                    role: userData.role
-                                }} />
+                                <UserDropdown userData={user} />
                             </div>
                         </div>
                         :
@@ -485,13 +478,13 @@ const Navbar = ({ userData }) => {
                                     <div
                                         className="flex items-center space-x-3"
                                         onClick={() => {
-                                            navigate("/candidate/profile");
+                                            navigate(userRole === "recruiter" ? "/recruiter/profile" : "/candidate/profile");
                                             toggleDrawer();
                                         }}
                                     >
-                                        {userData?.picture ? (
+                                        {(user?.picture || user?.img) ? (
                                             <img
-                                                src={userData.picture}
+                                                src={user.picture || user.img}
                                                 alt="User Profile"
                                                 className="w-10 h-10 rounded-full object-cover border border-gray-300"
                                                 onError={(e) => {
@@ -502,7 +495,7 @@ const Navbar = ({ userData }) => {
                                         ) : (
                                             <div
                                                 className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700"
-                                                style={{ display: userData?.Picture ? "none" : "flex" }}
+                                                style={{ display: (user?.picture || user?.img) ? "none" : "flex" }}
                                             >
                                                 <svg
                                                     className="w-6 h-6"
@@ -521,7 +514,7 @@ const Navbar = ({ userData }) => {
                                             </div>
                                         )}
                                         <span className="text-lg font-medium text-gray-800 truncate max-w-[150px]">
-                                            {userData?.userName || "User"}
+                                            {user?.userName || user?.name || "User"}
                                         </span>
                                     </div>
                                     <button

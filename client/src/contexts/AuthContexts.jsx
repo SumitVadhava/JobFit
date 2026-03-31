@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
 
 // Create context
 const AuthContext = createContext();
@@ -16,11 +17,25 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const storedToken = localStorage.getItem("token");
+    
     if (storedUser && storedToken) {
-      setUser(storedUser);
-      setToken(storedToken);
-      // Derive role from user object if available
-      setRole(storedUser.role || null);
+      try {
+        const decodedToken = jwtDecode(storedToken);
+        const currentTime = Date.now() / 1000;
+
+        // Check if token is expired
+        if (decodedToken.exp < currentTime) {
+          console.warn("Token expired. Logging out...");
+          logout();
+        } else {
+          setUser(storedUser);
+          setToken(storedToken);
+          setRole(storedUser.role || null);
+        }
+      } catch (error) {
+        console.error("Invalid token found in storage. Clearing...", error);
+        logout();
+      }
     }
     setLoading(false);
   }, []);
@@ -43,8 +58,15 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
   };
 
+  const updateUser = (updatedUserData) => {
+    const newUser = { ...user, ...updatedUserData };
+    setUser(newUser);
+    localStorage.setItem("user", JSON.stringify(newUser));
+    console.log("User state updated:", newUser);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, role, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, role, loading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

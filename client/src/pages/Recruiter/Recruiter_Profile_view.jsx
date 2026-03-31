@@ -65,7 +65,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
 
   const { id: paramId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = !paramId || (user && (paramId === user._id || paramId === user.id));
@@ -218,7 +218,18 @@ const Recruiter_Profile_view = ({ userProp }) => {
       const config = formData ? {
         headers: { 'Content-Type': 'multipart/form-data' }
       } : {};
-      await api.put("/profile", formData || payload, config);
+      const response = await api.put("/profile", formData || payload, config);
+
+      const updatedProfile = response.data?.profile;
+      
+      // Update global auth state to reflect changes in Navbar/Avatar
+      const picToSync = updatedProfile?.img || data.profilePicture;
+      updateUser({
+        userName: data.name,
+        picture: picToSync,
+        img: picToSync
+      });
+
       setEditing(false);
       setSaved(true);
       setProfilePhotoFile(null); // Clear the file after save

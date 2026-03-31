@@ -358,7 +358,7 @@ const Recruiter_Analytics_view = () => {
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600">
               <CircleDot size={12} className="text-emerald-500" />
-              Live
+              Live updates
             </span>
           </motion.div>
 

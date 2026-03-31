@@ -16,6 +16,7 @@ import {
   FileText,
   Building2,
   Clock,
+  CircleDot,
 } from "lucide-react";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -351,12 +352,9 @@ function UserAnalytics() {
                 — here's your real-time performance overview.
               </p>
             </div>
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white"
-              style={{ borderColor: "#E2E8F0" }}
-            >
-              <Activity size={12} className="text-emerald-500" />
-              Live
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600">
+              <CircleDot size={12} className="text-emerald-500" />
+              Live updates
             </span>
           </motion.div>
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import Navbar from './components/Navbar'
 import { BrowserRouter, Route, Router, Routes } from 'react-router-dom'
-import HeroSection from './components/HeroSection'
+import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import UserAnalytics from './pages/User/User_Analytics_view';
 import AtsScreenBrackDown from './pages/User/User_Ats_view';
@@ -79,7 +79,7 @@ function App() {
       />
       <Navbar userData={userProp} />
       <Routes>
-        <Route path='/' element={<HeroSection />} />
+        <Route path='/' element={<LandingPage />} />
         <Route path='/login' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
 
         <Route

@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContexts';
 import UserImage from '../assets/user.png';
 
-const Avatar = ({ userData }) => {
+const UserDropdown = ({ userData }) => {
     const navigate = useNavigate();
     const { logout } = useAuth();
     const [open, setOpen] = useState(false);
@@ -45,9 +45,9 @@ const Avatar = ({ userData }) => {
 
     if (!userData) return null;
 
-    const name = userData.userName || 'User Name';
+    const name = userData.userName || userData.name || 'User Name';
     const email = userData.email || 'user@email.com';
-    const pic = userData.picture || UserImage;
+    const pic = userData.picture || userData.img || userData.profilePicture || UserImage;
 
     /* ── shared style tokens ── */
     const radius = '16px';
@@ -72,6 +72,7 @@ const Avatar = ({ userData }) => {
                 }}
             >
                 <img
+                    key={pic}
                     src={pic}
                     onError={e => { e.target.onerror = null; e.target.src = UserImage; }}
                     alt={name}
@@ -118,6 +119,7 @@ const Avatar = ({ userData }) => {
                             }}>
                                 <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', background: '#fff' }}>
                                     <img
+                                        key={pic}
                                         src={pic}
                                         onError={e => { e.target.onerror = null; e.target.src = UserImage; }}
                                         alt={name}
@@ -358,4 +360,4 @@ const Avatar = ({ userData }) => {
     );
 };
 
-export default Avatar;
+export default UserDropdown;
