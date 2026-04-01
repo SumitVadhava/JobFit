@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,6 +8,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import { FiEye, FiX } from 'react-icons/fi';
 
 /* ─── Google Fonts ─── */
 const fontLink = document.createElement('link');
@@ -17,18 +18,18 @@ document.head.appendChild(fontLink);
 
 /* ─── Design tokens (Light Theme) ─── */
 const t = {
-  bg: '#F9FAFB',
+  bg: '#F4F6F8',
   surface: '#FFFFFF',
   card: '#FFFFFF',
-  border: '#E9D5FF',
-  borderHov: '#C084FC',
+  border: '#D1D5DB',
+  borderHov: '#9CA3AF',
   text: '#111827',
-  muted: '#6B7280',
-  accent: '#6B46C1',
-  accentDim: '#F3E8FF',
-  green: '#15803D',
-  greenDim: '#DCFCE7',
-  red: '#DC2626',
+  muted: '#4B5563',
+  accent: '#1D4ED8',
+  accentDim: '#DBEAFE',
+  green: '#047857',
+  greenDim: '#D1FAE5',
+  red: '#B91C1C',
   redDim: '#FEE2E2',
   amber: '#B45309',
   amberDim: '#FEF3C7',
@@ -70,13 +71,58 @@ const GlobalStyle = () => (
 );
 
 /* ─── Status Pill ─── */
-const StatusPill = ({ value, onChange, compact }) => {
-  const [open, setOpen] = useState(false);
+// pillId: unique id for this pill; openPillId/setOpenPillId: shared accordion state from parent
+const StatusPill = ({ pillId, value, onChange, compact, openPillId, setOpenPillId }) => {
+  const open = openPillId === pillId;
+  const btnRef = useRef(null);
+  const [flipUp, setFlipUp] = useState(false);
+  const [flipLeft, setFlipLeft] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState({});
+
+  const handleToggle = useCallback(() => {
+    if (open) {
+      setOpenPillId(null);
+    } else {
+      // Calculate and set position
+      if (btnRef.current) {
+        const rect = btnRef.current.getBoundingClientRect();
+        const dropdownHeight = 120;
+        const dropdownWidth = 140;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceRight = window.innerWidth - rect.left;
+
+        const isFlipUp = spaceBelow < dropdownHeight + 12;
+        const isFlipLeft = spaceRight < dropdownWidth + 12;
+
+        setFlipUp(isFlipUp);
+        setFlipLeft(isFlipLeft);
+
+        // Calculate exact pixel positions for fixed positioning
+        const top = isFlipUp ? rect.top - dropdownHeight - 6 : rect.bottom + 6;
+        const left = isFlipLeft ? rect.right - dropdownWidth : rect.left;
+
+        setDropdownStyle({
+          position: 'fixed',
+          top: `${top}px`,
+          left: `${left}px`,
+          zIndex: 10001,
+        });
+      }
+      setOpenPillId(pillId);
+    }
+  }, [open, pillId, setOpenPillId]);
+
   const s = STATUS[value] || STATUS.pending;
+
+  const motionInitial = flipUp ? { opacity: 0, y: 6, scale: 0.95 } : { opacity: 0, y: -6, scale: 0.95 };
+  const motionAnimate = { opacity: 1, y: 0, scale: 1 };
+  const motionExit = flipUp ? { opacity: 0, y: 6, scale: 0.95 } : { opacity: 0, y: -6, scale: 0.95 };
+
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        ref={btnRef}
+        onClick={handleToggle}
         style={{
           display: 'flex', alignItems: 'center', gap: 7,
           background: s.bg, color: s.color,
@@ -101,21 +147,23 @@ const StatusPill = ({ value, onChange, compact }) => {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -6, scale: .95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: .95 }}
+            initial={motionInitial}
+            animate={motionAnimate}
+            exit={motionExit}
             transition={{ duration: .15 }}
             style={{
-              position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 100,
+              ...dropdownStyle,
               background: t.card, border: `1px solid ${t.border}`,
               borderRadius: 10, overflow: 'hidden', minWidth: 140,
-              boxShadow: '0 12px 32px rgba(107, 70, 193, 0.1)',
+              boxShadow: '0 12px 32px rgba(107, 70, 193, 0.15)',
+              maxHeight: '90vh',
+              overflowY: 'auto',
             }}
           >
             {Object.entries(STATUS).map(([key, cfg]) => (
               <button
                 key={key}
-                onClick={() => { onChange(key); setOpen(false); }}
+                onClick={() => { onChange(key); setOpenPillId(null); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
                   width: '100%', padding: '9px 14px',
@@ -140,42 +188,42 @@ const StatusPill = ({ value, onChange, compact }) => {
 
 /* ─── Stat Card ─── */
 const StatCard = ({ icon: Icon, label, value, color, delay }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay }}
-        style={{ flex: 1, minWidth: 140 }}
+  <motion.div
+    initial={{ opacity: 0, y: 16 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.45, delay }}
+    style={{ flex: 1, minWidth: 140 }}
+  >
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 3,
+        border: '1px solid #F1F5F9',
+        bgcolor: '#FFFFFF',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        transition: 'all 0.25s ease',
+        '&:hover': { borderColor: color, boxShadow: `0 4px 16px ${color}18` },
+      }}
     >
-        <Paper
-            elevation={0}
-            sx={{
-                p: { xs: 2, sm: 2.5 },
-                borderRadius: 3,
-                border: '1px solid #F1F5F9',
-                bgcolor: '#FFFFFF',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                transition: 'all 0.25s ease',
-                '&:hover': { borderColor: color, boxShadow: `0 4px 16px ${color}18` },
-            }}
-        >
-            <Box sx={{
-                width: 44, height: 44, borderRadius: 2.5,
-                bgcolor: `${color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-                <Icon sx={{ fontSize: 22, color }} />
-            </Box>
-            <Box>
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {label}
-                </Typography>
-                <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
-                    {value}
-                </Typography>
-            </Box>
-        </Paper>
-    </motion.div>
+      <Box sx={{
+        width: 44, height: 44, borderRadius: 2.5,
+        bgcolor: `${color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon sx={{ fontSize: 22, color }} />
+      </Box>
+      <Box>
+        <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {label}
+        </Typography>
+        <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
+          {value}
+        </Typography>
+      </Box>
+    </Paper>
+  </motion.div>
 );
 
 /* ─── Search Bar ─── */
@@ -361,9 +409,10 @@ const SORTABLE_COLS = [
   { key: 'companyName', label: 'Company' },
   { key: 'date', label: 'Date Posted' },
   { key: null, label: 'Status' },
+  { key: null, label: 'Action' },
 ];
 
-const JobTable = ({ jobs, onStatusChange, loading, sortKey, sortDir, onSort }) => {
+const JobTable = ({ jobs, onStatusChange, loading, sortKey, sortDir, onSort, openPillId, setOpenPillId, onViewJob }) => {
   return (
     <div style={{
       background: t.card, border: `1px solid ${t.border}`,
@@ -407,7 +456,7 @@ const JobTable = ({ jobs, onStatusChange, loading, sortKey, sortDir, onSort }) =
               <>
                 {jobs.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ padding: '60px 20px', textAlign: 'center', color: t.muted, fontFamily: "'Inter', sans-serif", fontSize: 14 }}>
+                    <td colSpan={5} style={{ padding: '60px 20px', textAlign: 'center', color: t.muted, fontFamily: "'Inter', sans-serif", fontSize: 14 }}>
                       No jobs match the current filters.
                     </td>
                   </tr>
@@ -445,9 +494,38 @@ const JobTable = ({ jobs, onStatusChange, loading, sortKey, sortDir, onSort }) =
                       </td>
                       <td style={{ padding: '16px 20px' }}>
                         <StatusPill
+                          pillId={`table-${job._id}`}
                           value={job.adminReview}
                           onChange={(val) => onStatusChange(job._id, val)}
+                          openPillId={openPillId}
+                          setOpenPillId={setOpenPillId}
                         />
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <button
+                          onClick={() => onViewJob(job)}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            padding: '8px 16px', background: t.accent, color: '#FFFFFF',
+                            border: 'none', borderRadius: 8, cursor: 'pointer',
+                            fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: 600,
+                            transition: 'all .2s',
+                            boxShadow: `0 2px 6px ${t.accent}40`,
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = '#5A3BA6';
+                            e.currentTarget.style.boxShadow = `0 4px 12px ${t.accent}60`;
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = t.accent;
+                            e.currentTarget.style.boxShadow = `0 2px 6px ${t.accent}40`;
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
+                        >
+                          <FiEye size={16} />
+                          View
+                        </button>
                       </td>
                     </motion.tr>
                   ))}
@@ -462,7 +540,7 @@ const JobTable = ({ jobs, onStatusChange, loading, sortKey, sortDir, onSort }) =
 };
 
 /* ─── Mobile Card ─── */
-const MobileCard = ({ job, onStatusChange, index }) => (
+const MobileCard = ({ job, onStatusChange, index, openPillId, setOpenPillId, onViewJob }) => (
   <motion.div
     initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
     transition={{ duration: .3, delay: index * 0.06 }}
@@ -477,9 +555,9 @@ const MobileCard = ({ job, onStatusChange, index }) => (
       <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: t.text, fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
         {job.jobTitle}
       </span>
-      <StatusPill value={job.adminReview} onChange={val => onStatusChange(job._id, val)} compact />
+      <StatusPill pillId={`mobile-${job._id}`} value={job.adminReview} onChange={val => onStatusChange(job._id, val)} compact openPillId={openPillId} setOpenPillId={setOpenPillId} />
     </div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: t.muted, fontWeight: 500 }}>
         {job.companyName}
       </span>
@@ -487,6 +565,30 @@ const MobileCard = ({ job, onStatusChange, index }) => (
         {job.date}
       </span>
     </div>
+    <button
+      onClick={() => onViewJob(job)}
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        padding: '8px 16px', background: t.accent, color: '#FFFFFF',
+        border: 'none', borderRadius: 8, cursor: 'pointer',
+        fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: 600,
+        transition: 'all .2s', width: '100%',
+        boxShadow: `0 2px 6px ${t.accent}40`,
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = '#5A3BA6';
+        e.currentTarget.style.boxShadow = `0 4px 12px ${t.accent}60`;
+        e.currentTarget.style.transform = 'translateY(-1px)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = t.accent;
+        e.currentTarget.style.boxShadow = `0 2px 6px ${t.accent}40`;
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      <FiEye size={16} />
+      View Details
+    </button>
   </motion.div>
 );
 
@@ -500,12 +602,19 @@ const JobDescriptions = () => {
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
+  // Accordion: track which StatusPill is open (only one at a time)
+  const [openPillId, setOpenPillId] = useState(null);
+
   // Sorting state
   const [sortKey, setSortKey] = useState('date');
   const [sortDir, setSortDir] = useState('desc');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 640);
@@ -554,6 +663,16 @@ const JobDescriptions = () => {
       setSortDir('asc');
     }
     setCurrentPage(1);
+  };
+
+  const handleViewJob = (job) => {
+    setSelectedJob(job);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedJob(null);
   };
 
   const counts = {
@@ -692,7 +811,7 @@ const JobDescriptions = () => {
                       </div>
                     )
                     : paginatedJobs.map((job, i) => (
-                      <MobileCard key={job._id} job={job} onStatusChange={handleStatusChange} index={i} />
+                      <MobileCard key={job._id} job={job} onStatusChange={handleStatusChange} index={i} openPillId={openPillId} setOpenPillId={setOpenPillId} onViewJob={handleViewJob} />
                     ))
                 }
               </div>
@@ -704,6 +823,9 @@ const JobDescriptions = () => {
                 sortKey={sortKey}
                 sortDir={sortDir}
                 onSort={handleSort}
+                openPillId={openPillId}
+                setOpenPillId={setOpenPillId}
+                onViewJob={handleViewJob}
               />
             )}
 
@@ -718,6 +840,221 @@ const JobDescriptions = () => {
               />
             )}
           </motion.div>
+
+          {/* ── Job Details Modal ── */}
+          <style>{`
+            @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
+            .jd-modal-scroll::-webkit-scrollbar { width: 4px; }
+            .jd-modal-scroll::-webkit-scrollbar-track { background: transparent; }
+            .jd-modal-scroll::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.3); border-radius: 4px; }
+            .jd-glass-card { transition: box-shadow 0.25s, transform 0.25s; }
+            .jd-glass-card:hover { box-shadow: 0 0 0 1px rgba(124,58,237,0.25), 0 8px 28px rgba(124,58,237,0.1) !important; transform: translateY(-1px); }
+            .jd-chip { transition: background 0.2s, border-color 0.2s; }
+            .jd-chip:hover { background: rgba(124,58,237,0.1) !important; border-color: rgba(124,58,237,0.35) !important; }
+            .jd-btn-glow { transition: all 0.2s; }
+            .jd-btn-glow:hover { box-shadow: 0 0 20px rgba(124,58,237,0.5), 0 4px 16px rgba(124,58,237,0.35) !important; transform: translateY(-1px); }
+            .jd-btn-outline { transition: all 0.2s; }
+            .jd-btn-outline:hover { background: #F3F0FF !important; border-color: rgba(124,58,237,0.35) !important; color: #7c3aed !important; }
+            @keyframes pulse-ring { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:0.4} }
+          `}</style>
+          <AnimatePresence>
+            {isModalOpen && selectedJob && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                onClick={handleCloseModal}
+                style={{
+                  position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'rgba(15, 23, 42, 0.35)',
+                  backdropFilter: 'blur(10px)',
+                  display: 'flex', justifyContent: 'center', alignItems: 'center',
+                  zIndex: 1000, padding: '20px',
+                }}
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: 40, scale: 0.94 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 40, scale: 0.94 }}
+                  transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                  onClick={e => e.stopPropagation()}
+                  className="jd-modal-scroll"
+                  style={{
+                    width: '100%', maxWidth: 720,
+                    maxHeight: '90vh', overflowY: 'auto',
+                    borderRadius: 20,
+                    background: '#FFFFFF',
+                    border: '1px solid rgba(124,58,237,0.12)',
+                    boxShadow: '0 24px 56px rgba(15,23,42,0.14), 0 0 0 1px rgba(124,58,237,0.08)',
+                    display: 'flex', flexDirection: 'column',
+                    fontFamily: "'Sora', 'Inter', sans-serif",
+                  }}
+                >
+                  {/* ════ HERO BANNER ════ */}
+                  <div style={{
+                    position: 'relative',
+                    padding: '36px 32px 28px',
+                    background: 'linear-gradient(135deg, rgba(124,58,237,0.09) 0%, rgba(6,182,212,0.05) 60%, rgba(248,250,252,0) 100%)',
+                    borderBottom: '1px solid rgba(124,58,237,0.1)',
+                    overflow: 'hidden',
+                  }}>
+                    {/* Glow orbs */}
+                    <div style={{ position: 'absolute', top: -60, left: -40, width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                    <div style={{ position: 'absolute', bottom: -40, right: 60, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.09) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+                    {/* Close */}
+                    <button
+                      onClick={handleCloseModal}
+                      style={{
+                        position: 'absolute', top: 18, right: 18,
+                        width: 32, height: 32, borderRadius: '50%',
+                        border: '1px solid #E2E8F0',
+                        background: '#FFFFFF',
+                        color: '#64748B', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all .18s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#FEE2E2'; e.currentTarget.style.borderColor = '#FECACA'; e.currentTarget.style.color = '#DC2626'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; }}
+                    >
+                      <FiX size={14} />
+                    </button>
+
+                    {/* Title block */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                      <div style={{
+                        width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+                        background: 'rgba(124,58,237,0.08)',
+                        border: '1.5px solid rgba(124,58,237,0.2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
+                        boxShadow: '0 2px 12px rgba(124,58,237,0.12)',
+                      }}>🏢</div>
+                      <div style={{ flex: 1 }}>
+                        <h2 style={{
+                          margin: 0, fontSize: 26, fontWeight: 800,
+                          color: '#0F172A', letterSpacing: '-0.025em', lineHeight: 1.2,
+                        }}>
+                          {selectedJob.jobTitle}
+                        </h2>
+                        <p style={{ margin: '6px 0 0', fontSize: 14, color: '#64748B', fontWeight: 500 }}>
+                          {selectedJob.companyName}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* ── Pill Chips Row ── */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 22 }}>
+                      {[
+                        { icon: '💼', label: selectedJob.department },
+                        { icon: '⏱️', label: selectedJob.experience },
+                        { icon: '📍', label: selectedJob.location },
+                        { icon: '🖥️', label: selectedJob.workPlaceType },
+                        selectedJob.openings ? { icon: '👥', label: `${selectedJob.openings} Opening${selectedJob.openings !== 1 ? 's' : ''}` } : null,
+                      ].filter(Boolean).map((chip, i) => (
+                        <span key={i} className="jd-chip" style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '6px 14px', borderRadius: 999,
+                          background: 'rgba(124,58,237,0.06)',
+                          border: '1px solid rgba(124,58,237,0.15)',
+                          fontSize: 12.5, fontWeight: 600, color: '#3B0764',
+                          cursor: 'default',
+                        }}>
+                          <span style={{ fontSize: 13 }}>{chip.icon}</span>
+                          {chip.label || '—'}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* ════ CONTENT SECTIONS ════ */}
+                  <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {[
+                      { title: 'Job Description', content: selectedJob.jobDescription, glowColor: '#7c3aed', bgHead: '#F5F3FF', borderHead: '#DDD6FE' },
+                      { title: 'Responsibilities', content: selectedJob.responsibilities, glowColor: '#0891B2', bgHead: '#ECFEFF', borderHead: '#A5F3FC' },
+                      { title: 'Qualifications', content: selectedJob.qualifications, glowColor: '#9333EA', bgHead: '#FAF5FF', borderHead: '#E9D5FF' },
+                    ].filter(s => s.content).map((sec, i) => (
+                      <div key={i} className="jd-glass-card" style={{
+                        borderRadius: 16,
+                        background: '#FFFFFF',
+                        border: `1px solid ${sec.borderHead}`,
+                        borderLeft: `3px solid ${sec.glowColor}`,
+                        boxShadow: `0 2px 12px rgba(15,23,42,0.06)`,
+                        overflow: 'hidden',
+                      }}>
+                        {/* Card heading */}
+                        <div style={{
+                          padding: '12px 20px 10px',
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          borderBottom: `1px solid ${sec.borderHead}`,
+                          background: sec.bgHead,
+                        }}>
+                          <div style={{ width: 3, height: 14, borderRadius: 2, background: sec.glowColor, flexShrink: 0 }} />
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
+                            textTransform: 'uppercase', color: sec.glowColor,
+                          }}>
+                            {sec.title}
+                          </span>
+                        </div>
+                        {/* Card body */}
+                        <div style={{
+                          padding: '16px 20px',
+                          fontSize: 14, lineHeight: 1.85,
+                          color: '#374151',
+                          fontWeight: 400,
+                        }}>
+                          {sec.content}
+                        </div>
+                      </div>
+                    ))}
+
+                    {!selectedJob.jobDescription && !selectedJob.responsibilities && !selectedJob.qualifications && (
+                      <div style={{ textAlign: 'center', color: '#94A3B8', fontSize: 14, padding: '32px 0' }}>
+                        No details available for this job.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ════ BOTTOM BAR ════ */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center',
+                    flexWrap: 'wrap', gap: 16,
+                    padding: '14px 28px 18px',
+                    borderTop: '1px solid #F1F5F9',
+                    background: '#F8FAFC',
+                  }}>
+                    {/* Status */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Status</span>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 7,
+                        padding: '5px 13px', borderRadius: 999,
+                        background: STATUS[selectedJob.adminReview]?.bg || '#F3F4F6',
+                        color: STATUS[selectedJob.adminReview]?.color || '#94a3b8',
+                        border: `1px solid ${STATUS[selectedJob.adminReview]?.color || '#475569'}40`,
+                        fontSize: 12, fontWeight: 700,
+                      }}>
+                        <span style={{
+                          width: 7, height: 7, borderRadius: '50%',
+                          background: STATUS[selectedJob.adminReview]?.dot || '#64748b',
+                          animation: selectedJob.adminReview === 'pending' ? 'pulse-dot 1.5s infinite' : 'none',
+                          flexShrink: 0,
+                        }} />
+                        {STATUS[selectedJob.adminReview]?.label || 'Unknown'}
+                      </span>
+                    </div>
+                    {/* Date */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Posted</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>{selectedJob.date}</span>
+                    </div>
+                  </div>
+
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </div>
       </div>
