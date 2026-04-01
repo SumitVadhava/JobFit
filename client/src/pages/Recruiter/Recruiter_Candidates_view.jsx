@@ -14,8 +14,6 @@ import {
   Edit,
   Trash2,
   X,
-  FileText,
-  GraduationCap,
   Loader2,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
@@ -27,6 +25,8 @@ import WorkIcon from "@mui/icons-material/Work";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import PeopleIcon from "@mui/icons-material/People";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFilter } from "@fortawesome/free-solid-svg-icons";
 
 /* ─────────────────── Constants ─────────────────── */
 const ACCENT = "#9c44fe";
@@ -35,6 +35,23 @@ const HISTORY_CARD_COLORS = {
   amber: "#B45309",
   green: "#15803D",
   blue: "#2563EB",
+};
+const byPrefixAndName = {
+  far: {
+    filter: faFilter,
+  },
+};
+
+const STATUS_OPTIONS = [
+  { value: "shortlisted", label: "Shortlisted", color: "green" },
+  { value: "hired", label: "Hired", color: "indigo" },
+  { value: "rejected", label: "Rejected", color: "red" },
+];
+
+const STATUS_STYLES = {
+  green: { pill: "bg-green-50 border-green-200 text-green-700", checked: "bg-green-500 border-green-500" },
+  indigo: { pill: "bg-indigo-50 border-indigo-200 text-indigo-700", checked: "bg-indigo-500 border-indigo-500" },
+  red: { pill: "bg-red-50 border-red-200 text-red-600", checked: "bg-red-500 border-red-500" },
 };
 
 /* ─────────────── ATS Score Circle ──────────────── */
@@ -453,7 +470,7 @@ const EditJobModal = ({ job, isOpen, onClose, onUpdate }) => {
               <input
                 required
                 name="jobTitle"
-                value={formData.jobTitle}
+                value={formData.jobTitle}ta
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded-lg"
               />
@@ -676,6 +693,155 @@ const DeleteConfirmModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
   );
 };
 
+/* ─────────── Candidate Action Confirm Modal ────────── */
+const ACTION_CONFIG = {
+  shortlist: {
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="28"
+        height="28"
+        fill="currentColor"
+        viewBox="0 0 256 256"
+        className="text-green-600"
+      >
+        <path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" />
+      </svg>
+    ),
+    iconBg: "bg-green-50 border-green-100",
+    title: "Shortlist Candidate?",
+    description:
+      "This candidate will be moved to the shortlisted pool. You can hire or reject them later.",
+    confirmLabel: "Yes, Shortlist",
+    confirmClass: "bg-green-600 hover:bg-green-700 text-white",
+  },
+  reject: {
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="28"
+        height="28"
+        fill="currentColor"
+        viewBox="0 0 256 256"
+        className="text-red-600"
+      >
+        <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+      </svg>
+    ),
+    iconBg: "bg-red-50 border-red-100",
+    title: "Reject Candidate?",
+    description:
+      "This candidate will be marked as rejected. This action reflects your hiring decision.",
+    confirmLabel: "Yes, Reject",
+    confirmClass: "bg-red-600 hover:bg-red-700 text-white",
+  },
+  hire: {
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="28"
+        height="28"
+        fill="currentColor"
+        viewBox="0 0 256 256"
+        className="text-indigo-600"
+      >
+        <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z" />
+      </svg>
+    ),
+    iconBg: "bg-indigo-50 border-indigo-100",
+    title: "Hire Candidate?",
+    description:
+      "Hiring this candidate will reduce the available openings count for this job posting.",
+    confirmLabel: "Yes, Hire",
+    confirmClass: "bg-indigo-600 hover:bg-indigo-700 text-white",
+  },
+};
+
+const ConfirmActionModal = ({
+  isOpen,
+  action,
+  candidateName,
+  onCancel,
+  onConfirm,
+  isLoading,
+}) => {
+  if (!isOpen || !action) return null;
+  const cfg = ACTION_CONFIG[action] || {};
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={!isLoading ? onCancel : undefined}
+      />
+
+      {/* Card */}
+      <div className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+        {/* Header accent bar */}
+        <div
+          className={`h-1.5 rounded-t-2xl ${action === "shortlist"
+            ? "bg-green-500"
+            : action === "reject"
+              ? "bg-red-500"
+              : "bg-indigo-500"
+            }`}
+        />
+
+        <div className="p-6">
+          {/* Icon */}
+          <div
+            className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border-2 ${cfg.iconBg}`}
+          >
+            {cfg.icon}
+          </div>
+
+          {/* Title */}
+          <h3 className="text-center text-lg font-bold text-gray-900 mb-1">
+            {cfg.title}
+          </h3>
+
+          {/* Candidate name */}
+          {candidateName && (
+            <p className="text-center text-sm font-semibold text-[#9c44fe] mb-2">
+              {candidateName}
+            </p>
+          )}
+
+          {/* Description */}
+          <p className="text-center text-sm text-gray-500 leading-relaxed">
+            {cfg.description}
+          </p>
+
+          {/* Buttons */}
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isLoading}
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={isLoading}
+              className={`min-w-[130px] px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 ${cfg.confirmClass}`}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                cfg.confirmLabel
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ─────────────────── Main Component ─────────────────── */
 const CandidatesView = () => {
   const [jobs, setJobs] = useState([]);
@@ -690,9 +856,15 @@ const CandidatesView = () => {
   const [candidatesLoading, setCandidatesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [jobSearch, setJobSearch] = useState("");
-  const [sortBy, setSortBy] = useState("score-desc");
+  const [statusFilters, setStatusFilters] = useState(new Set());
   const [expandedCandidate, setExpandedCandidate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [actionLoadingKey, setActionLoadingKey] = useState("");
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    action: null,
+    candidate: null,
+  });
   const candidatesPerPage = 6;
 
   /* ── Fetch Jobs ── */
@@ -781,8 +953,8 @@ const CandidatesView = () => {
         experience: candidate.profile?.experience,
         skills: Array.isArray(candidate.profile?.skills)
           ? candidate.profile.skills.map((item) =>
-              typeof item === "string" ? item : item?.skillName,
-            )
+            typeof item === "string" ? item : item?.skillName,
+          )
           : candidate.profile?.skills,
         resumeLink: candidate.profile?.resumeLink,
       }));
@@ -895,23 +1067,102 @@ const CandidatesView = () => {
     window.open(candidate.resumeLink, "_blank", "noopener,noreferrer");
   }, []);
 
+  const openConfirmModal = useCallback(
+    (candidate, action) => {
+      const jobId = selectedJob?._id;
+      const candidateStatus = (candidate?.status || "").toLowerCase();
+
+      if (!jobId || !candidate?.applicationId) {
+        toast.error("Unable to process candidate action");
+        return;
+      }
+
+      if (action === "hire" && candidateStatus !== "shortlisted") {
+        toast.info("You must shortlist the candidate before hiring");
+        return;
+      }
+
+      setConfirmModal({ open: true, action, candidate });
+    },
+    [selectedJob?._id],
+  );
+
+  const closeConfirmModal = useCallback(() => {
+    setConfirmModal({ open: false, action: null, candidate: null });
+  }, []);
+
+  const handleCandidateAction = useCallback(
+    async (candidate, action) => {
+      const jobId = selectedJob?._id;
+      const applicationId = candidate?.applicationId;
+
+      if (!jobId || !applicationId) {
+        toast.error("Unable to process candidate action");
+        return;
+      }
+
+      const endpointMap = {
+        shortlist: `/jobs/${jobId}/candidates/${applicationId}/shortlist`,
+        reject: `/jobs/${jobId}/candidates/${applicationId}/reject`,
+        hire: `/jobs/${jobId}/candidates/${applicationId}/hire`,
+      };
+
+      const successMessageMap = {
+        shortlist: "Candidate shortlisted successfully",
+        reject: "Candidate rejected successfully",
+        hire: "Candidate hired successfully",
+      };
+
+      const endpoint = endpointMap[action];
+      if (!endpoint) return;
+
+      const loadingKey = `${applicationId}:${action}`;
+      setActionLoadingKey(loadingKey);
+      closeConfirmModal();
+
+      try {
+        const res = await api.patch(endpoint);
+        toast.success(res?.data?.message || successMessageMap[action]);
+
+        if (action === "hire") {
+          const openingsLeft = res?.data?.data?.openingsLeft;
+          if (Number.isFinite(openingsLeft)) {
+            setSelectedJob((prev) =>
+              prev ? { ...prev, openings: openingsLeft } : prev,
+            );
+            setJobs((prev) =>
+              prev.map((j) =>
+                j._id === jobId ? { ...j, openings: openingsLeft } : j,
+              ),
+            );
+          }
+        }
+
+        await fetchCandidates(jobId);
+      } catch (error) {
+        console.error(`Failed to ${action} candidate:`, error);
+        toast.error(
+          error?.response?.data?.message || `Failed to ${action} candidate`,
+        );
+      } finally {
+        setActionLoadingKey("");
+      }
+    },
+    [fetchCandidates, selectedJob?._id, closeConfirmModal],
+  );
+
   /* ── Filter & Sort Candidates ── */
-  const filtered = candidates
-    .filter(
-      (c) =>
-        searchQuery === "" ||
+  const filtered = candidates.filter(
+    (c) =>
+      (searchQuery === "" ||
         (c.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (c.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (c.qualifications || "")
           .toLowerCase()
-          .includes(searchQuery.toLowerCase()),
-    )
-    .sort((a, b) => {
-      if (sortBy === "score-desc") return (b.atsScore || 0) - (a.atsScore || 0);
-      if (sortBy === "score-asc") return (a.atsScore || 0) - (b.atsScore || 0);
-      if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
-      return 0;
-    });
+          .includes(searchQuery.toLowerCase())) &&
+      (statusFilters.size === 0 ||
+        statusFilters.has((c.status || "").toLowerCase())),
+  );
 
   const totalPages = Math.ceil(filtered.length / candidatesPerPage);
   const paginated = filtered.slice(
@@ -927,9 +1178,9 @@ const CandidatesView = () => {
   const avgScore =
     candidatesWithScore.length > 0
       ? Math.round(
-          candidatesWithScore.reduce((sum, c) => sum + c.atsScore, 0) /
-            candidatesWithScore.length,
-        )
+        candidatesWithScore.reduce((sum, c) => sum + c.atsScore, 0) /
+        candidatesWithScore.length,
+      )
       : 0;
   const topScore =
     candidatesWithScore.length > 0
@@ -978,6 +1229,18 @@ const CandidatesView = () => {
     return (
       <div className="min-h-screen bg-[#faf8ff]">
         <ToastContainer />
+
+        {/* ── Confirm Action Modal ── */}
+        <ConfirmActionModal
+          isOpen={confirmModal.open}
+          action={confirmModal.action}
+          candidateName={confirmModal.candidate?.name}
+          onCancel={closeConfirmModal}
+          onConfirm={() =>
+            handleCandidateAction(confirmModal.candidate, confirmModal.action)
+          }
+          isLoading={actionLoadingKey !== ""}
+        />
 
         {/* ── Sticky Header ── */}
         <div className="bg-white/90 backdrop-blur-md border-b border-[#9c44fe]/10 sticky top-0 z-30">
@@ -1047,11 +1310,12 @@ const CandidatesView = () => {
               </div>
             </div>
 
-            {/* Search + Sort */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <div className="relative flex-1">
+            {/* Search + Filter */}
+            <div className="flex flex-col gap-3 mt-4">
+              {/* Search bar */}
+              <div className="relative">
                 <svg
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
                   height="16"
@@ -1068,24 +1332,68 @@ const CandidatesView = () => {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all placeholder:text-slate-400"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#9c44fe]/25 focus:border-[#9c44fe]/40 transition-all placeholder:text-slate-400"
                 />
               </div>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2.5 bg-white border border-[#9c44fe]/15 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#9c44fe]/25 cursor-pointer appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239c44fe' viewBox='0 0 256 256'%3E%3Cpath d='M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 12px center",
-                  paddingRight: "36px",
-                }}
-              >
-                <option value="score-desc">Highest Score</option>
-                <option value="score-asc">Lowest Score</option>
-                <option value="name">Name (A–Z)</option>
-              </select>
+
+              {/* Checkbox filter pills */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="flex items-center gap-2 text-sm font-semibold text-gray-500 uppercase tracking-wider mr-1">
+                  <FontAwesomeIcon icon={byPrefixAndName.far["filter"]} className="text-[#9c44fe] text-sm" />
+                  Filter {"    "}
+                </span>
+
+                {STATUS_OPTIONS.map(({ value, label, color }) => {
+                  const isChecked = statusFilters.has(value);
+                  const s = STATUS_STYLES[color];
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        setStatusFilters((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(value)) next.delete(value);
+                          else next.add(value);
+                          return next;
+                        });
+                        setCurrentPage(1);
+                      }}
+                      className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 select-none ${isChecked
+                        ? `${s.pill} shadow-md scale-[1.04]`
+                        : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:shadow-sm"
+                        }`}
+                    >
+                      {/* Custom checkbox tick */}
+                      <span
+                        className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${isChecked ? s.checked : "border-gray-300 bg-white"
+                          }`}
+                      >
+                        {isChecked && (
+                          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                            <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </span>
+                      {label}
+                    </button>
+                  );
+                })}
+
+                {/* Clear button — only visible when filters active */}
+                {statusFilters.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setStatusFilters(new Set()); setCurrentPage(1); }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-dashed border-gray-300 text-sm font-medium text-gray-400 hover:border-red-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 10 10" fill="none">
+                      <path d="M1 1L9 9M9 1L1 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    </svg>
+                    Clear filters
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1202,6 +1510,10 @@ const CandidatesView = () => {
               <div className="space-y-4">
                 {paginated.map((c, i) => {
                   const isExpanded = expandedCandidate === c._id;
+                  const candidateStatus = (c.status || "").toLowerCase();
+                  const isShortlisted = candidateStatus === "shortlisted";
+                  const isHired = candidateStatus === "hired";
+                  const isRejected = candidateStatus === "rejected";
                   const initials = (c.name || "?")
                     .split(" ")
                     .map((w) => w[0])
@@ -1265,7 +1577,7 @@ const CandidatesView = () => {
                               {/* Score */}
                               <div className="shrink-0 flex flex-col items-center">
                                 {typeof c.atsScore === "number" &&
-                                Number.isFinite(c.atsScore) ? (
+                                  Number.isFinite(c.atsScore) ? (
                                   <>
                                     <AtsScoreCircle
                                       score={c.atsScore}
@@ -1319,11 +1631,10 @@ const CandidatesView = () => {
 
                             {/* Expanded Details */}
                             <div
-                              className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                                isExpanded
-                                  ? "max-h-[400px] opacity-100 mt-4"
-                                  : "max-h-0 opacity-0 mt-0"
-                              }`}
+                              className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded
+                                ? "max-h-[400px] opacity-100 mt-4"
+                                : "max-h-0 opacity-0 mt-0"
+                                }`}
                             >
                               <div className="space-y-3">
                                 {c.experience && (
@@ -1414,31 +1725,127 @@ const CandidatesView = () => {
                                 </button>
                               )}
 
-                              <button className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-green-600 border border-green-200 bg-white hover:bg-green-50 transition-all duration-300 active:scale-[0.97]">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="15"
-                                  height="15"
-                                  fill="currentColor"
-                                  viewBox="0 0 256 256"
-                                >
-                                  <path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34Z" />
-                                </svg>
-                                Shortlist
-                              </button>
+                              {!isShortlisted && !isHired && !isRejected && (
+                                <>
+                                  <button
+                                    onClick={() =>
+                                      openConfirmModal(c, "shortlist")
+                                    }
+                                    disabled={
+                                      actionLoadingKey ===
+                                      `${c.applicationId}:shortlist`
+                                    }
+                                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-green-600 border border-green-200 bg-white hover:bg-green-50 transition-all duration-300 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="15"
+                                      height="15"
+                                      fill="currentColor"
+                                      viewBox="0 0 256 256"
+                                    >
+                                      <path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34Z" />
+                                    </svg>
+                                    {actionLoadingKey ===
+                                      `${c.applicationId}:shortlist`
+                                      ? "Shortlisting..."
+                                      : "Shortlist"}
+                                  </button>
 
-                              <button className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 bg-white hover:bg-red-50 transition-all duration-300 active:scale-[0.97]">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="15"
-                                  height="15"
-                                  fill="currentColor"
-                                  viewBox="0 0 256 256"
-                                >
-                                  <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
-                                </svg>
-                                Reject
-                              </button>
+                                  <button
+                                    onClick={() =>
+                                      openConfirmModal(c, "reject")
+                                    }
+                                    disabled={
+                                      actionLoadingKey ===
+                                      `${c.applicationId}:reject`
+                                    }
+                                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 bg-white hover:bg-red-50 transition-all duration-300 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="15"
+                                      height="15"
+                                      fill="currentColor"
+                                      viewBox="0 0 256 256"
+                                    >
+                                      <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+                                    </svg>
+                                    {actionLoadingKey ===
+                                      `${c.applicationId}:reject`
+                                      ? "Rejecting..."
+                                      : "Reject"}
+                                  </button>
+                                </>
+                              )}
+
+                              {isShortlisted && (
+                                <>
+                                  <span className="inline-flex items-center rounded-xl px-4 py-2.5 text-sm font-semibold bg-green-50 text-green-700 border border-green-200">
+                                    Shortlisted
+                                  </span>
+
+                                  <button
+                                    onClick={() =>
+                                      openConfirmModal(c, "reject")
+                                    }
+                                    disabled={
+                                      actionLoadingKey ===
+                                      `${c.applicationId}:reject`
+                                    }
+                                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 bg-white hover:bg-red-50 transition-all duration-300 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="15"
+                                      height="15"
+                                      fill="currentColor"
+                                      viewBox="0 0 256 256"
+                                    >
+                                      <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+                                    </svg>
+                                    {actionLoadingKey ===
+                                      `${c.applicationId}:reject`
+                                      ? "Rejecting..."
+                                      : "Reject"}
+                                  </button>
+
+                                  <button
+                                    onClick={() => openConfirmModal(c, "hire")}
+                                    disabled={
+                                      actionLoadingKey ===
+                                      `${c.applicationId}:hire`
+                                    }
+                                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-indigo-600 border border-indigo-200 bg-white hover:bg-indigo-50 transition-all duration-300 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="15"
+                                      height="15"
+                                      fill="currentColor"
+                                      viewBox="0 0 256 256"
+                                    >
+                                      <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z" />
+                                    </svg>
+                                    {actionLoadingKey ===
+                                      `${c.applicationId}:hire`
+                                      ? "Hiring..."
+                                      : "Hire"}
+                                  </button>
+                                </>
+                              )}
+
+                              {isHired && (
+                                <span className="inline-flex items-center rounded-xl px-4 py-2.5 text-sm font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                  Hired
+                                </span>
+                              )}
+
+                              {isRejected && (
+                                <span className="inline-flex items-center rounded-xl px-4 py-2.5 text-sm font-semibold bg-red-50 text-red-700 border border-red-200">
+                                  Rejected
+                                </span>
+                              )}
 
                               <button
                                 onClick={() =>
@@ -1446,11 +1853,10 @@ const CandidatesView = () => {
                                     isExpanded ? null : c._id,
                                   )
                                 }
-                                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-300 ml-auto ${
-                                  isExpanded
-                                    ? "text-[#9c44fe] bg-[#9c44fe]/5 border-[#9c44fe]/20"
-                                    : "text-gray-400 bg-white border-gray-200 hover:border-gray-300 hover:text-gray-600"
-                                }`}
+                                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-300 ml-auto ${isExpanded
+                                  ? "text-[#9c44fe] bg-[#9c44fe]/5 border-[#9c44fe]/20"
+                                  : "text-gray-400 bg-white border-gray-200 hover:border-gray-300 hover:text-gray-600"
+                                  }`}
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1500,10 +1906,10 @@ const CandidatesView = () => {
                         style={
                           currentPage === p
                             ? {
-                                background: ACCENT,
-                                color: "white",
-                                boxShadow: `0 4px 14px ${ACCENT}40`,
-                              }
+                              background: ACCENT,
+                              color: "white",
+                              boxShadow: `0 4px 14px ${ACCENT}40`,
+                            }
                             : { color: "#9ca3af" }
                         }
                       >
@@ -1584,7 +1990,6 @@ const CandidatesView = () => {
             </div>
           </div>
 
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <HistoryStatCard
               label="Total Jobs"
