@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContexts";
 import api from "../../api/api";
+import { RecruiterSkeletonProfilePage } from "../../components/recruiter/RecruiterSkeletons";
 
 /* ── Inline Icon helper ─────────────────────────────────────── */
 const Ic = ({ d, size = 16 }) => (
@@ -317,14 +318,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
 
   /* ── Loading State ────────────────────────────────────────── */
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
-          <p className="text-lg font-medium text-gray-600 animate-pulse">Loading profile...</p>
-        </div>
-      </div>
-    );
+    return <RecruiterSkeletonProfilePage />;
   }
 
   /* ── Error State ──────────────────────────────────────────── */
@@ -435,8 +429,10 @@ const Recruiter_Profile_view = ({ userProp }) => {
                   >
                     {saving ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Saving...
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-white/90 animate-pulse" />
+                          <span>Saving...</span>
+                        </span>
                       </>
                     ) : (
                       <>
@@ -694,7 +690,10 @@ const Recruiter_Profile_view = ({ userProp }) => {
               <label className="flex flex-col items-center justify-center gap-2 h-24 border-2 border-dashed border-slate-300 hover:border-blue-400 bg-slate-50 hover:bg-blue-50 rounded-xl cursor-pointer transition-all text-slate-400 hover:text-blue-500">
                 <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
                 {uploading ? (
-                  <div className="anim-spin w-6 h-6 border-2 border-slate-200 border-t-blue-500 rounded-full" />
+                  <span className="inline-flex items-center gap-1.5 text-slate-600 text-sm font-medium">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                    Uploading...
+                  </span>
                 ) : (
                   <>
                     <Ic d={ICONS.upload} size={22} />

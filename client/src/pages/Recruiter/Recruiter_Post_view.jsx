@@ -14,7 +14,6 @@ import {
   GraduationCap,
   ListChecks,
   Send,
-  Loader2,
   ChevronDown,
   CheckCircle2,
   AlertCircle,
@@ -482,26 +481,51 @@ const Recruiter_Post_view = () => {
                 />
               </InputWrapper>
 
-              {/* Image URL */}
+              {/* Image Upload */}
               <InputWrapper
-                label="Company Logo URL"
+                label="Company Logo"
                 icon={Image}
                 error={errors.img}
                 isFocused={focusedField === "img"}
                 isFilled={!!formData.img}
               >
                 <input
-                  name="img"
-                  value={formData.img}
-                  onChange={handleChange}
+                  key={formData.img ? "has-file" : "empty"}
+                  type="file"
+                  accept="image/jpeg, image/png, image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      // Validate file type
+                      const validTypes = ["image/jpeg", "image/png", "image/webp"];
+                      if (!validTypes.includes(file.type)) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          img: "Only JPG, PNG, and WEBP formats are allowed.",
+                        }));
+                        setFormData((prev) => ({ ...prev, img: "" }));
+                        return;
+                      }
+
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData((prev) => ({ ...prev, img: reader.result }));
+                        setErrors((prev) => ({ ...prev, img: "" }));
+                      };
+                      reader.readAsDataURL(file);
+                    } else {
+                      setFormData((prev) => ({ ...prev, img: "" }));
+                    }
+                  }}
                   onFocus={() => handleFocus("img")}
                   onBlur={handleBlur}
-                  placeholder="https://example.com/logo.png"
-                  className={getInputClass(
-                    !!errors.img,
-                    focusedField === "img",
-                    !!formData.img
-                  )}
+                  className={
+                    getInputClass(
+                      !!errors.img,
+                      focusedField === "img",
+                      !!formData.img
+                    ) + " file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                  }
                 />
               </InputWrapper>
             </div>
@@ -646,8 +670,10 @@ const Recruiter_Post_view = () => {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>Publishing...</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-white/90 animate-pulse" />
+                      <span>Publishing...</span>
+                    </span>
                   </>
                 ) : (
                   <>
