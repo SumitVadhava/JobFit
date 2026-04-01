@@ -14,6 +14,7 @@ const jobSchema = new mongoose.Schema(
     },
     openings: {
       type: Number,
+      min: 0,
       required: true,
     },
     jobTitle: {

@@ -24,7 +24,7 @@ const notificationSchema = new mongoose.Schema(
     },
     outcome: {
       type: String,
-      enum: ["selected", "not_selected"],
+      enum: ["selected", "not_selected", "shortlisted", "rejected"],
       required: true,
     },
     title: {
