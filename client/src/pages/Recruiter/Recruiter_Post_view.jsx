@@ -14,7 +14,6 @@ import {
   GraduationCap,
   ListChecks,
   Send,
-  Loader2,
   ChevronDown,
   CheckCircle2,
   AlertCircle,
