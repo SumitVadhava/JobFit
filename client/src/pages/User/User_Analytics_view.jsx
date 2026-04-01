@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import api from "../../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Skeleton from "../../components/Skeleton";
 
 import {
   Bookmark,
@@ -303,16 +304,90 @@ function UserAnalytics() {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 border-4 rounded-full animate-spin"
-            style={{ borderColor: "#f3e8ff", borderTopColor: ACCENT }}
-          />
-          <p className="text-base font-medium text-gray-400 animate-pulse">
-            Loading your analytics...
-          </p>
-        </div>
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#faf5ff_0%,_#ffffff_48%)]">
+        <main className="min-w-0">
+          <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-8">
+            {/* Header Skeleton */}
+            <div className="flex items-start sm:items-center justify-between gap-4">
+              <div>
+                <Skeleton variant="title" className="h-8 w-48 mb-2" />
+                <Skeleton variant="text" className="h-4 w-64" />
+              </div>
+              <Skeleton className="h-6 w-24 rounded-full hidden sm:block" />
+            </div>
+
+            {/* Profile Progress Skeleton */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+              <div className="flex justify-between mb-3">
+                <Skeleton variant="title" className="h-5 w-32" />
+                <Skeleton variant="text" className="h-5 w-12" />
+              </div>
+              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <Skeleton className="w-1/2 h-full" />
+              </div>
+              <Skeleton variant="text" className="h-3 w-64 mt-3" />
+            </div>
+
+            {/* Stat Cards Skeleton */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4">
+                  <Skeleton variant="circle" className="h-11 w-11 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton variant="text" className="h-3 w-16" />
+                    <Skeleton variant="text" className="h-6 w-10" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ATS History Skeleton */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm">
+              <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 mb-5">
+                <div>
+                  <Skeleton variant="title" className="h-6 w-32 mb-2" />
+                  <Skeleton variant="text" className="h-3 w-64" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-32 rounded-xl" />
+                  <Skeleton className="h-6 w-24 rounded-xl" />
+                </div>
+              </div>
+              <div className="space-y-4 py-8">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-gray-100">
+                    <Skeleton variant="circle" className="h-11 w-11 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton variant="text" className="h-4 w-40" />
+                      <Skeleton variant="text" className="h-3 w-32" />
+                    </div>
+                    <Skeleton className="h-5 w-16 rounded-full hidden sm:block" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Applications Skeleton */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <Skeleton variant="title" className="h-6 w-40" />
+                <Skeleton variant="text" className="h-4 w-16 hidden sm:block" />
+              </div>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100">
+                    <Skeleton variant="circle" className="h-10 w-10 shrink-0" />
+                    <div className="flex-1">
+                      <Skeleton variant="text" className="h-4 w-32 mb-1.5" />
+                      <Skeleton variant="text" className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-5 w-16 rounded-full hidden sm:block" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
