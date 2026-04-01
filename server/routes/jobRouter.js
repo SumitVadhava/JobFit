@@ -257,6 +257,88 @@ router.patch(
 
 /**
  * @swagger
+ * /api/jobs/{jobId}/candidates/{applicationId}/shortlist:
+ *   patch:
+ *     summary: Shortlist a candidate for a recruiter-owned job
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Job document ID owned by logged-in recruiter
+ *       - in: path
+ *         name: applicationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Application document ID from applied_jobs
+ *     responses:
+ *       200:
+ *         description: Candidate shortlisted successfully
+ *       400:
+ *         description: Invalid ids
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - recruiter role required
+ *       404:
+ *         description: Job or application not found
+ *       409:
+ *         description: Invalid status transition
+ */
+router.patch(
+  "/:jobId/candidates/:applicationId/shortlist",
+  authorizeRole(ROLES.RECRUITER),
+  jobController.shortlistCandidateForJob,
+);
+
+/**
+ * @swagger
+ * /api/jobs/{jobId}/candidates/{applicationId}/reject:
+ *   patch:
+ *     summary: Reject a candidate for a recruiter-owned job
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Job document ID owned by logged-in recruiter
+ *       - in: path
+ *         name: applicationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Application document ID from applied_jobs
+ *     responses:
+ *       200:
+ *         description: Candidate rejected successfully
+ *       400:
+ *         description: Invalid ids
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - recruiter role required
+ *       404:
+ *         description: Job or application not found
+ *       409:
+ *         description: Invalid status transition
+ */
+router.patch(
+  "/:jobId/candidates/:applicationId/reject",
+  authorizeRole(ROLES.RECRUITER),
+  jobController.rejectCandidateForJob,
+);
+
+/**
+ * @swagger
  * /api/jobs/admin/candidates/unique-count:
  *   get:
  *     summary: Get total unique candidates across all jobs (admin)

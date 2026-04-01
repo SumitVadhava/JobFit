@@ -10,7 +10,6 @@ import {
   CircleDot,
   Rocket,
   Sparkles,
-  Star,
   Users,
 } from "lucide-react";
 
@@ -25,35 +24,41 @@ import {
 
 const AdminAnalytics = () => {
   const [jobs, setJobs] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [applicationStats, setApplicationStats] = useState({ applicants: 0, shortlisted: 0, hired: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
+        
+        // Fetch jobs
         const jobsRes = await api.get("/admin/jobs");
         const fetchedJobs = jobsRes.data.data || [];
-        // Sort by createdAt descending to show most recent first
         const sortedJobs = [...fetchedJobs].sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
         setJobs(sortedJobs);
+        
+        // Fetch companies
+        const companiesRes = await api.get("/admin/companies");
+        setCompanies(companiesRes.data.data || []);
+        
+        // Fetch application stats
+        const statsRes = await api.get("/admin/application-stats");
+        setApplicationStats(statsRes.data.data || { applicants: 0, shortlisted: 0, hired: 0 });
+        
       } catch (err) {
-        console.error("Error loading jobs:", err);
-        toast.error("Failed to load jobs");
+        console.error("Error loading data:", err);
+        toast.error("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJobs();
+    fetchData();
   }, []);
-
-  const staticStats = {
-    applicants: 148,
-    shortlisted: 37,
-    hired: 16,
-  };
 
   if (loading) {
     return (
@@ -103,29 +108,29 @@ const AdminAnalytics = () => {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
+              label="Total Companies"
+              value={companies.length}
+              color={ACCENT}
+              delay={0}
+              icon={Building2}
+            />
+            <StatCard
               label="Total Jobs"
               value={jobs.length}
               color={ACCENT}
-              delay={0}
+              delay={0.1}
               icon={Briefcase}
             />
             <StatCard
               label="Applicants"
-              value={staticStats.applicants}
+              value={applicationStats.applicants}
               color={ACCENT}
-              delay={0.1}
+              delay={0.2}
               icon={Users}
             />
             <StatCard
-              label="Shortlisted"
-              value={staticStats.shortlisted}
-              color={ACCENT}
-              delay={0.2}
-              icon={Star}
-            />
-            <StatCard
               label="Hired"
-              value={staticStats.hired}
+              value={applicationStats.hired}
               color={ACCENT}
               delay={0.3}
               icon={Rocket}

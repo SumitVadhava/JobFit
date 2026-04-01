@@ -1,6 +1,7 @@
 const AdminDashboard = require("../models/adminDashboard");
 const Login = require("../models/login");
 const Job = require("../models/jobs");
+const AppliedJob = require("../models/appliedJobs");
 const mongoose = require("mongoose");
 
 exports.getDashboardData = async (req, res) => {
@@ -194,6 +195,21 @@ exports.getCompaniesData = async (req, res) => {
     res
       .status(200)
       .json({ error: false, message: "Operation successful", data: companies });
+  } catch (error) {
+    res.status(500).json({ error: true, message: "Server error", data: null });
+  }
+};
+
+exports.getApplicationStats = async (req, res) => {
+  try {
+    const applicants = await AppliedJob.countDocuments({ status: "applied" });
+    const shortlisted = await AppliedJob.countDocuments({ status: "shortlisted" });
+    const hired = await AppliedJob.countDocuments({ status: "hired" });
+    res.status(200).json({
+      error: false,
+      message: "Operation successful",
+      data: { applicants, shortlisted, hired }
+    });
   } catch (error) {
     res.status(500).json({ error: true, message: "Server error", data: null });
   }

@@ -67,7 +67,7 @@ const googleAddLoginController = async (req, res) => {
         userModel: "google_logins",
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN },
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" },
     );
 
     if (!token)
