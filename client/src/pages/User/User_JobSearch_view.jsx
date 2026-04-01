@@ -8,10 +8,10 @@ import { Briefcase } from "lucide-react";
 
 const getStatusConfig = (status) => {
   switch (status?.toLowerCase()) {
-    case "applied": return { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500", label: "Applied", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg> };
-    case "shortlisted": return { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", dot: "bg-purple-500", label: "Shortlisted", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> };
-    case "hired": return { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500", label: "Hired", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> };
-    case "rejected": return { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", label: "Rejected", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> };
+    case "applied": return { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500", label: "Applied", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg> };
+    case "shortlisted": return { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", dot: "bg-purple-500", label: "Shortlisted", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> };
+    case "hired": return { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500", label: "Hired", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg> };
+    case "rejected": return { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", label: "Rejected", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg> };
     default: return { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200", dot: "bg-gray-500", label: "Applied", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> };
   }
 };
@@ -127,7 +127,7 @@ const JobSearch = () => {
 
       const profileRes = await api.get("/profile").catch(() => null);
       const profile = profileRes?.data?.profile;
-      
+
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
 
@@ -153,7 +153,7 @@ const JobSearch = () => {
           return next;
         });
         setTimeout(() => {
-          navigate("/user/profile");
+          navigate("/candidate/profile");
         }, 1500);
         return;
       }
@@ -806,11 +806,10 @@ const JobSearch = () => {
                             {/* Bookmark Button */}
                             <button
                               onClick={() => handleBookMarkClick(job._id)}
-                              className={`shrink-0 p-3 rounded-2xl transition-all duration-300 ${
-                                isBookmarked
+                              className={`shrink-0 p-3 rounded-2xl transition-all duration-300 ${isBookmarked
                                   ? "text-blue-600 bg-blue-50 shadow-md shadow-blue-100 hover:bg-blue-100 scale-110"
                                   : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"
-                              }`}
+                                }`}
                               aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
                             >
                               <svg
@@ -912,12 +911,12 @@ const JobSearch = () => {
                               ${!appliedJobs[job._id]
                                 ? "bg-gray-900 hover:bg-gray-800 text-white hover:shadow-xl hover:shadow-gray-900/25"
                                 : appliedJobs[job._id] === "rejected"
-                                ? "bg-red-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
-                                : appliedJobs[job._id] === "shortlisted"
-                                ? "bg-purple-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
-                                : appliedJobs[job._id] === "hired"
-                                ? "bg-green-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
-                                : "bg-blue-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                  ? "bg-red-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                  : appliedJobs[job._id] === "shortlisted"
+                                    ? "bg-purple-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                    : appliedJobs[job._id] === "hired"
+                                      ? "bg-green-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                      : "bg-blue-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
                               }
                               ${applyingJobs.has(job._id) ? "opacity-75 cursor-wait" : ""}
                             `}

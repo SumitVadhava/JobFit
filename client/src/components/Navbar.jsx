@@ -131,44 +131,14 @@ const NavShortcutItem = ({
                                 setIsOpen(false);
                             }}
                         >
-                            {/* Flex container to place label left and keep content neat */}
-                            <div className="flex items-center justify-between">
-                                <span>{item.label}</span>
+                            <div className="flex items-center justify-between gap-4">
+                                <span className="whitespace-nowrap">{item.label}</span>
+                                {item.shortcut && (
+                                    <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 group-hover:border-purple-200 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors whitespace-nowrap">
+                                        {item.shortcut}
+                                    </span>
+                                )}
                             </div>
-
-                            {/* Hover Tooltip styled identically but flying out to the right */}
-                            {item.shortcut && (
-                                <span
-                                    className="absolute top-1/2 left-[105%] -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 ease-in pointer-events-none hidden md:block"
-                                    style={{
-                                        background: "#1e0a3c",
-                                        color: "#fff",
-                                        fontSize: "11px",
-                                        fontWeight: 600,
-                                        padding: "3px 8px",
-                                        borderRadius: "6px",
-                                        whiteSpace: "nowrap",
-                                        zIndex: 100,
-                                        boxShadow: "0 2px 8px rgba(0,0,0,.18)",
-                                        letterSpacing: ".03em",
-                                    }}
-                                >
-                                    {item.shortcut}
-                                    <span
-                                        style={{
-                                            position: "absolute",
-                                            top: "50%",
-                                            left: "-5px",
-                                            transform: "translateY(-50%)",
-                                            width: 0,
-                                            height: 0,
-                                            borderTop: "5px solid transparent",
-                                            borderBottom: "5px solid transparent",
-                                            borderRight: "5px solid #1e0a3c",
-                                        }}
-                                    />
-                                </span>
-                            )}
                         </NavLink>
                     ))}
                 </div>
