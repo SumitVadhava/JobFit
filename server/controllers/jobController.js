@@ -227,8 +227,8 @@ exports.getAllJobs = async (req, res) => {
       principal.role === ROLES.CANDIDATE || principal.role === ROLES.USER;
 
     const jobs = isUserFacingRole
-      ? await Job.find({ openings: { $gt: 0 } })
-      : await Job.find({});
+      ? await Job.find({ openings: { $gt: 0 } }).sort({ createdAt: -1 })
+      : await Job.find({}).sort({ createdAt: -1 });
 
     res.status(200).json({ message: "Jobs retrieved successfully", jobs });
   } catch (error) {
@@ -429,7 +429,9 @@ exports.getRecruiterOwnJobs = async (req, res) => {
       });
     }
 
-    const jobs = await Job.find(buildRecruiterOwnershipFilter(principal));
+    const jobs = await Job.find(buildRecruiterOwnershipFilter(principal)).sort({
+      createdAt: -1,
+    });
 
     return res.status(200).json({
       message: "Recruiter jobs retrieved successfully",

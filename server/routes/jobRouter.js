@@ -238,6 +238,41 @@ router.get(
  *     responses:
  *       200:
  *         description: Candidate hired successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Candidate hired successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     jobId:
+ *                       type: string
+ *                       example: 69ccdaa8a27df422df97895d
+ *                     applicationId:
+ *                       type: string
+ *                       example: 69cce447eafdb0789f73e9f3
+ *                     openingsLeft:
+ *                       type: number
+ *                       example: 4
+ *                     isHired:
+ *                       type: boolean
+ *                       example: true
+ *                     removedUnhiredApplications:
+ *                       type: number
+ *                       example: 0
+ *                     notifications:
+ *                       type: object
+ *                       properties:
+ *                         selectedCandidateNotified:
+ *                           type: boolean
+ *                           example: true
+ *                         notSelectedCandidatesNotified:
+ *                           type: number
+ *                           example: 0
  *       400:
  *         description: Invalid ids
  *       401:
@@ -279,6 +314,36 @@ router.patch(
  *     responses:
  *       200:
  *         description: Candidate shortlisted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Candidate shortlisted successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     jobId:
+ *                       type: string
+ *                       example: 69ccdaa8a27df422df97895d
+ *                     applicationId:
+ *                       type: string
+ *                       example: 69cce447eafdb0789f73e9f3
+ *                     status:
+ *                       type: string
+ *                       enum: [applied, shortlisted, rejected, hired]
+ *                       example: shortlisted
+ *                     notifications:
+ *                       type: object
+ *                       properties:
+ *                         sent:
+ *                           type: boolean
+ *                           example: true
+ *                         outcome:
+ *                           type: string
+ *                           example: shortlisted
  *       400:
  *         description: Invalid ids
  *       401:
@@ -320,6 +385,36 @@ router.patch(
  *     responses:
  *       200:
  *         description: Candidate rejected successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Candidate rejected successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     jobId:
+ *                       type: string
+ *                       example: 69ccdaa8a27df422df97895d
+ *                     applicationId:
+ *                       type: string
+ *                       example: 69cce447eafdb0789f73e9f3
+ *                     status:
+ *                       type: string
+ *                       enum: [applied, shortlisted, rejected, hired]
+ *                       example: rejected
+ *                     notifications:
+ *                       type: object
+ *                       properties:
+ *                         sent:
+ *                           type: boolean
+ *                           example: true
+ *                         outcome:
+ *                           type: string
+ *                           example: rejected
  *       400:
  *         description: Invalid ids
  *       401:
