@@ -453,7 +453,7 @@ const EditJobModal = ({ job, isOpen, onClose, onUpdate }) => {
               <input
                 required
                 name="jobTitle"
-                value={formData.jobTitle}
+                value={formData.jobTitle}ta
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded-lg"
               />

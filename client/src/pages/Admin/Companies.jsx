@@ -379,49 +379,58 @@ const CompanyTable = ({ companies, loading, sortKey, sortDir, onSort }) => (
 
 
 
-const CompanyCard = ({ co, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.4, delay: index * 0.05 }}
-    className="group bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 relative"
-  >
-    {/* Jobs Badge */}
-    <div className="absolute top-4 right-4 bg-purple-50 text-purple-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border border-purple-100/50 shadow-sm">
-      {co.totalJobs} Jobs
-    </div>
+const CompanyCard = ({ co, index }) => {
+  const [imgError, setImgError] = React.useState(false);
 
-    <div className="p-6">
-      <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0 group-hover:bg-purple-100 transition-colors overflow-hidden">
-          {co.logo ? (
-            <img src={co.logo} alt={co.companyName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-          ) : (
-            <span className="text-2xl font-black text-purple-600">
-              {co.companyName.charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
-        <div className="min-w-0 pr-12">
-          <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-700 transition-colors truncate">
-            {co.companyName}
-          </h3>
-          <p className="text-xs text-gray-400 font-medium mt-1">
-            Active since: {co.lastPostedLabel}
-          </p>
-        </div>
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+      className="group bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 relative"
+    >
+      {/* Jobs Badge */}
+      <div className="absolute top-4 right-4 bg-purple-50 text-purple-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border border-purple-100/50 shadow-sm">
+        {co.totalJobs} Jobs
       </div>
 
-      <div className="mt-8 pt-6 border-t border-gray-50">
-        <div className="grid grid-cols-3 gap-3">
-          <StatusBadge count={co.reviewed} label="Reviewed" bg={t.greenDim} color={t.green} />
-          <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />
-          <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />
+      <div className="p-6">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0 group-hover:bg-purple-100 transition-colors overflow-hidden">
+            {co.logo && !imgError ? (
+              <img 
+                src={co.logo} 
+                alt={co.companyName} 
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <span className="text-2xl font-black text-purple-600">
+                {co.companyName.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0 pr-12">
+            <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-700 transition-colors truncate">
+              {co.companyName}
+            </h3>
+            <p className="text-xs text-gray-400 font-medium mt-1">
+              Active since: {co.lastPostedLabel}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-gray-50">
+          <div className="grid grid-cols-3 gap-3">
+            <StatusBadge count={co.reviewed} label="Reviewed" bg={t.greenDim} color={t.green} />
+            <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />
+            <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />
+          </div>
         </div>
       </div>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 
 /* ─── Main Component ─── */
@@ -455,7 +464,6 @@ const Companies = () => {
       setLoading(true);
       const res = await api.get('/admin/jobs');
       const raw = res.data?.data || res.data || [];
-      console.log(raw);
       setJobsData(raw);
     } catch {
       toast.error('Failed to load data');
@@ -469,9 +477,23 @@ const Companies = () => {
   jobsData.forEach(job => {
     const name = job.companyName || 'Unknown';
     if (!companiesMap[name]) {
-      companiesMap[name] = { companyName: name, totalJobs: 0, pending: 0, reviewed: 0, risky: 0, lastPosted: 0 };
+      companiesMap[name] = { 
+        companyName: name, 
+        totalJobs: 0, 
+        pending: 0, 
+        reviewed: 0, 
+        risky: 0, 
+        lastPosted: 0,
+        logo: job.img || job.logo || null // Capture logo from job record
+      };
     }
     const c = companiesMap[name];
+    
+    // Update logo if current is null but job has one
+    if (!c.logo && (job.img || job.logo)) {
+      c.logo = job.img || job.logo;
+    }
+
     c.totalJobs += 1;
     const status = job.adminReview || 'pending';
     if (status === 'reviewed') c.reviewed += 1;
