@@ -13,9 +13,29 @@ const NavShortcutItem = ({
     userRole,
     location,
     onClick,
+    dropdown
 }) => {
     const [hovered, setHovered] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
     const navigate = useNavigate();
+
+    const activeDropdownItem = dropdown?.find(d => location.pathname === d.href);
+    const displayLabel = activeDropdownItem ? activeDropdownItem.label : label;
+    const activeHref = activeDropdownItem ? activeDropdownItem.href : to;
+
+    // The items to show in the dropdown (excluding the currently active one)
+    const visibleDropdownItems = dropdown?.filter(d => d.href !== activeHref);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const handleClick = (e) => {
         if (to.startsWith("#")) {
@@ -53,25 +73,69 @@ const NavShortcutItem = ({
 
     return (
         <li
-            className="w-full md:w-auto"
-            style={{ position: "relative", listStyle: "none" }}
+            className="w-full md:w-auto relative"
+            style={{ listStyle: "none" }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
+            ref={dropdownRef}
         >
-            <NavLink
-                to={to}
-                onClick={handleClick}
-                className={({ isActive }) => {
-                    const isActuallyActive =
-                        userRole !== "default" && (isActive || location.hash === to);
-                    return `flex items-center justify-center px-2 md:px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${isActuallyActive
+            {dropdown ? (
+                <div
+                    className={`flex items-center justify-between md:justify-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${(userRole !== "default" && (location.pathname === activeHref || location.hash === activeHref || dropdown.some(d => location.pathname === d.href)))
                         ? "text-[#9b44fe] bg-gray-100 shadow-sm"
                         : "text-gray-700 hover:text-[#9b44fe] hover:bg-gray-100"
-                        }`;
-                }}
-            >
-                {label}
-            </NavLink>
+                        }`}
+                >
+                    <NavLink
+                        to={activeHref}
+                        onClick={handleClick}
+                        className="flex-1 py-2 pl-4 md:pl-4 pr-1 md:pr-1 text-left md:text-center shrink-0 min-w-16"
+                    >
+                        {displayLabel}
+                    </NavLink>
+                    <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsOpen(!isOpen); }}
+                        className="py-2 pr-4 pl-2 focus:outline-none flex items-center justify-center shrink-0 border-l border-transparent hover:bg-gray-200/50 rounded-r-lg"
+                    >
+                        <svg className={`w-4 h-4 transition-transform duration-250 ${isOpen ? "rotate-180 text-[#9b44fe]" : "text-gray-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
+            ) : (
+                <NavLink
+                    to={activeHref}
+                    onClick={handleClick}
+                    className={({ isActive }) => {
+                        const isActuallyActive =
+                            userRole !== "default" && (isActive || location.hash === activeHref);
+                        return `flex items-center justify-center px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${isActuallyActive
+                            ? "text-[#9b44fe] bg-gray-100 shadow-sm"
+                            : "text-gray-700 hover:text-[#9b44fe] hover:bg-gray-100"
+                            }`;
+                    }}
+                >
+                    {displayLabel}
+                </NavLink>
+            )}
+
+            {dropdown && isOpen && (
+                <div className="md:absolute static top-full left-1/2 md:-translate-x-1/2 w-full md:w-56 bg-white md:rounded-2xl md:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border-l-2 md:border-l-0 md:border border-purple-200 md:border-gray-100 py-2 mt-2 md:mt-1 z-50 animate-in fade-in md:slide-in-from-top-2 ml-4 md:ml-0">
+                    {visibleDropdownItems.map((item, idx) => (
+                        <NavLink
+                            key={idx}
+                            to={item.href}
+                            className={({ isActive }) => `block px-5 py-2.5 text-base font-medium transition-colors ${isActive ? "text-[#9b44fe] bg-purple-50" : "text-gray-600 hover:text-[#9b44fe] hover:bg-purple-50/50"}`}
+                            onClick={(e) => {
+                                if (onClick) onClick(e);
+                                setIsOpen(false);
+                            }}
+                        >
+                            {item.label}
+                        </NavLink>
+                    ))}
+                </div>
+            )}
             {shortcut && hovered && (
                 <span
                     style={{
@@ -141,8 +205,16 @@ const Navbar = ({ userData }) => {
                 href: "/candidate/best-resumes",
                 shortcut: "Ctrl + BR",
             },
-            { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
-            { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+            {
+                label: "Jobs",
+                href: "/candidate/job-search",
+                shortcut: "Ctrl + J",
+                dropdown: [
+                    { label: "Jobs", href: "/candidate/job-search" },
+                    { label: "Saved Jobs", href: "/candidate/saved-jobs" },
+                    { label: "Applied Jobs", href: "/candidate/applied-jobs" }
+                ]
+            },
         ],
         user: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
@@ -152,8 +224,16 @@ const Navbar = ({ userData }) => {
                 href: "/candidate/best-resumes",
                 shortcut: "Ctrl + BR",
             },
-            { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
-            { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+            {
+                label: "Jobs",
+                href: "/candidate/job-search",
+                shortcut: "Ctrl + J",
+                dropdown: [
+                    { label: "Jobs", href: "/candidate/job-search" },
+                    { label: "Saved Jobs", href: "/candidate/saved-jobs" },
+                    { label: "Applied Jobs", href: "/candidate/dashboard" }
+                ]
+            },
         ],
         recruiter: [
             {
@@ -398,6 +478,7 @@ const Navbar = ({ userData }) => {
                                 shortcut={link.shortcut}
                                 userRole={userRole}
                                 location={location}
+                                dropdown={link.dropdown}
                             />
                         ))}
                     </ul>
@@ -470,6 +551,7 @@ const Navbar = ({ userData }) => {
                                         userRole={userRole}
                                         location={location}
                                         onClick={toggleDrawer}
+                                        dropdown={link.dropdown}
                                     />
                                 ))}
                             </ul>

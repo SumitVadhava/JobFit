@@ -448,6 +448,8 @@ const SavedJobs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hoveredJob, setHoveredJob] = useState(null);
   const [expandedJob, setExpandedJob] = useState(null);
+  const [appliedJobs, setAppliedJobs] = useState(new Set());
+  const [applyingJobs, setApplyingJobs] = useState(new Set());
   const jobsPerPage = 3;
 
   useEffect(() => {
@@ -459,7 +461,16 @@ const SavedJobs = () => {
     const fetchJobs = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get(`/user/savedJobs`);
+        const [response, appliedJobsResponse] = await Promise.all([
+          api.get(`/user/savedJobs`),
+          api.get("/user/applied-companies").catch(() => ({ data: { applications: [], appliedJobs: [] } }))
+        ]);
+
+        const apps = appliedJobsResponse.data.applications || appliedJobsResponse.data.appliedJobs || [];
+        const appliedJobsIds = new Set(
+          apps.map(app => app.jobId || app._id)
+        );
+        setAppliedJobs(appliedJobsIds);
 
         // Data comes in response.data.savedJobs where each entry has jobId inside it
         const savedJobsList = response.data.savedJobs || [];
@@ -495,6 +506,61 @@ const SavedJobs = () => {
 
     fetchJobs();
   }, []); // Empty array ensures this runs only once when the page loads
+
+  const handleApplyJob = async (jobId) => {
+    try {
+      setApplyingJobs(prev => new Set([...prev, jobId]));
+
+      const profileRes = await api.get("/profile").catch(() => null);
+      const profile = profileRes?.data?.profile;
+      
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+
+      const isComplete = profile &&
+        (profile.name || profile.userName || user?.userName || user?.name) &&
+        (profile.email || user?.email) &&
+        profile.img &&
+        (profile.resumeLink || profile.resumelink) &&
+        profile.description &&
+        profile.experience &&
+        profile.education && profile.education.length > 0 &&
+        profile.skills && profile.skills.length > 0 &&
+        profile.softSkills && profile.softSkills.length > 0;
+
+      if (!isComplete) {
+        toast.error(
+          "Please fill in all your profile details (photo, bio, experience, education, skills, soft skills, and resume) before applying.",
+          { position: "top-center", autoClose: 5000 }
+        );
+        setApplyingJobs(prev => {
+          const next = new Set(prev);
+          next.delete(jobId);
+          return next;
+        });
+        return;
+      }
+
+      await api.post(`/jobs/${jobId}/apply`);
+
+      setAppliedJobs(prev => new Set([...prev, jobId]));
+      toast.success("Applied for job successfully!", { position: "top-center", autoClose: 2000 });
+
+    } catch (err) {
+      if (err.response?.status === 409) {
+        toast.info("You have already applied for this job.", { position: "top-center", autoClose: 2000 });
+        setAppliedJobs(prev => new Set([...prev, jobId]));
+      } else {
+        toast.error("Failed to apply for job. Please try again.", { position: "top-center", autoClose: 2000 });
+      }
+    } finally {
+      setApplyingJobs(prev => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
+    }
+  };
 
   // --- HANDLERS ---
   const handleBookMarkClick = async (jobId) => {
@@ -672,13 +738,13 @@ const SavedJobs = () => {
                     >
 
 
-                      <div className="p-7 sm:p-8">
+                      <div className="p-4 sm:p-5">
                         {/* Header: Logo + Info + Bookmark */}
-                        <div className="flex gap-5 sm:gap-6">
-                          {/* Company Logo - BIGGER */}
+                        <div className="flex gap-4 sm:gap-5">
+                          {/* Company Logo - SMALLER */}
                           <div className="shrink-0">
                             <div
-                              className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl overflow-hidden border-2 transition-all duration-500 ${isHovered
+                              className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all duration-500 ${isHovered
                                 ? "border-gray-200 shadow-xl scale-105 rotate-1"
                                 : "border-gray-100 shadow-md"
                                 }`}
@@ -712,7 +778,7 @@ const SavedJobs = () => {
                               <div className="min-w-0 flex-1">
                                 {/* Job Title */}
                                 <h3
-                                  className={`text-xl sm:text-2xl font-bold text-gray-900 truncate transition-colors duration-300 ${isHovered ? "text-blue-700" : ""
+                                  className={`text-lg sm:text-xl font-bold text-gray-900 truncate transition-colors duration-300 ${isHovered ? "text-blue-700" : ""
                                     }`}
                                 >
                                   {job.jobTitle}
@@ -781,15 +847,12 @@ const SavedJobs = () => {
                               {/* Bookmark Button */}
                               <button
                                 onClick={() => handleBookMarkClick(job._id)}
-                                className={`shrink-0 p-3 rounded-2xl transition-all duration-300 ${isBookmarked
-                                  ? "text-blue-600 bg-blue-50 shadow-md shadow-blue-100 hover:bg-blue-100 scale-110"
-                                  : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"
-                                  }`}
-                                aria-label={
+                                className={`shrink-0 p-3 rounded-2xl transition-all duration-300 ${
                                   isBookmarked
-                                    ? "Remove bookmark"
-                                    : "Add bookmark"
-                                }
+                                    ? "text-blue-600 bg-blue-50 shadow-md shadow-blue-100 hover:bg-blue-100 scale-110"
+                                    : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"
+                                }`}
+                                aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -797,8 +860,7 @@ const SavedJobs = () => {
                                   height="24"
                                   viewBox="0 0 256 256"
                                   fill="currentColor"
-                                  className={`transition-transform duration-300 ${isBookmarked ? "scale-110" : ""
-                                    }`}
+                                  className={`transition-transform duration-300 ${isBookmarked ? "scale-110" : ""}`}
                                 >
                                   {isBookmarked ? (
                                     <path d="M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Z" />
@@ -812,7 +874,7 @@ const SavedJobs = () => {
                         </div>
 
                         {/* Description */}
-                        <div className="mt-5 ml-[100px] sm:ml-[120px]">
+                        <div className="mt-5">
                           <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">
                             {job.jobDescription}
                           </p>
@@ -820,7 +882,7 @@ const SavedJobs = () => {
 
                         {/* Expandable Details */}
                         <div
-                          className={`overflow-hidden transition-all duration-500 ease-in-out ml-[100px] sm:ml-[120px] ${isExpanded
+                          className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded
                             ? "max-h-[600px] opacity-100 mt-6"
                             : "max-h-0 opacity-0 mt-0"
                             }`}
@@ -877,24 +939,42 @@ const SavedJobs = () => {
                         </div>
 
                         {/* Actions Row */}
-                        <div className="flex items-center justify-between mt-6 ml-[100px] sm:ml-[120px]">
+                        <div className="flex items-center justify-between mt-6">
                           <div className="flex items-center gap-3">
                             {/* Apply Button */}
                             <button
-                              onClick={() => navigate(`/user/apply/${job._id}`)}
-                              className="group/btn relative inline-flex items-center gap-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-7 py-3 rounded-2xl transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-gray-900/25 active:scale-[0.97]">
-                              {/* <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    width="17"
-                                                    height="17"
-                                                    fill="currentColor"
-                                                    viewBox="0 0 256 256"
-                                                    className="transition-transform duration-300 mt-1 group-hover/btn:-translate-y-0.5 -rotate-45"
-                                                  >
-                                                    <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,13-9.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14L118.42,148.9l47.24-47.25a8,8,0,0,0-11.32-11.32L107.1,137.58,23.91,98.12l.14,0L215.94,40Z" />
-                                                  </svg> */}
-                              <img src={ButtonLogo} className="w-6" alt="" />
-                              Apply Now
+                              onClick={() => {
+                                if (!appliedJobs.has(job._id) && !applyingJobs.has(job._id)) {
+                                  handleApplyJob(job._id);
+                                }
+                              }}
+                              disabled={appliedJobs.has(job._id) || applyingJobs.has(job._id)}
+                              className={`group/btn relative inline-flex items-center gap-2.5 text-sm font-semibold px-7 py-3 rounded-2xl transition-all duration-300 shadow-md active:scale-[0.97]
+                                ${appliedJobs.has(job._id)
+                                  ? "bg-green-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                  : "bg-gray-900 hover:bg-gray-800 text-white hover:shadow-xl hover:shadow-gray-900/25"
+                                }
+                                ${applyingJobs.has(job._id) ? "opacity-75 cursor-wait" : ""}
+                              `}
+                            >
+                              {applyingJobs.has(job._id) ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                  Applying...
+                                </>
+                              ) : appliedJobs.has(job._id) ? (
+                                <>
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
+                                  </svg>
+                                  Applied
+                                </>
+                              ) : (
+                                <>
+                                  <img src={ButtonLogo} className="w-6 group-hover/btn:-translate-y-0.5 transition-transform duration-300" alt="" />
+                                  Apply Now
+                                </>
+                              )}
                             </button>
 
                             {/* View Details Toggle */}
