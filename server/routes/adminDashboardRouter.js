@@ -157,4 +157,47 @@ router.get("/jobs", adminController.getJobsData);
  */
 router.get("/companies", adminController.getCompaniesData);
 
+/**
+ * @swagger
+ * /api/admin/application-stats:
+ *   get:
+ *     summary: Get application statistics (applicants, shortlisted, hired)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Application statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Operation successful"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     applicants:
+ *                       type: number
+ *                       example: 148
+ *                     shortlisted:
+ *                       type: number
+ *                       example: 37
+ *                     hired:
+ *                       type: number
+ *                       example: 16
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – admin role required
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/application-stats", adminController.getApplicationStats);
+
 module.exports = router;
