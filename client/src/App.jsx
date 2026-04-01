@@ -33,6 +33,7 @@ import FeatureResumeMatching from './pages/FeatureResumeMatching'
 import FeatureATSAnalytics from './pages/FeatureATSAnalytics'
 import Recruiter_Profile_view from './pages/Recruiter/Recruiter_Profile_view'
 import Candidate_Profile_View from './pages/User/Candidate_Profile_View'
+import AppliedJobs from './pages/User/User_AppliedJobs_view'
 
 
 
@@ -121,6 +122,14 @@ function App() {
               allowedRoles={['candidate']}
             >
               <SavedJobs />
+            </ProtectedRoute>} />
+        <Route
+          path='/candidate/applied-jobs'
+          element={
+            <ProtectedRoute
+              allowedRoles={['candidate']}
+            >
+              <AppliedJobs />
             </ProtectedRoute>} />
         <Route
           path='/candidate/best-resumes'
