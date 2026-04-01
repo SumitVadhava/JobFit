@@ -527,9 +527,9 @@ const Candidate_Profile_View = ({ userProp }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       } : {};
       const response = await api.put("/profile", formData || payload, config);
-      
+
       const updatedProfile = response.data?.profile;
-      
+
       // Update global auth state to reflect changes in Navbar/Avatar
       const picToSync = updatedProfile?.img || data.profilePicture;
       updateUser({
@@ -541,8 +541,7 @@ const Candidate_Profile_View = ({ userProp }) => {
       setEditing(false);
       setSaved(true);
       setProfilePhotoFile(null); // Clear the file after save
-      toast.success("Profile saved successfully!");
-      setTimeout(() => setSaved(false), 2500);
+      toast.success("Profile saved successfully!", { position: "top-center", autoClose: 2000 });
     } catch (err) {
       console.error("Error saving profile:", err);
       const serverMsg = err.response?.data?.message || err.response?.data?.error || err.message;
@@ -825,7 +824,7 @@ const Candidate_Profile_View = ({ userProp }) => {
                           />
                         ) : (
                           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-indigo-100 shadow-sm">
-                            <span className="text-lg font-black text-indigo-600">{data.totalExperience + " Years"|| "0-2" + " Years"}</span>
+                            <span className="text-lg font-black text-indigo-600">{data.totalExperience + " Years" || "0-2" + " Years"}</span>
                           </div>
                         )}
                       </div>

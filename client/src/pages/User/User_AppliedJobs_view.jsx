@@ -207,13 +207,13 @@ const AppliedJobs = () => {
           dot: "bg-blue-500",
           label: "Shortlisted",
         };
-      case "accepted":
+      case "hired":
         return {
           bg: "bg-green-50",
           text: "text-green-700",
           border: "border-green-200",
           dot: "bg-green-500",
-          label: "Accepted",
+          label: "Hired",
         };
       case "rejected":
         return {
@@ -301,7 +301,7 @@ const AppliedJobs = () => {
   const activeFilterCount = Object.values(filters).flat().length;
 
   const filterOptions = {
-    Status: ["applied", "shortlisted", "rejected", "accepted"],
+    Status: ["applied", "shortlisted", "rejected", "hired"],
   };
 
   /* ─── Filtering & pagination ─── */

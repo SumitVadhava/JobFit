@@ -28,7 +28,11 @@ import {
     PersonSearch,
     Work,
     Refresh,
+    GridView,
+    TableRows,
+    ChevronRight,
 } from '@mui/icons-material';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -107,39 +111,41 @@ const StatCard = ({ icon: Icon, label, value, color, delay }) => (
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay }}
-        style={{ flex: 1, minWidth: 140 }}
+        className="flex-1 min-w-[140px]"
     >
-        <Paper
-            elevation={0}
-            sx={{
-                p: { xs: 2, sm: 2.5 },
-                borderRadius: 3,
-                border: '1px solid #F1F5F9',
-                bgcolor: '#FFFFFF',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                transition: 'all 0.25s ease',
-                '&:hover': { borderColor: color, boxShadow: `0 4px 16px ${color}18` },
+        <div
+            className="p-5 rounded-2xl border bg-white flex items-center gap-4 transition-all duration-300 h-full"
+            style={{
+                borderColor: "#F1F5F9",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = color;
+                e.currentTarget.style.boxShadow = `0 4px 16px ${color}18`;
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#F1F5F9";
+                e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
             }}
         >
-            <Box sx={{
-                width: 44, height: 44, borderRadius: 2.5,
-                bgcolor: `${color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
+            <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: `${color}12` }}
+            >
                 <Icon sx={{ fontSize: 22, color }} />
-            </Box>
-            <Box>
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            </div>
+            <div>
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-gray-400">
                     {label}
-                </Typography>
-                <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
+                </p>
+                <p className="text-2xl font-black text-black mt-0.5 leading-none">
                     {value}
-                </Typography>
-            </Box>
-        </Paper>
+                </p>
+            </div>
+        </div>
     </motion.div>
 );
+
 
 /* ─── Search Bar ─── */
 const SearchBar = ({ value, onChange }) => (
@@ -180,7 +186,7 @@ const TabBar = ({ active, onChange, counts }) => {
         { key: 'Candidate', label: 'Candidates', count: counts.candidates },
     ];
     return (
-        <div style={{ display: 'flex', gap: 4, background: t.card, borderRadius: 10, padding: 4, border: `1px solid ${t.border}` }}>
+        <div style={{ display: 'flex', gap: 4, background: t.card,  borderRadius: 10, padding: 4, border: `1px solid ${t.border}` }}>
             {tabs.map(tab => (
                 <button
                     key={tab.key}
@@ -451,58 +457,99 @@ const UserTable = ({ users, onEdit, onDelete, loading, sortKey, sortDir, onSort 
     </div>
 );
 
-/* ─── Mobile Card ─── */
-const MobileCard = ({ user, onEdit, onDelete, index }) => (
+/* ─── User Card (Grid View) ─── */
+
+
+const UserCard = ({ user, onEdit, onDelete, index }) => (
     <motion.div
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: .3, delay: index * 0.06 }}
-        style={{
-            background: t.card, border: `1px solid ${t.border}`,
-            borderRadius: 14, padding: '16px 18px',
-            display: 'flex', flexDirection: 'column', gap: 12,
-            boxShadow: '0 4px 12px rgba(107, 70, 193, 0.05)',
-        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: index * 0.05 }}
+        className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl hover:border-purple-200 hover:-translate-y-1 transition-all duration-300 flex flex-col"
     >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Avatar sx={{ width: 40, height: 40, bgcolor: getAvatarColor(user.name), fontSize: '0.85rem', fontWeight: 600 }}>
-                {getInitials(user.name)}
-            </Avatar>
-            <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: t.text, fontWeight: 700 }}>
-                        {user.name}
-                    </span>
-                    <Chip
-                        label={user.role}
-                        size="small"
-                        sx={{ bgcolor: roleConfig[user.role]?.bg, color: roleConfig[user.role]?.color, fontWeight: 600, fontSize: '0.7rem', height: 22, border: `1px solid ${roleConfig[user.role]?.border}` }}
-                    />
-                </div>
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: t.muted }}>
-                    {user.email}
+        <div className="p-6 flex-1">
+            <div className="flex items-start justify-between mb-4">
+                <Avatar 
+                    sx={{ 
+                        width: 56, 
+                        height: 56, 
+                        bgcolor: getAvatarColor(user.name), 
+                        fontSize: '1.2rem', 
+                        fontWeight: 800,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                    }}
+                >
+                    {getInitials(user.name)}
+                </Avatar>
+                <Chip
+                    label={user.role}
+                    size="small"
+                    sx={{
+                        bgcolor: roleConfig[user.role]?.bg || '#F1F5F9',
+                        color: roleConfig[user.role]?.color || '#475569',
+                        fontWeight: 700,
+                        fontSize: '0.7rem',
+                        height: 24,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        border: `1px solid ${roleConfig[user.role]?.border || '#E2E8F0'}`,
+                    }}
+                />
+            </div>
+
+            <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-700 transition-colors truncate">
+                {user.name}
+            </h3>
+            <p className="text-sm text-gray-500 font-medium truncate mb-4">
+                {user.email}
+            </p>
+
+            <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                    ID: {user.id.slice(-6)}
                 </span>
+                <div className="flex gap-2">
+                    {user.role !== 'Admin' && (
+                        <>
+                            <IconButton
+                                size="small"
+                                onClick={() => onEdit(user)}
+                                sx={{
+                                    color: t.accent, bgcolor: `${t.accent}10`,
+                                    '&:hover': { bgcolor: `${t.accent}20` },
+                                    width: 32, height: 32,
+                                }}
+                            >
+                                <Edit sx={{ fontSize: 16 }} />
+                            </IconButton>
+                            <IconButton
+                                size="small"
+                                onClick={() => onDelete(user)}
+                                sx={{
+                                    color: t.red, bgcolor: `${t.red}10`,
+                                    '&:hover': { bgcolor: `${t.red}20` },
+                                    width: 32, height: 32,
+                                }}
+                            >
+                                <Delete sx={{ fontSize: 16 }} />
+                            </IconButton>
+                        </>
+                    )}
+                </div>
             </div>
         </div>
-        {user.role !== 'Admin' && (
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', borderTop: `1px solid ${t.border}40`, paddingTop: 10 }}>
-                <Button
-                    size="small"
-                    onClick={() => onEdit(user)}
-                    sx={{ textTransform: 'none', fontSize: '0.75rem', fontWeight: 600, color: t.accent, borderRadius: 2 }}
-                >
-                    Edit
-                </Button>
-                <Button
-                    size="small"
-                    onClick={() => onDelete(user)}
-                    sx={{ textTransform: 'none', fontSize: '0.75rem', fontWeight: 600, color: t.red, borderRadius: 2 }}
-                >
-                    Delete
-                </Button>
-            </div>
-        )}
+        <div className="px-6 pb-6 mt-auto">
+            <button 
+                onClick={() => onEdit(user)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-50 border border-gray-100 text-gray-600 font-bold text-sm hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all duration-300"
+            >
+                View Profile
+                <ChevronRight sx={{ fontSize: 18 }} />
+            </button>
+        </div>
     </motion.div>
 );
+
 
 /* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
@@ -528,6 +575,7 @@ const JobFitUserTable = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [page, setPage] = useState(0);
+
 
     useEffect(() => {
         const onResize = () => setIsMobile(window.innerWidth < 640);
@@ -762,68 +810,52 @@ const JobFitUserTable = () => {
                         <StatCard icon={Work} label="Recruiters" value={counts.recruiters} color="#3B82F6" delay={0.2} />
                     </div>
 
-                    {/* ── Controls ── */}
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .3, duration: .4 }}
-                        style={{
-                            display: 'flex', gap: 12, flexWrap: 'wrap',
-                            alignItems: 'center', justifyContent: 'space-between',
-                        }}
-                    >
+                    {/* ── Search & Filters ── */}
+                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between w-full">
                         <SearchBar value={searchTerm} onChange={setSearchTerm} />
-                        <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-                            <TabBar active={filterRole} onChange={setFilterRole} counts={counts} />
-                        </div>
-                    </motion.div>
+                        <TabBar active={filterRole} onChange={setFilterRole} counts={counts} />
+                    </div>
 
-                    {/* ── Table / Cards ── */}
+                    {/* ── Content ── */}
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35, duration: .4 }}>
-                        {isMobile ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                {loading
-                                    ? [1, 2, 3].map(i => (
-                                        <div key={i} className="shimmer-row" style={{ height: 100, borderRadius: 14 }} />
-                                    ))
-                                    : paginatedUsers.length === 0
-                                        ? (
-                                            <div style={{
-                                                background: t.card, border: `1px solid ${t.border}`,
-                                                borderRadius: 14, padding: '48px 20px',
-                                                textAlign: 'center', color: t.muted, fontSize: 14,
-                                                fontFamily: "'Inter', sans-serif"
-                                            }}>
-                                                No users found matching your criteria.
-                                            </div>
-                                        )
-                                        : paginatedUsers.map((user, i) => (
-                                            <MobileCard key={user.id} user={user} onEdit={handleEditUser} onDelete={handleDeleteUser} index={i} />
-                                        ))
-                                }
+                        {loading ? (
+                            <div className="py-20 flex flex-col items-center justify-center bg-white rounded-2xl border border-dashed border-slate-200">
+                                <CircularProgress sx={{ color: t.accent, mb: 2 }} />
+                                <p className="text-sm font-medium text-gray-400 animate-pulse">Syncing user directory...</p>
+                            </div>
+                        ) : paginatedUsers.length === 0 ? (
+                            <div style={{
+                                background: t.card, border: `1px solid ${t.border}`,
+                                borderRadius: 24, padding: '80px 20px',
+                                textAlign: 'center', color: t.muted, fontSize: 14,
+                                fontFamily: "'Inter', sans-serif"
+                            }}>
+                                <PersonSearch sx={{ fontSize: 48, color: t.accent, opacity: 0.2, mb: 2 }} />
+                                <p className="font-bold text-slate-900 text-lg">No Users Found</p>
+                                <p className="text-slate-500 mt-1">Try adjusting your filters or search term.</p>
                             </div>
                         ) : (
-                            <UserTable
-                                users={paginatedUsers}
-                                onEdit={handleEditUser}
-                                onDelete={handleDeleteUser}
-                                loading={loading}
-                                sortKey={sortConfig.key}
-                                sortDir={sortConfig.direction}
-                                onSort={handleSort}
-                            />
-                        )}
-
-                        {/* ── Pagination ── */}
-                        {!loading && (
-                            <Pagination
-                                currentPage={page}
-                                totalPages={totalPages}
-                                onPageChange={setPage}
-                                totalItems={sortedUsers.length}
-                                itemsPerPage={USERS_PER_PAGE}
-                            />
+                            <>
+                                <UserTable
+                                    users={paginatedUsers}
+                                    onEdit={handleEditUser}
+                                    onDelete={handleDeleteUser}
+                                    loading={loading}
+                                    sortKey={sortConfig.key}
+                                    sortDir={sortConfig.direction}
+                                    onSort={handleSort}
+                                />
+                                {/* ── Pagination ── */}
+                                <Pagination
+                                    currentPage={page}
+                                    totalPages={totalPages}
+                                    onPageChange={setPage}
+                                    totalItems={sortedUsers.length}
+                                    itemsPerPage={USERS_PER_PAGE}
+                                />
+                            </>
                         )}
                     </motion.div>
-
                 </div>
             </div>
 
@@ -974,6 +1006,7 @@ const JobFitUserTable = () => {
             </Dialog>
         </>
     );
+
 };
 
 export default JobFitUserTable;

@@ -7,6 +7,8 @@ const Login = require("../models/login");
 const GoogleLogin = require("../models/google_login");
 const mongoose = require("mongoose");
 const { ROLES } = require("../utils/roles");
+const cloudinary = require("../config/cloudinary");
+
 
 const ADMIN_REVIEW_STATUSES = ["pending", "reviewed", "risky"];
 const APPLICATION_STATUSES = {
@@ -21,6 +23,26 @@ const USER_MODELS = {
 };
 
 const getISTDate = () => new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+
+const uploadToCloudinary = async (imagePath) => {
+  if (!imagePath || typeof imagePath !== "string") return imagePath;
+
+  // If it's already a URL, return it
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+
+  try {
+    const result = await cloudinary.uploader.upload(imagePath, {
+      folder: "job_images",
+    });
+    return result.secure_url;
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    return imagePath; // Fallback to original path if upload fails
+  }
+};
+
 
 const resolveUserModelFromAuth = async (authUser) => {
   const tokenUserModel = authUser?.userModel;
@@ -191,6 +213,8 @@ exports.createJob = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
+    const cloudinaryImg = await uploadToCloudinary(img);
+
     const newJob = new Job({
       recruiterId: principal.id,
       recruiterModel: principal.userModel,
@@ -204,7 +228,7 @@ exports.createJob = async (req, res) => {
       location,
       workPlaceType,
       jobDescription,
-      img,
+      img: cloudinaryImg,
       bookmarked,
     });
     const savedJob = await newJob.save();
@@ -215,6 +239,7 @@ exports.createJob = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 exports.getAllJobs = async (req, res) => {
   try {
@@ -1151,16 +1176,10 @@ exports.updateJob = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (
-      !isOwnedByPrincipal(
-        existingJob.recruiterId,
-        existingJob.recruiterModel,
-        principal,
-      )
-    ) {
-      return res
-        .status(403)
-        .json({ message: "Forbidden: you can only update your own jobs" });
+    if (!isOwnedByPrincipal(existingJob.recruiterId, existingJob.recruiterModel, principal)) {
+      return res.status(403).json({
+        message: "Forbidden: you can only update your own jobs",
+      });
     }
 
     const {
@@ -1177,6 +1196,9 @@ exports.updateJob = async (req, res) => {
       img,
       bookmarked,
     } = req.body;
+
+    const cloudinaryImg = await uploadToCloudinary(img);
+
     const updatedJob = await Job.findByIdAndUpdate(
       req.params.id,
       {
@@ -1190,7 +1212,7 @@ exports.updateJob = async (req, res) => {
         location,
         workPlaceType,
         jobDescription,
-        img,
+        img: cloudinaryImg,
         bookmarked,
       },
       { new: true, runValidators: true },
