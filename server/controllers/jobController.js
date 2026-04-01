@@ -9,6 +9,12 @@ const mongoose = require("mongoose");
 const { ROLES } = require("../utils/roles");
 
 const ADMIN_REVIEW_STATUSES = ["pending", "reviewed", "risky"];
+const APPLICATION_STATUSES = {
+  APPLIED: "applied",
+  SHORTLISTED: "shortlisted",
+  REJECTED: "rejected",
+  HIRED: "hired",
+};
 const USER_MODELS = {
   LOGIN: "logins",
   GOOGLE_LOGIN: "google_logins",
@@ -757,6 +763,177 @@ exports.getUniqueCandidatesCountForAdmin = async (req, res) => {
   }
 };
 
+const updateCandidateStatusForJob = async ({
+  req,
+  res,
+  nextStatus,
+  successMessage,
+  notification,
+}) => {
+  try {
+    const { jobId, applicationId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job id" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(applicationId)) {
+      return res.status(400).json({ message: "Invalid application id" });
+    }
+
+    const principal = await resolveAuthenticatedPrincipal(req.user);
+    if (!principal) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const ownershipFilter = buildRecruiterOwnershipFilter(principal);
+    const job = await Job.findOne({ _id: jobId, ...ownershipFilter })
+      .select("_id jobTitle companyName")
+      .lean();
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const application = await AppliedJob.findOne({ _id: applicationId, jobId })
+      .select("_id userId userModel status isHired")
+      .lean();
+
+    if (!application) {
+      return res
+        .status(404)
+        .json({ message: "Application not found for this job" });
+    }
+
+    if (
+      application.isHired ||
+      application.status === APPLICATION_STATUSES.HIRED
+    ) {
+      return res
+        .status(409)
+        .json({ message: "Cannot update status for a hired candidate" });
+    }
+
+    if (nextStatus === APPLICATION_STATUSES.SHORTLISTED) {
+      if (application.status === APPLICATION_STATUSES.SHORTLISTED) {
+        return res.status(200).json({
+          message: "Candidate is already shortlisted",
+          data: {
+            jobId,
+            applicationId,
+            status: APPLICATION_STATUSES.SHORTLISTED,
+          },
+        });
+      }
+
+      if (application.status === APPLICATION_STATUSES.REJECTED) {
+        return res.status(409).json({
+          message: "Rejected candidate cannot be shortlisted",
+        });
+      }
+    }
+
+    if (nextStatus === APPLICATION_STATUSES.REJECTED) {
+      if (application.status === APPLICATION_STATUSES.REJECTED) {
+        return res.status(200).json({
+          message: "Candidate is already rejected",
+          data: {
+            jobId,
+            applicationId,
+            status: APPLICATION_STATUSES.REJECTED,
+          },
+        });
+      }
+    }
+
+    const now = getISTDate();
+    const updatedApplication = await AppliedJob.findOneAndUpdate(
+      {
+        _id: applicationId,
+        jobId,
+        isHired: false,
+      },
+      {
+        $set: {
+          status: nextStatus,
+          updatedAt: now,
+        },
+      },
+      { new: true },
+    ).lean();
+
+    if (!updatedApplication) {
+      return res
+        .status(409)
+        .json({ message: "Unable to update candidate status. Please retry." });
+    }
+
+    const notificationSummary = {
+      sent: false,
+      outcome: notification.outcome,
+    };
+
+    try {
+      await Notification.create({
+        userId: application.userId,
+        userModel: application.userModel || USER_MODELS.LOGIN,
+        jobId,
+        applicationId,
+        outcome: notification.outcome,
+        title: notification.title,
+        message: `${notification.messagePrefix}${job.jobTitle} at ${job.companyName}.`,
+        createdAt: now,
+        updatedAt: now,
+      });
+      notificationSummary.sent = true;
+    } catch (_notificationError) {
+      notificationSummary.sent = false;
+    }
+
+    return res.status(200).json({
+      message: successMessage,
+      data: {
+        jobId,
+        applicationId,
+        status: updatedApplication.status,
+        notifications: notificationSummary,
+      },
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.shortlistCandidateForJob = async (req, res) => {
+  return updateCandidateStatusForJob({
+    req,
+    res,
+    nextStatus: APPLICATION_STATUSES.SHORTLISTED,
+    successMessage: "Candidate shortlisted successfully",
+    notification: {
+      outcome: "shortlisted",
+      title: "Application update: shortlisted",
+      messagePrefix: "Good news! You have been shortlisted for ",
+    },
+  });
+};
+
+exports.rejectCandidateForJob = async (req, res) => {
+  return updateCandidateStatusForJob({
+    req,
+    res,
+    nextStatus: APPLICATION_STATUSES.REJECTED,
+    successMessage: "Candidate rejected successfully",
+    notification: {
+      outcome: "rejected",
+      title: "Application update: not selected",
+      messagePrefix: "Your application was not selected for ",
+    },
+  });
+};
+
 exports.hireCandidateForJob = async (req, res) => {
   try {
     const { jobId, applicationId } = req.params;
@@ -793,10 +970,28 @@ exports.hireCandidateForJob = async (req, res) => {
         .json({ message: "Application not found for this job" });
     }
 
-    if (application.isHired) {
+    if (
+      application.isHired ||
+      application.status === APPLICATION_STATUSES.HIRED
+    ) {
       return res
         .status(409)
         .json({ message: "Candidate is already hired for this job" });
+    }
+
+    if (application.status === APPLICATION_STATUSES.REJECTED) {
+      return res.status(409).json({
+        message: "Rejected candidate cannot be hired",
+      });
+    }
+
+    if (
+      application.status !== APPLICATION_STATUSES.APPLIED &&
+      application.status !== APPLICATION_STATUSES.SHORTLISTED
+    ) {
+      return res.status(409).json({
+        message: "Candidate is not in a hirable state",
+      });
     }
 
     if (Number(job.openings) <= 0) {
@@ -829,11 +1024,14 @@ exports.hireCandidateForJob = async (req, res) => {
         _id: applicationId,
         jobId,
         isHired: false,
+        status: {
+          $in: [APPLICATION_STATUSES.APPLIED, APPLICATION_STATUSES.SHORTLISTED],
+        },
       },
       {
         $set: {
           isHired: true,
-          status: "hired",
+          status: APPLICATION_STATUSES.HIRED,
           updatedAt: now,
         },
       },
