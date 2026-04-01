@@ -1176,10 +1176,6 @@ exports.updateJob = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (
-      !isOwnedByPrincipal(
-        existingJob.recruiterId,
-        existingJob.recruiterModel,
     if (!isOwnedByPrincipal(existingJob.recruiterId, existingJob.recruiterModel, principal)) {
       return res.status(403).json({
         message: "Forbidden: you can only update your own jobs",
