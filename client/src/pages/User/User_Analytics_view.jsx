@@ -284,7 +284,7 @@ function UserAnalytics() {
 
   // Application status breakdown
   const statusBreakdown = React.useMemo(() => {
-    const counts = { applied: 0, shortlisted: 0, rejected: 0, accepted: 0 };
+    const counts = { applied: 0, shortlisted: 0, rejected: 0, hired: 0 };
     applications.forEach((a) => {
       if (counts[a.status] !== undefined) counts[a.status]++;
     });
@@ -503,7 +503,7 @@ function UserAnalytics() {
                     applied: { bg: "#f0fdf4", text: "#16a34a", border: "#bbf7d0" },
                     shortlisted: { bg: "#eff6ff", text: "#2563eb", border: "#bfdbfe" },
                     rejected: { bg: "#fff1f2", text: "#dc2626", border: "#fecdd3" },
-                    accepted: { bg: "#faf5ff", text: ACCENT, border: ACCENT_BORDER },
+                    hired: { bg: "#faf5ff", text: ACCENT, border: ACCENT_BORDER },
                   }[app.status] || { bg: "#f8fafc", text: "#64748b", border: "#e2e8f0" };
 
                   return (
@@ -572,7 +572,7 @@ function UserAnalytics() {
                   { label: "Applied", key: "applied", color: "#16a34a" },
                   { label: "Shortlisted", key: "shortlisted", color: "#2563eb" },
                   { label: "Rejected", key: "rejected", color: "#dc2626" },
-                  { label: "Accepted", key: "accepted", color: ACCENT },
+                  { label: "Hired", key: "hired", color: ACCENT },
                 ].map(({ label, key, color }) => (
                   <div key={key} className="text-center">
                     <p className="text-lg font-black" style={{ color }}>
