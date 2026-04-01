@@ -11,7 +11,8 @@ const adminCandidateRouter = require("./routes/adminCandidateRouter");
 const adminRecruiterRouter = require("./routes/adminRecruiterRouter");
 const userDashboardRouter = require("./routes/userDashboard");
 const profileRouter = require("./routes/profileRouter");
-const testimonialRouter = require("./routes/testimonialRouter");
+const testimonialRouter = require('./routes/testimonialRouter');
+const recruiterProfileRouter = require('./routes/recruiterProfileRouter');
 const auth = require("./middlewares/auth");
 const authorizeRole = require("./middlewares/authorizeRole");
 const { ROLES, USER_FACING_ROLES } = require("./utils/roles");
@@ -124,9 +125,10 @@ app.use(
   userDashboardRouter,
 );
 app.use(
-  "/api/profile",
+  '/api/profile',
   profileRouter,
 );
+app.use('/api/recruiter-profile', recruiterProfileRouter);
 app.use("/api/resume", auth, authorizeRole(...USER_FACING_ROLES), resumeRoute);
 app.use(
   "/api/atshistory",

@@ -387,7 +387,7 @@ const options = {
             },
           },
         },
-        // ── Profile ──────────────────────────────────────────────
+        // ── Candidate Profile ─────────────────────────────────────
         Profile: {
           type: "object",
           properties: {
@@ -402,6 +402,80 @@ const options = {
             education: { type: "array", items: { type: "object" } },
             experience: { type: "string", example: "0-2 years" },
             img: { type: "string", example: "https://example.com/profile.jpg" },
+          },
+        },
+
+        // ── Recruiter Profile ─────────────────────────────────────
+        RecruiterProfile: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "64abc123def456" },
+            email: {
+              type: "string",
+              format: "email",
+              example: "sample@company.com",
+            },
+            userName: { type: "string", example: "name" },
+            img: {
+              type: "string",
+              example: "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+            },
+            company: {
+              type: "string",
+              example: "Google Inc.",
+            },
+            position: {
+              type: "string",
+              example: "Lead Recruiter",
+            },
+            description: {
+              type: "string",
+              example: "Passionate about connecting talent with opportunity.",
+            },
+            location: {
+              type: "string",
+              example: "Mountain View, CA",
+            },
+            website: {
+              type: "string",
+              example: "https://careers.google.com",
+            },
+            linkedIn: {
+              type: "string",
+              example: "https://linkedin.com/in/username",
+            },
+            jobsPosted: { type: "number", example: 12 },
+            candidatesHired: { type: "number", example: 5 },
+            teamSize: { type: "number", example: 10 },
+          },
+        },
+        RecruiterProfileRequest: {
+          type: "object",
+          properties: {
+            email: { type: "string", format: "email", example: "jane@company.com" },
+            userName: { type: "string", example: "janesmith" },
+            company: { type: "string", example: "Google Inc." },
+            position: { type: "string", example: "Lead Recruiter" },
+            description: {
+              type: "string",
+              example: "Passionate about connecting talent with opportunity.",
+            },
+            location: { type: "string", example: "Mountain View, CA" },
+            website: { type: "string", example: "https://careers.google.com" },
+            linkedIn: {
+              type: "string",
+              example: "https://linkedin.com/in/username",
+            },
+            candidatesHired: { type: "number", example: 5 },
+            teamSize: { type: "number", example: 10 },
+
+          },
+        },
+        RecruiterProfileStats: {
+          type: "object",
+          properties: {
+            jobsPosted: { type: "number", example: 12 },
+            candidatesHired: { type: "number", example: 5 },
           },
         },
         // ── Generic ──────────────────────────────────────────────
