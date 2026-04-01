@@ -189,7 +189,7 @@ const StatCard = ({ icon: Icon, label, value, color, delay }) => (
 
 // ─── Job Card Component ──────────────────────────────────────────────────────
 const JobCard = ({ job, onViewDetails, onEdit, onDelete }) => {
-  const canEdit = (job.totalCandidates ?? 0) <= 3;
+  const canEdit = (job.totalCandidates ?? 0) < 1;
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition-all duration-300 group">
@@ -476,10 +476,10 @@ const EditJobModal = ({ job, isOpen, onClose, onUpdate }) => {
     setIsSubmitting(true);
     try {
       const normalizedOpenings =
-        formData.openings === "" ? 0 : Number(formData.openings);
+        formData.openings === "" ? NaN : Number(formData.openings);
 
-      if (!Number.isFinite(normalizedOpenings) || normalizedOpenings < 0) {
-        toast.error("Openings must be a valid non-negative number");
+      if (!Number.isFinite(normalizedOpenings) || normalizedOpenings < 1) {
+        toast.error("Minimum opening must be 1");
         setIsSubmitting(false);
         return;
       }
@@ -530,7 +530,7 @@ const EditJobModal = ({ job, isOpen, onClose, onUpdate }) => {
             </div>
             <div className="col-span-1">
               <label className="block text-xs font-semibold text-gray-500 mb-1">Openings</label>
-              <input required type="number" min="0" step="1" name="openings" value={formData.openings} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+              <input required type="number" min="1" step="1" name="openings" value={formData.openings} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
             </div>
             <div className="col-span-1">
               <label className="block text-xs font-semibold text-gray-500 mb-1">Workplace Type</label>
@@ -774,8 +774,8 @@ const Recruiter_History = () => {
   };
 
   const handleEdit = (job) => {
-    if ((job.totalCandidates ?? 0) > 3) {
-      toast.info("This job cannot be edited after more than 3 candidates apply");
+    if ((job.totalCandidates ?? 0) >= 1) {
+      toast.info("This job cannot be edited after at least 1 candidate applies");
       return;
     }
 

@@ -155,13 +155,25 @@ const Recruiter_Post_view = () => {
     if (!formData.jobDescription.trim())
       newErrors.jobDescription = "Job Description is required";
     if (!formData.img.trim()) newErrors.img = "Image URL is required";
-    if (!formData.openings) newErrors.openings = "Openings is required";
+    if (!formData.openings) {
+      newErrors.openings = "Openings is required";
+    } else {
+      const openingsValue = Number(formData.openings);
+      if (!Number.isFinite(openingsValue) || openingsValue < 1) {
+        newErrors.openings = "Minimum opening must be 1";
+      }
+    }
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return {
+      isValid: Object.keys(newErrors).length === 0,
+      errors: newErrors,
+    };
   };
 
   const handleSubmit = async () => {
-    if (validate()) {
+    const { isValid, errors: validationErrors } = validate();
+
+    if (isValid) {
       setIsSubmitting(true);
       try {
         const payload = {
@@ -204,7 +216,12 @@ const Recruiter_Post_view = () => {
         setIsSubmitting(false);
       }
     } else {
-      toast.error("Please fill all required fields.", {
+      const firstErrorMessage =
+        validationErrors.openings ||
+        Object.values(validationErrors)[0] ||
+        "Please fill all required fields.";
+
+      toast.error(firstErrorMessage, {
         position: "top-center",
         autoClose: 3000,
       });
@@ -451,6 +468,7 @@ const Recruiter_Post_view = () => {
                   name="openings"
                   type="number"
                   min="1"
+                  step="1"
                   value={formData.openings}
                   onChange={handleChange}
                   onFocus={() => handleFocus("openings")}

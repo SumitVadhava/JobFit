@@ -11,13 +11,31 @@ import {
   AlertCircle,
   XCircle,
   Monitor,
+  Edit,
+  Trash2,
+  X,
+  FileText,
+  GraduationCap,
+  Loader2,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
+import { motion } from "framer-motion";
+import { Paper, Box, Typography } from "@mui/material";
+import WorkIcon from "@mui/icons-material/Work";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import PeopleIcon from "@mui/icons-material/People";
 
 /* ─────────────────── Constants ─────────────────── */
 const ACCENT = "#9c44fe";
+const HISTORY_CARD_COLORS = {
+  accent: "#6B46C1",
+  amber: "#B45309",
+  green: "#15803D",
+  blue: "#2563EB",
+};
 
 /* ─────────────── ATS Score Circle ──────────────── */
 const AtsScoreCircle = ({ score = 0, size = 64 }) => {
@@ -99,6 +117,67 @@ const StatCard = ({ icon, label, value, sub, iconBorder = false }) => (
   </div>
 );
 
+const HistoryStatCard = ({ icon: Icon, label, value, color, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 16 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.45, delay }}
+    style={{ flex: 1, minWidth: 140 }}
+  >
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 3,
+        border: "1px solid #F1F5F9",
+        bgcolor: "#FFFFFF",
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+        transition: "all 0.25s ease",
+        "&:hover": { borderColor: color, boxShadow: `0 4px 16px ${color}18` },
+      }}
+    >
+      <Box
+        sx={{
+          width: 44,
+          height: 44,
+          borderRadius: 2.5,
+          bgcolor: `${color}14`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Icon sx={{ fontSize: 22, color }} />
+      </Box>
+      <Box>
+        <Typography
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: 500,
+            color: "#94A3B8",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          {label}
+        </Typography>
+        <Typography
+          sx={{
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            color: "#0F172A",
+            lineHeight: 1.2,
+          }}
+        >
+          {value}
+        </Typography>
+      </Box>
+    </Paper>
+  </motion.div>
+);
+
 /* ───────────── Recruiter History Style Job Cards ───────────── */
 const StatusBadge = ({ status }) => {
   const config = {
@@ -172,6 +251,8 @@ const WorkplaceBadge = ({ type }) => {
 };
 
 const RecruiterJobCard = ({ job, onViewApplicants }) => {
+  const canEdit = (job.totalCandidates ?? 0) < 1;
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition-all duration-300 group">
       <div className="p-5 pb-4">
@@ -197,6 +278,27 @@ const RecruiterJobCard = ({ job, onViewApplicants }) => {
                 {job.companyName}
               </p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {canEdit && (
+              <button
+                onClick={() => onViewApplicants?.(job, "edit")}
+                className="p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-700 transition-colors"
+                aria-label="Edit job"
+                title="Edit job"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={() => onViewApplicants?.(job, "delete")}
+              className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+              aria-label="Delete job"
+              title="Delete job"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -232,6 +334,10 @@ const RecruiterJobCard = ({ job, onViewApplicants }) => {
             <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
             <span>{job.openings ?? "N/A"} Openings</span>
           </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-600 col-span-2">
+            <Users className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+            <span>{job.totalCandidates ?? 0} Candidates Applied</span>
+          </div>
         </div>
 
         <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mt-2">
@@ -242,7 +348,7 @@ const RecruiterJobCard = ({ job, onViewApplicants }) => {
       <div className="px-5 pb-5">
         <button
           type="button"
-          onClick={() => onViewApplicants?.(job)}
+          onClick={() => onViewApplicants?.(job, "view")}
           className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 transition-all duration-200 font-medium text-sm"
         >
           <Eye className="w-4 h-4" />
@@ -253,10 +359,332 @@ const RecruiterJobCard = ({ job, onViewApplicants }) => {
   );
 };
 
+const EditJobModal = ({ job, isOpen, onClose, onUpdate }) => {
+  const [formData, setFormData] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (job) {
+      setFormData({
+        jobTitle: job.jobTitle || "",
+        department: job.department || "",
+        openings: job.openings ?? "",
+        experience: job.experience || "",
+        responsibilities: job.responsibilities || "",
+        qualifications: job.qualifications || "",
+        companyName: job.companyName || "",
+        location: job.location || "",
+        workPlaceType: job.workPlaceType || "",
+        jobDescription: job.jobDescription || "",
+        img: job.img || "",
+        bookmarked: job.bookmarked || false,
+      });
+    }
+  }, [job]);
+
+  if (!isOpen || !job) return null;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const normalizedOpenings =
+        formData.openings === "" ? NaN : Number(formData.openings);
+
+      if (!Number.isFinite(normalizedOpenings) || normalizedOpenings < 1) {
+        toast.error("Minimum opening must be 1");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const payload = {
+        ...formData,
+        openings: normalizedOpenings,
+      };
+
+      const res = await api.put(`/jobs/${job._id}`, payload);
+      onUpdate(res.data.job);
+      toast.success("Job updated successfully");
+      onClose();
+    } catch (error) {
+      console.error("Update failed", error);
+      toast.error("Failed to update job");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 flex flex-col">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center space-x-2">
+            <Edit className="w-5 h-5 text-purple-600" />
+            <span>Edit Job Posting</span>
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto p-6 space-y-4 flex-1">
+          <form
+            id="edit-job-form"
+            onSubmit={handleSubmit}
+            className="grid grid-cols-2 gap-4"
+          >
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Job Title
+              </label>
+              <input
+                required
+                name="jobTitle"
+                value={formData.jobTitle}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Company Info
+              </label>
+              <input
+                required
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Location
+              </label>
+              <input
+                required
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Openings
+              </label>
+              <input
+                required
+                type="number"
+                min="1"
+                step="1"
+                name="openings"
+                value={formData.openings}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Workplace Type
+              </label>
+              <select
+                required
+                name="workPlaceType"
+                value={formData.workPlaceType}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg bg-white"
+              >
+                <option value="onsite">On-Site</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+              </select>
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Department
+              </label>
+              <select
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg bg-white"
+              >
+                <option value="Engineering">Engineering</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Design">Design</option>
+                <option value="HR">HR</option>
+                <option value="Sales">Sales</option>
+              </select>
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Experience
+              </label>
+              <select
+                name="experience"
+                value={formData.experience}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg bg-white"
+              >
+                <option value="0-1 years">0-1 years</option>
+                <option value="2-4 years">2-4 years</option>
+                <option value="5-6 years">5-6 years</option>
+                <option value="7-8 years">7-8 years</option>
+                <option value="9-10 years">9-10 years</option>
+              </select>
+            </div>
+            <div className="col-span-1">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Image URL
+              </label>
+              <input
+                name="img"
+                value={formData.img}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Job Description
+              </label>
+              <textarea
+                required
+                name="jobDescription"
+                value={formData.jobDescription}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg min-h-[80px]"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Responsibilities
+              </label>
+              <textarea
+                required
+                name="responsibilities"
+                value={formData.responsibilities}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg min-h-[80px]"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Qualifications
+              </label>
+              <textarea
+                required
+                name="qualifications"
+                value={formData.qualifications}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg min-h-[80px]"
+              />
+            </div>
+          </form>
+        </div>
+
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            form="edit-job-form"
+            type="submit"
+            disabled={isSubmitting}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors min-w-[120px]"
+          >
+            {isSubmitting ? (
+              <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+            ) : (
+              "Save Changes"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DeleteConfirmModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+
+      <div className="relative w-full max-w-md rounded-2xl border border-red-100 bg-white shadow-2xl animate-in fade-in zoom-in-95">
+        <div className="p-6">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 border border-red-100">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+          </div>
+
+          <h3 className="text-center text-lg font-bold text-gray-900">
+            Delete this job posting?
+          </h3>
+          <p className="mt-2 text-center text-sm text-gray-500">
+            This action is permanent and cannot be undone.
+          </p>
+
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isDeleting}
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={isDeleting}
+              className="min-w-[120px] px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isDeleting ? (
+                <span className="inline-flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </span>
+              ) : (
+                "Yes, Delete"
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ─────────────────── Main Component ─────────────────── */
 const CandidatesView = () => {
   const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [editingJob, setEditingJob] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [candidatesLoading, setCandidatesLoading] = useState(false);
@@ -290,7 +718,36 @@ const CandidatesView = () => {
         }
 
         const res = await api.get(`/jobs/recruiter/${userId}`);
-        setJobs(res.data.jobs || []);
+        const recruiterJobs = res.data.jobs || [];
+
+        const jobsWithCandidateStats = await Promise.all(
+          recruiterJobs.map(async (job) => {
+            try {
+              const candidatesResponse = await api.get(
+                `/jobs/${job._id}/candidates`,
+              );
+              const totalCandidates =
+                Number(candidatesResponse?.data?.totalCandidates) || 0;
+
+              return {
+                ...job,
+                totalCandidates,
+              };
+            } catch (candidateError) {
+              console.error(
+                `Error fetching candidates for job ${job._id}:`,
+                candidateError,
+              );
+
+              return {
+                ...job,
+                totalCandidates: 0,
+              };
+            }
+          }),
+        );
+
+        setJobs(jobsWithCandidateStats);
       } catch (err) {
         console.error("Error fetching jobs:", err);
         toast.error("Failed to load jobs. Please try again.");
@@ -330,8 +787,6 @@ const CandidatesView = () => {
         resumeLink: candidate.profile?.resumeLink,
       }));
 
-      console.log(normalized);
-      
       setCandidates(normalized);
     } catch (err) {
       console.error("Error fetching candidates:", err);
@@ -342,15 +797,86 @@ const CandidatesView = () => {
     }
   }, []);
 
-  const handleJobClick = useCallback(
-    (job) => {
+  const handleEdit = useCallback((job) => {
+    if ((job.totalCandidates ?? 0) >= 1) {
+      toast.info(
+        "This job cannot be edited after at least 1 candidate applies",
+      );
+      return;
+    }
+
+    setEditingJob(job);
+    setEditModalOpen(true);
+  }, []);
+
+  const openDeleteModal = useCallback((jobId) => {
+    setJobToDelete(jobId);
+    setDeleteModalOpen(true);
+  }, []);
+
+  const closeDeleteModal = useCallback(() => {
+    if (isDeleting) return;
+    setDeleteModalOpen(false);
+    setJobToDelete(null);
+  }, [isDeleting]);
+
+  const handleDelete = useCallback(async (jobId) => {
+    setIsDeleting(true);
+    try {
+      await api.delete(`/jobs/${jobId}`);
+      setJobs((prev) => prev.filter((j) => j._id !== jobId));
+      setSelectedJob((prev) => (prev?._id === jobId ? null : prev));
+      setDeleteModalOpen(false);
+      setJobToDelete(null);
+      toast.success("Job deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete job:", error);
+      toast.error("Failed to delete job");
+    } finally {
+      setIsDeleting(false);
+    }
+  }, []);
+
+  const handleUpdateJob = useCallback((updatedJob) => {
+    const normalizedUpdatedJob = {
+      ...updatedJob,
+      openings: Number(updatedJob.openings) || 0,
+    };
+
+    setJobs((prev) =>
+      prev.map((j) =>
+        j._id === normalizedUpdatedJob._id
+          ? { ...j, ...normalizedUpdatedJob }
+          : j,
+      ),
+    );
+
+    setSelectedJob((prev) =>
+      prev?._id === normalizedUpdatedJob._id
+        ? { ...prev, ...normalizedUpdatedJob }
+        : prev,
+    );
+  }, []);
+
+  const handleJobAction = useCallback(
+    (job, action = "view") => {
+      if (action === "edit") {
+        handleEdit(job);
+        return;
+      }
+
+      if (action === "delete") {
+        openDeleteModal(job._id);
+        return;
+      }
+
       setSelectedJob(job);
       setSearchQuery("");
       setCurrentPage(1);
       setExpandedCandidate(null);
       fetchCandidates(job._id);
     },
-    [fetchCandidates],
+    [fetchCandidates, handleEdit, openDeleteModal],
   );
 
   const handleBack = useCallback(() => {
@@ -409,7 +935,9 @@ const CandidatesView = () => {
     candidatesWithScore.length > 0
       ? Math.max(...candidatesWithScore.map((c) => c.atsScore))
       : 0;
-  const highScoreCount = candidatesWithScore.filter((c) => c.atsScore >= 80).length;
+  const highScoreCount = candidatesWithScore.filter(
+    (c) => c.atsScore >= 80,
+  ).length;
 
   /* ── Filter Jobs ── */
   const filteredJobs = jobs.filter(
@@ -418,6 +946,14 @@ const CandidatesView = () => {
       j.jobTitle?.toLowerCase().includes(jobSearch.toLowerCase()) ||
       j.companyName?.toLowerCase().includes(jobSearch.toLowerCase()) ||
       j.department?.toLowerCase().includes(jobSearch.toLowerCase()),
+  );
+
+  const totalJobs = jobs.length;
+  const pendingJobs = jobs.filter((j) => j.adminReview === "pending").length;
+  const reviewedJobs = jobs.filter((j) => j.adminReview === "reviewed").length;
+  const totalOpenings = jobs.reduce(
+    (sum, j) => sum + (Number(j.openings) || 0),
+    0,
   );
 
   /* ═══════════════ LOADING ═══════════════ */
@@ -712,7 +1248,10 @@ const CandidatesView = () => {
                                   )}
                                   {c.appliedAt && (
                                     <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-50 text-gray-600 border border-gray-200">
-                                      Applied {new Date(c.appliedAt).toLocaleDateString()}
+                                      Applied{" "}
+                                      {new Date(
+                                        c.appliedAt,
+                                      ).toLocaleDateString()}
                                     </span>
                                   )}
                                   {!c.resumeLink && (
@@ -728,7 +1267,10 @@ const CandidatesView = () => {
                                 {typeof c.atsScore === "number" &&
                                 Number.isFinite(c.atsScore) ? (
                                   <>
-                                    <AtsScoreCircle score={c.atsScore} size={60} />
+                                    <AtsScoreCircle
+                                      score={c.atsScore}
+                                      size={60}
+                                    />
                                     <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-1">
                                       ATS
                                     </span>
@@ -807,23 +1349,41 @@ const CandidatesView = () => {
                                   </div>
                                 )}
                                 {c.skills && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {(Array.isArray(c.skills)
-                                      ? c.skills
-                                      : c.skills.split(",")
-                                    ).map((skill, si) => (
-                                      <span
-                                        key={si}
-                                        className="text-xs font-medium px-3 py-1.5 rounded-full border"
-                                        style={{
-                                          color: ACCENT,
-                                          backgroundColor: `${ACCENT}08`,
-                                          borderColor: `${ACCENT}20`,
-                                        }}
-                                      >
-                                        {skill.trim()}
+                                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="16"
+                                      height="16"
+                                      fill="#6b7280"
+                                      viewBox="0 0 256 256"
+                                      className="mt-0.5 shrink-0"
+                                    >
+                                      <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />
+                                    </svg>
+                                    <div>
+                                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Skills
                                       </span>
-                                    ))}
+
+                                      <div className="flex flex-wrap gap-2">
+                                        {(Array.isArray(c.skills)
+                                          ? c.skills
+                                          : c.skills.split(",")
+                                        ).map((skill, si) => (
+                                          <span
+                                            key={si}
+                                            className="text-xs font-medium px-3 py-1.5 rounded-full border"
+                                            style={{
+                                              color: ACCENT,
+                                              backgroundColor: `${ACCENT}08`,
+                                              borderColor: `${ACCENT}20`,
+                                            }}
+                                          >
+                                            {skill.trim()}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -837,7 +1397,8 @@ const CandidatesView = () => {
                                   className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:opacity-90 active:scale-[0.97]"
                                   style={{
                                     background: "#111827",
-                                    boxShadow: "0 4px 14px rgba(17, 24, 39, 0.35)",
+                                    boxShadow:
+                                      "0 4px 14px rgba(17, 24, 39, 0.35)",
                                   }}
                                 >
                                   <svg
@@ -994,12 +1555,9 @@ const CandidatesView = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3">
                 Candidates
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
-                Select a job post to view its applicants
-              </p>
             </div>
             <div className="flex items-center gap-3">
               {/* Job count badge */}
@@ -1016,11 +1574,46 @@ const CandidatesView = () => {
                 >
                   <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />
                 </svg>
-                <span className="text-sm font-bold" style={{ color: "#111827" }}>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: "#111827" }}
+                >
                   {jobs.length} Job{jobs.length !== 1 ? "s" : ""}
                 </span>
               </div>
             </div>
+          </div>
+
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <HistoryStatCard
+              label="Total Jobs"
+              value={totalJobs}
+              icon={WorkIcon}
+              color={HISTORY_CARD_COLORS.accent}
+              delay={0}
+            />
+            <HistoryStatCard
+              label="Pending Review"
+              value={pendingJobs}
+              icon={ErrorOutlineIcon}
+              color={HISTORY_CARD_COLORS.amber}
+              delay={0.1}
+            />
+            <HistoryStatCard
+              label="Reviewed"
+              value={reviewedJobs}
+              icon={CheckCircleOutlineIcon}
+              color={HISTORY_CARD_COLORS.green}
+              delay={0.2}
+            />
+            <HistoryStatCard
+              label="Total Openings"
+              value={totalOpenings}
+              icon={PeopleIcon}
+              color={HISTORY_CARD_COLORS.blue}
+              delay={0.3}
+            />
           </div>
 
           {/* Search */}
@@ -1079,12 +1672,29 @@ const CandidatesView = () => {
               <RecruiterJobCard
                 key={job._id}
                 job={job}
-                onViewApplicants={handleJobClick}
+                onViewApplicants={handleJobAction}
               />
             ))}
           </div>
         )}
       </div>
+
+      <EditJobModal
+        job={editingJob}
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingJob(null);
+        }}
+        onUpdate={handleUpdateJob}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onCancel={closeDeleteModal}
+        onConfirm={() => jobToDelete && handleDelete(jobToDelete)}
+        isDeleting={isDeleting}
+      />
 
       <style>{`
         @keyframes fadeInUp {
@@ -1097,4 +1707,3 @@ const CandidatesView = () => {
 };
 
 export default CandidatesView;
-
