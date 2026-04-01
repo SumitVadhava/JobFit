@@ -398,10 +398,10 @@ const CompanyCard = ({ co, index }) => {
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0 group-hover:bg-purple-100 transition-colors overflow-hidden">
             {co.logo && !imgError ? (
-              <img 
-                src={co.logo} 
-                alt={co.companyName} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+              <img
+                src={co.logo}
+                alt={co.companyName}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 onError={() => setImgError(true)}
               />
             ) : (
@@ -477,18 +477,18 @@ const Companies = () => {
   jobsData.forEach(job => {
     const name = job.companyName || 'Unknown';
     if (!companiesMap[name]) {
-      companiesMap[name] = { 
-        companyName: name, 
-        totalJobs: 0, 
-        pending: 0, 
-        reviewed: 0, 
-        risky: 0, 
+      companiesMap[name] = {
+        companyName: name,
+        totalJobs: 0,
+        pending: 0,
+        reviewed: 0,
+        risky: 0,
         lastPosted: 0,
         logo: job.img || job.logo || null // Capture logo from job record
       };
     }
     const c = companiesMap[name];
-    
+
     // Update logo if current is null but job has one
     if (!c.logo && (job.img || job.logo)) {
       c.logo = job.img || job.logo;
@@ -619,7 +619,7 @@ const Companies = () => {
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
           >
             <SearchBar value={searchQuery} onChange={handleSearch} />
-            
+
             <div className="flex bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
               <button
                 onClick={() => setViewMode('grid')}

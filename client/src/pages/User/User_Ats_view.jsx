@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Skeleton from "../../components/Skeleton";
 import {
   LineChart,
   Line,
@@ -120,10 +121,66 @@ function AtsScreenBrackDown({ atsData }) {
 
   // Add loading state and null check
   if (!atsData || !atsData.analysis) {
-    console.warn("atsData or atsData.analysis is missing:", atsData);
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-[#6B46C1] text-xl">Loading analysis data...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-2">
+              <Skeleton variant="title" className="h-7 w-48" />
+              <Skeleton variant="text" className="h-4 w-64" />
+            </div>
+          </div>
+
+          {/* Overall Score Card Skeleton */}
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <Skeleton variant="circle" className="h-40 w-40 shrink-0" />
+              <div className="flex-1 space-y-4">
+                <Skeleton variant="title" className="h-6 w-1/2" />
+                <Skeleton variant="text" className="h-4 w-full" />
+                <Skeleton variant="text" className="h-4 w-3/4" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-24 rounded-full" />
+                  <Skeleton className="h-8 w-32 rounded-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Score Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton variant="title" className="h-5 w-1/2" />
+                    <Skeleton variant="text" className="h-3 w-2/3" />
+                  </div>
+                  <Skeleton variant="circle" className="h-12 w-12 shrink-0" />
+                </div>
+                <Skeleton className="h-1 w-full rounded-full" />
+              </div>
+            ))}
+          </div>
+
+          {/* Improvement Tips Section Skeleton */}
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-6">
+            <Skeleton variant="title" className="h-6 w-1/3" />
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-4">
+                  <Skeleton variant="circle" className="h-10 w-10 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton variant="text" className="h-4 w-1/2" />
+                    <Skeleton variant="text" className="h-3 w-3/4" />
+                    <Skeleton variant="text" className="h-3 w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

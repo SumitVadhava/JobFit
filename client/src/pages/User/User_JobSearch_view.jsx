@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
-import ButtonLogo from "../../assets/button_logo.png"
+import ButtonLogo from "../../assets/button_logo.png";
 import { Briefcase } from "lucide-react";
+import Skeleton from "../../components/Skeleton";
 
 const getStatusConfig = (status) => {
   switch (status?.toLowerCase()) {
@@ -412,15 +413,73 @@ const JobSearch = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 border-4 rounded-full animate-spin"
-            style={{ borderColor: "#f3e8ff", borderTopColor: "#9c44fe" }}
-          />
-          <p className="text-base font-medium text-gray-400 animate-pulse">
-            Finding the best jobs for you...
-          </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 font-['Inter',sans-serif]">
+        {/* Header Skeleton */}
+        <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="w-full sm:w-auto">
+              <Skeleton variant="title" className="h-8 w-48 mb-2" />
+              <Skeleton variant="text" className="h-4 w-32" />
+            </div>
+            <Skeleton className="w-full sm:w-96 h-11 rounded-xl" />
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
+          {/* Filter Sidebar Skeleton */}
+          <aside className="w-full lg:w-72 shrink-0">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-6">
+              <Skeleton variant="title" className="h-6 w-24" />
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton variant="text" className="h-4 w-32" />
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((j) => (
+                      <div key={j} className="flex gap-3 items-center">
+                        <Skeleton variant="circle" className="h-5 w-5" />
+                        <Skeleton variant="text" className="h-4 w-24" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+
+          {/* Main Content Skeleton */}
+          <main className="flex-1 space-y-6">
+            <div className="flex gap-2 mb-5">
+              <Skeleton className="h-8 w-20 rounded-full" />
+              <Skeleton className="h-8 w-24 rounded-full" />
+            </div>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-3xl border border-gray-200 p-5">
+                <div className="flex gap-5">
+                  <Skeleton variant="image" className="h-20 w-20 rounded-2xl shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton variant="title" className="h-6 w-3/4" />
+                    <Skeleton variant="text" className="h-4 w-1/2" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-24 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 space-y-2">
+                  <Skeleton variant="text" className="h-4 w-full" />
+                  <Skeleton variant="text" className="h-4 w-5/6" />
+                </div>
+                <div className="mt-6 flex justify-between items-center pt-5 border-t border-gray-100">
+                  <Skeleton variant="text" className="h-4 w-24" />
+                  <div className="flex gap-3">
+                    <Skeleton variant="button" className="h-10 w-24" />
+                    <Skeleton variant="button" className="h-10 w-32" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </main>
         </div>
       </div>
     );
