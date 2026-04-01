@@ -155,4 +155,55 @@ router.get(
   userDashboardController.getAppliedCompaniesData,
 );
 
+/**
+ * @swagger
+ * /api/user/notifications:
+ *   get:
+ *     summary: Get application outcome notifications for the current user
+ *     tags: [User Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Notification list retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.get(
+  "/notifications",
+  authorizeRole(ROLES.CANDIDATE, ROLES.USER),
+  userDashboardController.getMyNotifications,
+);
+
+/**
+ * @swagger
+ * /api/user/notifications/{notificationId}/read:
+ *   patch:
+ *     summary: Mark a notification as read
+ *     tags: [User Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: notificationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Notification document ID
+ *     responses:
+ *       200:
+ *         description: Notification marked as read
+ *       400:
+ *         description: Invalid notification id
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Notification not found
+ */
+router.patch(
+  "/notifications/:notificationId/read",
+  authorizeRole(ROLES.CANDIDATE, ROLES.USER),
+  userDashboardController.markNotificationAsRead,
+);
+
 module.exports = router;

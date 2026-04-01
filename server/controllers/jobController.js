@@ -1,5 +1,6 @@
 const Job = require("../models/jobs");
 const AppliedJob = require("../models/appliedJobs");
+const Notification = require("../models/notification");
 const SavedJob = require("../models/savedJobs");
 const Profile = require("../models/candidateProfile");
 const Login = require("../models/login");
@@ -211,7 +212,18 @@ exports.createJob = async (req, res) => {
 
 exports.getAllJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({});
+    const principal = await resolveAuthenticatedPrincipal(req.user);
+    if (!principal) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const isUserFacingRole =
+      principal.role === ROLES.CANDIDATE || principal.role === ROLES.USER;
+
+    const jobs = isUserFacingRole
+      ? await Job.find({ openings: { $gt: 0 } })
+      : await Job.find({});
+
     res.status(200).json({ message: "Jobs retrieved successfully", jobs });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -224,10 +236,24 @@ exports.getJobById = async (req, res) => {
       return res.status(400).json({ message: "Invalid job id" });
     }
 
+    const principal = await resolveAuthenticatedPrincipal(req.user);
+    if (!principal) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const job = await Job.findById(req.params.id);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
+
+    const isUserFacingRole =
+      principal.role === ROLES.CANDIDATE || principal.role === ROLES.USER;
+
+    // Keep filled jobs in DB for recruiter/admin history, but hide from candidate/user.
+    if (isUserFacingRole && Number(job.openings) <= 0) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
     res.status(200).json({ message: "Job retrieved successfully", job });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -293,9 +319,16 @@ exports.saveJob = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const job = await Job.findById(jobId).select("_id");
+    const job = await Job.findById(jobId).select("_id openings");
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
+    }
+
+    const isUserFacingRole =
+      principal.role === ROLES.CANDIDATE || principal.role === ROLES.USER;
+
+    if (isUserFacingRole && Number(job.openings) <= 0) {
+      return res.status(409).json({ message: "Job is closed" });
     }
 
     const existingSavedJob = await SavedJob.findOne({
@@ -743,7 +776,7 @@ exports.hireCandidateForJob = async (req, res) => {
 
     const ownershipFilter = buildRecruiterOwnershipFilter(principal);
     const job = await Job.findOne({ _id: jobId, ...ownershipFilter })
-      .select("_id openings")
+      .select("_id openings jobTitle companyName")
       .lean();
 
     if (!job) {
@@ -751,7 +784,7 @@ exports.hireCandidateForJob = async (req, res) => {
     }
 
     const application = await AppliedJob.findOne({ _id: applicationId, jobId })
-      .select("_id jobId status isHired")
+      .select("_id jobId userId userModel status isHired")
       .lean();
 
     if (!application) {
@@ -800,7 +833,7 @@ exports.hireCandidateForJob = async (req, res) => {
       {
         $set: {
           isHired: true,
-          status: "accepted",
+          status: "hired",
           updatedAt: now,
         },
       },
@@ -818,8 +851,65 @@ exports.hireCandidateForJob = async (req, res) => {
         .json({ message: "Unable to hire candidate. Please retry." });
     }
 
+    const notificationsSummary = {
+      selectedCandidateNotified: false,
+      notSelectedCandidatesNotified: 0,
+    };
+
+    const selectedUserModel = application.userModel || USER_MODELS.LOGIN;
+
+    try {
+      await Notification.create({
+        userId: application.userId,
+        userModel: selectedUserModel,
+        jobId,
+        applicationId,
+        outcome: "selected",
+        title: "Application update: selected",
+        message: `Congratulations! You have been selected for ${job.jobTitle} at ${job.companyName}.`,
+        createdAt: now,
+        updatedAt: now,
+      });
+      notificationsSummary.selectedCandidateNotified = true;
+    } catch (_notificationError) {
+      notificationsSummary.selectedCandidateNotified = false;
+    }
+
     let removedUnhiredApplications = 0;
     if (updatedJob.openings === 0) {
+      const notSelectedApplications = await AppliedJob.find({
+        jobId,
+        isHired: false,
+      })
+        .select("_id userId userModel")
+        .lean();
+
+      if (notSelectedApplications.length > 0) {
+        const rejectionNotifications = notSelectedApplications.map(
+          (notSelectedApplication) => ({
+            userId: notSelectedApplication.userId,
+            userModel: notSelectedApplication.userModel || USER_MODELS.LOGIN,
+            jobId,
+            applicationId: notSelectedApplication._id,
+            outcome: "not_selected",
+            title: "Application update: not selected",
+            message: `Your application for ${job.jobTitle} at ${job.companyName} was not selected because all openings are now filled.`,
+            createdAt: now,
+            updatedAt: now,
+          }),
+        );
+
+        try {
+          await Notification.insertMany(rejectionNotifications, {
+            ordered: false,
+          });
+          notificationsSummary.notSelectedCandidatesNotified =
+            rejectionNotifications.length;
+        } catch (_notificationError) {
+          notificationsSummary.notSelectedCandidatesNotified = 0;
+        }
+      }
+
       const cleanupResult = await AppliedJob.deleteMany({
         jobId,
         isHired: false,
@@ -835,6 +925,7 @@ exports.hireCandidateForJob = async (req, res) => {
         openingsLeft: updatedJob.openings,
         isHired: true,
         removedUnhiredApplications,
+        notifications: notificationsSummary,
       },
     });
   } catch (error) {

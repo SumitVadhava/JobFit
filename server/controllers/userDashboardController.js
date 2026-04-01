@@ -1,5 +1,6 @@
 const UserDashboard = require("../models/userDashboard");
 const AppliedJob = require("../models/appliedJobs");
+const Notification = require("../models/notification");
 const SavedJob = require("../models/savedJobs");
 const Login = require("../models/login");
 const GoogleLogin = require("../models/google_login");
@@ -215,6 +216,87 @@ exports.getAppliedCompaniesData = async (req, res) => {
       uniqueCompaniesCount: uniqueCompanies.length,
       companies: uniqueCompanies,
       applications: formattedApplications,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.getMyNotifications = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const userModel = await resolveUserModelFromAuth(req.user);
+    if (!userModel) {
+      return res.status(401).json({ message: "Authenticated user not found" });
+    }
+
+    const notifications = await Notification.find({
+      userId: req.user.id,
+      userModel,
+    })
+      .populate({
+        path: "jobId",
+        select: "jobTitle companyName location",
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      totalNotifications: notifications.length,
+      unreadCount: notifications.filter((item) => !item.isRead).length,
+      notifications,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.markNotificationAsRead = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+      return res.status(400).json({ message: "Invalid notification id" });
+    }
+
+    const userModel = await resolveUserModelFromAuth(req.user);
+    if (!userModel) {
+      return res.status(401).json({ message: "Authenticated user not found" });
+    }
+
+    const notification = await Notification.findOneAndUpdate(
+      {
+        _id: notificationId,
+        userId: req.user.id,
+        userModel,
+      },
+      {
+        $set: {
+          isRead: true,
+          updatedAt: new Date(Date.now() + 5.5 * 60 * 60 * 1000),
+        },
+      },
+      { new: true },
+    ).lean();
+
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    return res.status(200).json({
+      message: "Notification marked as read",
+      notification,
     });
   } catch (error) {
     return res

@@ -267,7 +267,7 @@ const options = {
             jobId: { type: "string", example: "689f13f42c9b4f0012a34321" },
             status: {
               type: "string",
-              enum: ["applied", "shortlisted", "rejected", "accepted"],
+              enum: ["applied", "shortlisted", "rejected", "hired"],
               example: "applied",
             },
             appliedAt: {
