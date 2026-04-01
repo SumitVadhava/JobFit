@@ -210,7 +210,9 @@ const Recruiter_Analytics_view = () => {
       try {
         setLoading(true);
 
-        const jobsRes = await api.get(`/jobs/recruiter/${userId}`).catch(() => null);
+        const jobsRes = await api
+          .get(`/jobs/recruiter/${userId}`)
+          .catch(() => null);
         const recruiterJobs = jobsRes?.data?.jobs || [];
         setJobs(recruiterJobs);
 
@@ -625,7 +627,8 @@ const Recruiter_Analytics_view = () => {
                     "";
 
                   const applicationTime = app.appliedAt || app.createdAt;
-                  const formattedDateTime = formatBackendDateTime(applicationTime);
+                  const formattedDateTime =
+                    formatBackendDateTime(applicationTime);
 
                   return (
                     <motion.div
@@ -666,8 +669,6 @@ const Recruiter_Analytics_view = () => {
                       <span className="text-xs text-gray-300 shrink-0">
                         {formattedDateTime}
                       </span>
-
-                      <ArrowRight size={15} className="text-gray-300 shrink-0" />
                     </motion.div>
                   );
                 })}
