@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContexts";
 import api from "../../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Skeleton from "../../components/Skeleton";
 
 /* ── ATS Circular Gauge ─────────────────────────────────────── */
 const AtsGauge = ({ score }) => {
@@ -626,10 +627,48 @@ const Candidate_Profile_View = ({ userProp }) => {
   /* ── Loading State ────────────────────────────────────────── */
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
-          <p className="text-lg font-medium text-gray-600 animate-pulse">Loading profile...</p>
+      <div className="min-h-screen bg-slate-50 font-poppins">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 pb-16 space-y-6">
+          {/* Header Skeleton */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-lg px-6 py-5">
+            <div className="flex flex-wrap items-center gap-5">
+              <Skeleton variant="circle" className="h-24 w-24 shrink-0" />
+              <div className="flex-1 min-w-0 space-y-3">
+                <Skeleton variant="title" className="h-7 w-1/2" />
+                <Skeleton variant="text" className="h-4 w-1/3" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Skeleton variant="button" className="h-9 w-20" />
+                <Skeleton variant="button" className="h-9 w-32" />
+              </div>
+            </div>
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_288px] gap-5">
+            <div className="flex flex-col gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+                  <Skeleton variant="title" className="h-5 w-1/3" />
+                  <Skeleton variant="text" className="h-4 w-full" />
+                  <Skeleton variant="text" className="h-4 w-4/5" />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+                  <Skeleton variant="title" className="h-5 w-3/4 mb-4" />
+                  <Skeleton variant="text" className="h-4 w-full" />
+                  <Skeleton variant="text" className="h-4 w-full mt-2" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );

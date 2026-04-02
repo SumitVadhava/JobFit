@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const storedToken = localStorage.getItem("token");
-    
+
     if (storedUser && storedToken) {
       try {
         const decodedToken = jwtDecode(storedToken);
@@ -46,8 +46,7 @@ export const AuthProvider = ({ children }) => {
     setRole(userRole || userData.role);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", jwtToken);
-    
-    console.log("User logged in:", userData);
+
   };
 
   const logout = () => {
@@ -62,7 +61,6 @@ export const AuthProvider = ({ children }) => {
     const newUser = { ...user, ...updatedUserData };
     setUser(newUser);
     localStorage.setItem("user", JSON.stringify(newUser));
-    console.log("User state updated:", newUser);
   };
 
   return (

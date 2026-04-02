@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api/api";
 import { toast } from "react-toastify";
+import { RecruiterSkeletonPostedJobsPage } from "../../components/recruiter/RecruiterSkeletons";
 
 const Recruiter_Posted_Jobs_view = () => {
   const [jobs, setJobs] = useState([]);
@@ -132,16 +133,7 @@ const Recruiter_Posted_Jobs_view = () => {
   });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-purple-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-purple-200 rounded-full animate-spin border-t-purple-600"></div>
-          <p className="text-lg font-medium text-gray-600 animate-pulse">
-            Loading your posted jobs...
-          </p>
-        </div>
-      </div>
-    );
+    return <RecruiterSkeletonPostedJobsPage />;
   }
 
   return (
