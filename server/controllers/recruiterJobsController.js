@@ -193,3 +193,24 @@ exports.updateApplicationStatus = async (req, res) => {
     res.status(500).json({ error: true, message: "Failed to update application status." });
   }
 };
+
+/**
+ * Delete a job (Only if no one has applied)
+ */
+exports.deleteJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Validation (Job existence, Ownership, Applicant check) is now handled by validateJobDeletion middleware
+
+    await Job.findByIdAndDelete(jobId);
+
+    res.status(200).json({
+      error: false,
+      message: "Job deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Delete Job Error:", error);
+    res.status(500).json({ error: true, message: "Failed to delete job." });
+  }
+};

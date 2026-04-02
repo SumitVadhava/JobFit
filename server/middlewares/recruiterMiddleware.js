@@ -1,5 +1,7 @@
 const { protect, authorize } = require("./authMiddleware");
 const { ROLES } = require("../utils/roles");
+const Job = require("../models/jobs");
+const Application = require("../models/applications");
 
 /**
  * Recruiter Authentication Middleware
@@ -50,9 +52,44 @@ const validateRecruiterProfileUpdate = (req, res, next) => {
   next();
 };
 
+/**
+ * Validate Job Deletion (Ownership & No applicants)
+ */
+const validateJobDeletion = async (req, res, next) => {
+  try {
+    const { jobId } = req.params;
+
+    // 1. Find the job
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: true, message: "Job not found." });
+    }
+
+    // 2. Check ownership
+    if (String(job.recruiterId) !== String(req.user.id)) {
+      return res.status(403).json({ error: true, message: "Unauthorized to delete this job." });
+    }
+
+    // 3. Check for applicants
+    const applicantCount = await Application.countDocuments({ jobId });
+    if (applicantCount > 0) {
+      return res.status(400).json({
+        error: true,
+        message: "This job cannot be deleted because it already has applicants.",
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Validate Job Deletion Error:", error);
+    res.status(500).json({ error: true, message: "Server error during job deletion validation." });
+  }
+};
+
 module.exports = {
   recruiterAuth,
   validateJobPost,
   validateApplicationStatusUpdate,
   validateRecruiterProfileUpdate,
+  validateJobDeletion,
 };

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const recruiterController = require("../controllers/recruiterController");
 const recruiterJobsController = require("../controllers/recruiterJobsController");
-const { recruiterAuth, validateJobPost, validateApplicationStatusUpdate, validateRecruiterProfileUpdate } = require("../middlewares/recruiterMiddleware");
+const { recruiterAuth, validateJobPost, validateApplicationStatusUpdate, validateRecruiterProfileUpdate, validateJobDeletion } = require("../middlewares/recruiterMiddleware");
 const { validateIds } = require("../middlewares/commonMiddleware");
 const upload = require("../middlewares/uploadMiddleware");
 
@@ -244,5 +244,30 @@ router.get("/applicants", validateIds(["jobId"]), recruiterJobsController.getApp
  *         description: Application status updated successfully (decrements job openings if status is "hired")
  */
 router.patch("/applicants/:applicationId/status", validateIds(["applicationId"]), validateApplicationStatusUpdate, recruiterJobsController.updateApplicationStatus);
+
+/**
+ * @swagger
+ * /api/recruiter/jobs/{jobId}:
+ *   delete:
+ *     summary: Delete a job listing (Only if no one has applied)
+ *     tags: [Recruiter-Jobs]
+ *     parameters:
+ *       - in: path
+ *         name: jobId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the job to delete
+ *     responses:
+ *       200:
+ *         description: Job deleted successfully
+ *       400:
+ *         description: Cannot delete job (e.g., has applicants)
+ *       403:
+ *         description: Unauthorized to delete this job
+ *       404:
+ *         description: Job not found
+ */
+router.delete("/jobs/:jobId", validateIds(["jobId"]), validateJobDeletion, recruiterJobsController.deleteJob);
 
 module.exports = router;
