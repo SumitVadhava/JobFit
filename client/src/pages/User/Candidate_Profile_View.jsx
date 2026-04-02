@@ -429,7 +429,6 @@ const Candidate_Profile_View = ({ userProp }) => {
           // Compute best ATS dynamically from ATS history and Resumes
           if (userIdToFetch) {
             const [resumeRes, atsHistoryRes] = await Promise.all([
-              api.get(`/resume/${userIdToFetch}`).catch(() => null),
               isOwnProfile ? api.get("/candidate/ats-analyzer").catch(() => null) : Promise.resolve(null),
             ]);
             const resumesList = resumeRes?.data?.resumes || resumeRes?.data || [];
