@@ -352,7 +352,7 @@ const CompanyTable = ({ companies, loading, sortKey, sortDir, onSort }) => (
                     {/* Status Breakdown */}
                     <td style={{ padding: '16px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                        <StatusBadge count={co.reviewed} label="Reviewed" bg={t.greenDim} color={t.green} />
+                        <StatusBadge count={co.verified} label="Verified" bg={t.greenDim} color={t.green} />
                         <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />
                         <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />
                       </div>
@@ -420,11 +420,17 @@ const CompanyCard = ({ co, index }) => {
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-50">
-          <div className="grid grid-cols-3 gap-3">
-            <StatusBadge count={co.reviewed} label="Reviewed" bg={t.greenDim} color={t.green} />
-            <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />
-            <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />
+        <div className="mt-6 pt-5 border-t border-gray-100">
+          <div className="flex flex-wrap gap-2">
+            {co.verified > 0 && <StatusBadge count={co.verified} label="Verified" bg={t.greenDim} color={t.green} />}
+            {co.pending > 0 && <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />}
+            {co.risky > 0 && <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />}
+            {co.verified === 0 && co.pending === 0 && co.risky === 0 && (
+              <span style={{
+                fontSize: 11, color: t.muted,
+                fontFamily: "'Inter', sans-serif", fontWeight: 500,
+              }}>No status data</span>
+            )}
           </div>
         </div>
       </div>
@@ -481,7 +487,7 @@ const Companies = () => {
         companyName: name,
         totalJobs: 0,
         pending: 0,
-        reviewed: 0,
+        verified: 0,
         risky: 0,
         lastPosted: 0,
         logo: job.img || job.logo || null // Capture logo from job record
@@ -495,8 +501,8 @@ const Companies = () => {
     }
 
     c.totalJobs += 1;
-    const status = job.adminReview || 'pending';
-    if (status === 'reviewed') c.reviewed += 1;
+    const status = job.status || 'pending';
+    if (status === 'verified') c.verified += 1;
     else if (status === 'risky') c.risky += 1;
     else c.pending += 1;
 
@@ -515,8 +521,8 @@ const Companies = () => {
 
   /* ─── Stats ─── */
   const totalJobs = jobsData.length;
-  const totalReviewed = jobsData.filter(j => j.adminReview === 'reviewed').length;
-  const totalRisky = jobsData.filter(j => j.adminReview === 'risky').length;
+  const totalVerified = jobsData.filter(j => j.status === 'verified').length;
+  const totalRisky = jobsData.filter(j => j.status === 'risky').length;
 
   /* ─── Filter ─── */
   const filtered = allCompanies.filter(co =>
@@ -609,7 +615,7 @@ const Companies = () => {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <StatCard label="Companies" value={allCompanies.length} color={t.accent} icon={BusinessIcon} delay={.1} />
             <StatCard label="Total Jobs" value={totalJobs} color="#0284C7" icon={WorkIcon} delay={.15} />
-            <StatCard label="Reviewed" value={totalReviewed} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
+            <StatCard label="Verified" value={totalVerified} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
             <StatCard label="Risky" value={totalRisky} color={t.red} icon={ReportProblemIcon} delay={.25} />
           </div>
 

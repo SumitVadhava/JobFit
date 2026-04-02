@@ -2,16 +2,16 @@ import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
+import { motion } from "framer-motion";
+
 import {
   ArrowRight,
   Briefcase,
   Building2,
-  CircleDot,
   Rocket,
   Sparkles,
   Users,
-} from "lucide-react";
-import { motion } from "framer-motion";
+} from "lucide-react"
 
 import {
   StatCard,
@@ -47,7 +47,13 @@ const AdminAnalytics = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
+        // Fetch stats from dashboard endpoint (stat cards only)
+        const statsRes = await api.get("/admin/dashboard");
+        const statsData = statsRes.data.data || {};
+
+        console.log(statsData);
+
         // Fetch jobs
         const jobsRes = await api.get("/admin/jobs");
         const fetchedJobs = jobsRes.data.data || [];
@@ -55,21 +61,21 @@ const AdminAnalytics = () => {
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
         setJobs(sortedJobs);
-        
+
         // Fetch companies
         const companiesRes = await api.get("/admin/companies");
         const fetchedCompanies = companiesRes.data.data || [];
         setCompanies(fetchedCompanies);
-        
-        // Fetch application stats
-        const statsRes = await api.get("/admin/application-stats");
-        setApplicationStats(statsRes.data.data || { applicants: 0, shortlisted: 0, hired: 0 });
 
-        // Fetch user stats (candidates vs recruiters)
-        const candidatesRes = await api.get("/admin/candidates");
-        const recruitersRes = await api.get("/admin/recruiters");
-        const candCount = (candidatesRes.data.data || []).length;
-        const recCount = (recruitersRes.data.data || []).length;
+        // Set derived stats
+        setApplicationStats({
+          applicants: statsData.totalApplications || 0,
+          shortlisted: statsData.totalShortlisted || 0,
+          hired: statsData.totalHired || 0,
+        });
+
+        const candCount = statsData.totalCandidates || 0;
+        const recCount = statsData.totalRecruiter || 0;
         setUserStats({ candidates: candCount, recruiters: recCount });
 
         // Prepare Company Distribution Data (Jobs per company)
@@ -81,7 +87,7 @@ const AdminAnalytics = () => {
         const chartData = Object.keys(companyJobMap).map(name => ({
           name: name.length > 10 ? name.substring(0, 10) + '...' : name,
           jobs: companyJobMap[name]
-        })).sort((a,b) => b.jobs - a.jobs).slice(0, 6);
+        })).sort((a, b) => b.jobs - a.jobs).slice(0, 6);
         setCompanyData(chartData);
 
         // Prepare Role Split Data
@@ -89,7 +95,7 @@ const AdminAnalytics = () => {
           { name: 'Candidates', value: candCount, color: '#9c44fe' },
           { name: 'Recruiters', value: recCount, color: '#f59e0b' }
         ]);
-        
+
       } catch (err) {
         console.error("Error loading data:", err);
         toast.error("Failed to load dashboard data");
@@ -101,29 +107,12 @@ const AdminAnalytics = () => {
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 border-4 rounded-full animate-spin"
-            style={{ borderColor: "#f3e8ff", borderTopColor: "#9c44fe" }}
-          />
-          <p className="text-base font-medium text-gray-400 animate-pulse">
-            Loading dashboard...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const Skeleton = ({ className }) => (
+    <div className={`animate-pulse bg-slate-200/60 rounded-2xl ${className}`} />
+  );
 
   return (
-    <div
-      className="min-h-screen p-4 sm:p-8"
-      style={{
-        background: "radial-gradient(circle at top left, #fdfbff 0%, #ffffff 100%)",
-      }}
-    >
+    <div className="min-h-screen p-4 sm:p-8 bg-[radial-gradient(circle_at_top_left,_#fdfbff_0%,_#ffffff_100%)]">
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -165,34 +154,42 @@ const AdminAnalytics = () => {
 
         {/* ─── Overview Stats ─── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <StatCard
-            label="Companies"
-            value={companies.length}
-            icon={Building2}
-            color="#9c44fe"
-            delay={0.1}
-          />
-          <StatCard
-            label="Total Jobs"
-            value={jobs.length}
-            icon={Briefcase}
-            color="#0ea5e9"
-            delay={0.2}
-          />
-          <StatCard
-            label="Candidates"
-            value={userStats.candidates}
-            icon={Users}
-            color="#f59e0b"
-            delay={0.3}
-          />
-          <StatCard
-            label="Hired"
-            value={applicationStats.hired}
-            icon={Rocket}
-            color="#10b981"
-            delay={0.4}
-          />
+          {loading ? (
+            [1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))
+          ) : (
+            <>
+              <StatCard
+                label="Companies"
+                value={companies.length}
+                icon={Building2}
+                color="#9c44fe"
+                delay={0.1}
+              />
+              <StatCard
+                label="Total Jobs"
+                value={jobs.length}
+                icon={Briefcase}
+                color="#0ea5e9"
+                delay={0.2}
+              />
+              <StatCard
+                label="Candidates"
+                value={userStats.candidates}
+                icon={Users}
+                color="#f59e0b"
+                delay={0.3}
+              />
+              <StatCard
+                label="Hired"
+                value={applicationStats.hired}
+                icon={Rocket}
+                color="#10b981"
+                delay={0.4}
+              />
+            </>
+          )}
         </div>
 
         {/* ─── Analytics & Insights Section ─── */}
@@ -213,26 +210,30 @@ const AdminAnalytics = () => {
                 <Sparkles size={18} className="text-purple-600" />
               </div>
             </div>
-            
+
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={companyData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
-                    dy={10}
-                  />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
-                  <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontWeight: 800 }}
-                  />
-                  <Bar dataKey="jobs" fill="#9c44fe" radius={[6, 6, 0, 0]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
+              {loading ? (
+                <Skeleton className="w-full h-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={companyData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
+                      dy={10}
+                    />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+                    <Tooltip
+                      cursor={{ fill: '#f8fafc' }}
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontWeight: 800 }}
+                    />
+                    <Bar dataKey="jobs" fill="#9c44fe" radius={[6, 6, 0, 0]} barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </motion.div>
 
@@ -247,36 +248,44 @@ const AdminAnalytics = () => {
               <h2 className="text-lg font-black text-slate-900 leading-none">User Ratio</h2>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-2">Candidate vs Recruiter Split</p>
             </div>
-            
+
             <div className="h-[240px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={roleData}
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={8}
-                    dataKey="value"
-                  >
-                    {roleData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    iconType="circle"
-                    formatter={(value) => <span className="text-xs font-bold text-slate-600 ml-1">{value}</span>}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              {loading ? (
+                <Skeleton className="w-full h-full rounded-full max-w-[200px] mx-auto" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={roleData}
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={8}
+                      dataKey="value"
+                    >
+                      {roleData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend
+                      verticalAlign="bottom"
+                      iconType="circle"
+                      formatter={(value) => <span className="text-xs font-bold text-slate-600 ml-1">{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
-            
+
             <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-               <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500">Total Registered</span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Total Registered</span>
+                {loading ? (
+                  <Skeleton className="w-12 h-5" />
+                ) : (
                   <span className="text-sm font-black text-slate-900">{userStats.candidates + userStats.recruiters}</span>
-               </div>
+                )}
+              </div>
             </div>
           </motion.div>
         </div>
@@ -287,14 +296,12 @@ const AdminAnalytics = () => {
             <div className="flex items-center justify-between px-2">
               <h2 className="text-xl font-black text-slate-900">Recent Job Posts</h2>
             </div>
-            
+
             <div className="space-y-3">
               {loading ? (
-                <EmptyState
-                  icon={CircleDot}
-                  title="Loading Jobs"
-                  subtitle="Syncing with database..."
-                />
+                [1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-20 w-full" />
+                ))
               ) : jobs.length === 0 ? (
                 <EmptyState
                   icon={Briefcase}
@@ -311,9 +318,9 @@ const AdminAnalytics = () => {
                     className="group flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 hover:border-purple-200 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 cursor-pointer"
                   >
                     <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-purple-50 group-hover:border-purple-100 transition-colors">
-                       <span className="text-lg font-black text-slate-400 group-hover:text-purple-600">
-                          {job.companyName?.charAt(0).toUpperCase()}
-                       </span>
+                      <span className="text-lg font-black text-slate-400 group-hover:text-purple-600">
+                        {job.companyName?.charAt(0).toUpperCase()}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-black text-slate-900 truncate tracking-tight group-hover:text-purple-700 transition-colors">
@@ -326,9 +333,15 @@ const AdminAnalytics = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
+                      {job.openings > 0 ? (
                         <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
-                          {job.openings || 0} Openings
+                          {job.openings} Openings
                         </span>
+                      ) : (
+                        <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
+                          Filled
+                        </span>
+                      )}
                     </div>
                   </motion.div>
                 ))
@@ -347,21 +360,39 @@ const AdminAnalytics = () => {
               <Rocket size={24} className="text-emerald-600" />
             </div>
             <h2 className="text-xl font-extrabold mb-2 leading-tight tracking-tight">Growth Insights</h2>
-            <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">Your network grew by 12% this month. More recruiters are looking for talent.</p>
-            
+            {loading ? (
+              <Skeleton className="h-10 w-full mb-8" />
+            ) : (
+              <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
+                Your network has {companies.length} active companies. More recruiters are joining the platform.
+              </p>
+            )}
+
             <div className="space-y-4">
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Avg. Applications</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black">4.2</span>
-                  <span className="text-xs font-semibold text-slate-400">per job</span>
+                  <span className="text-2xl font-black">
+                    {loading ? <Skeleton className="w-16 h-8" /> : (jobs.length > 0 ? (applicationStats.applicants / jobs.length).toFixed(1) : "0.0")}
+                  </span>
+                  {!loading && <span className="text-xs font-semibold text-slate-400">per job</span>}
                 </div>
               </div>
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Shortlist Rate</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-emerald-600">68%</span>
-                  <span className="text-xs font-bold text-emerald-500/80">+2% vs LY</span>
+                  {loading ? (
+                    <Skeleton className="w-20 h-8" />
+                  ) : (
+                    <>
+                      <span className="text-2xl font-black text-emerald-600">
+                        {applicationStats.applicants > 0 ? ((applicationStats.shortlisted / applicationStats.applicants) * 100).toFixed(0) : "0"}%
+                      </span>
+                      <span className="text-xs font-bold text-emerald-500/80">
+                        {applicationStats.shortlisted > 0 ? "+2% vs LY" : "Awaiting data"}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

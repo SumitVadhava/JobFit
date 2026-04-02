@@ -41,7 +41,7 @@ const t = {
 
 const STATUS = {
   pending: { label: 'Pending', bg: t.amberDim, color: t.amber, dot: '#F59E0B' },
-  reviewed: { label: 'Reviewed', bg: t.greenDim, color: t.green, dot: '#22C55E' },
+  verified: { label: 'Verified', bg: t.greenDim, color: t.green, dot: '#22C55E' },
   risky: { label: 'Risky', bg: t.redDim, color: t.red, dot: '#EF4444' },
 };
 
@@ -267,7 +267,7 @@ const TabBar = ({ active, onChange, counts }) => {
   const tabs = [
     { key: 'All', label: 'All', count: counts.all },
     { key: 'pending', label: 'Pending', count: counts.pending },
-    { key: 'reviewed', label: 'Reviewed', count: counts.reviewed },
+    { key: 'verified', label: 'Verified', count: counts.verified },
     { key: 'risky', label: 'Risky', count: counts.risky },
   ];
   return (
@@ -500,7 +500,7 @@ const JobTable = ({ jobs, onStatusChange, loading, sortKey, sortDir, onSort, ope
                       <td style={{ padding: '16px 20px' }}>
                         <StatusPill
                           pillId={`table-${job._id}`}
-                          value={job.adminReview}
+                          value={job.status}
                           onChange={(val) => onStatusChange(job._id, val)}
                           openPillId={openPillId}
                           setOpenPillId={setOpenPillId}
@@ -543,7 +543,7 @@ const MobileCard = ({ job, onStatusChange, index, openPillId, setOpenPillId, onV
       <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: t.text, fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
         {job.jobTitle}
       </span>
-      <StatusPill pillId={`mobile-${job._id}`} value={job.adminReview} onChange={val => onStatusChange(job._id, val)} compact openPillId={openPillId} setOpenPillId={setOpenPillId} />
+      <StatusPill pillId={`mobile-${job._id}`} value={job.status} onChange={val => onStatusChange(job._id, val)} compact openPillId={openPillId} setOpenPillId={setOpenPillId} />
     </div>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: t.muted, fontWeight: 500 }}>
@@ -623,10 +623,13 @@ const JobDescriptions = () => {
 
   const handleStatusChange = async (jobId, newStatus) => {
     try {
-      await api.patch(`/jobs/${jobId}/admin-review`, { adminReview: newStatus });
-      setJobsData(prev => prev.map(j => j._id === jobId ? { ...j, adminReview: newStatus } : j));
+      await api.patch(`/admin/jobs/status/${jobId}`, { status: newStatus });
+      setJobsData(prev => prev.map(j => j._id === jobId ? { ...j, status: newStatus } : j));
       toast.success('Status updated');
-    } catch { toast.error('Failed to update status'); }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      toast.error('Failed to update status');
+    }
   };
 
   const handleSort = (key) => {
@@ -651,14 +654,14 @@ const JobDescriptions = () => {
 
   const counts = {
     all: jobsData.length,
-    pending: jobsData.filter(j => j.adminReview === 'pending').length,
-    reviewed: jobsData.filter(j => j.adminReview === 'reviewed').length,
-    risky: jobsData.filter(j => j.adminReview === 'risky').length,
+    pending: jobsData.filter(j => j.status === 'pending').length,
+    verified: jobsData.filter(j => j.status === 'verified').length,
+    risky: jobsData.filter(j => j.status === 'risky').length,
   };
 
   // Filter
   const filteredJobs = jobsData.filter(job => {
-    const matchTab = activeTab === 'All' || job.adminReview === activeTab;
+    const matchTab = activeTab === 'All' || job.status === activeTab;
     const q = searchQuery.toLowerCase();
     const matchSearch = !q || `${job.jobTitle} ${job.companyName}`.toLowerCase().includes(q);
     return matchTab && matchSearch;
@@ -747,7 +750,7 @@ const JobDescriptions = () => {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <StatCard label="Total" value={counts.all} color={t.accent} icon={AssignmentIcon} delay={.1} />
             <StatCard label="Pending" value={counts.pending} color={t.amber} icon={PendingActionsIcon} delay={.15} />
-            <StatCard label="Reviewed" value={counts.reviewed} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
+            <StatCard label="Verified" value={counts.verified} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
             <StatCard label="Risky" value={counts.risky} color={t.red} icon={ReportProblemIcon} delay={.25} />
           </div>
 
