@@ -130,7 +130,14 @@ exports.getRecruiterProfileById = async (req, res) => {
       return res.status(400).json({ error: true, message: "Invalid profile ID" });
     }
 
-    const profile = await RecruiterProfile.findById(profileId);
+    // Try finding by Profile ID first, fallback to User ID lookup if necessary
+    // Populate user info so public profile views can display Name and Avatar correctly
+    let profile = await RecruiterProfile.findById(profileId).populate("user", "userName email picture");
+    
+    if (!profile) {
+      profile = await RecruiterProfile.findOne({ user: profileId }).populate("user", "userName email picture");
+    }
+
     if (!profile) {
       return res.status(404).json({ error: true, message: "Recruiter profile not found." });
     }
