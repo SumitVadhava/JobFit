@@ -6,6 +6,7 @@ import api from "../../../api/api";
 const createFallbackProfile = ({ name = "", email = "", picture = "" } = {}) => ({
   profileId: null,
   name,
+  userName: name,
   email,
   position: "",
   company: "",
@@ -36,6 +37,7 @@ const mapProfileToState = (profile, userName, userEmail, userPicture) => {
   return {
     profileId: profile?._id || null,
     name: displayName,
+    userName: displayName,
     email: profile?.email || userEmail || "",
     position: profile?.position || "",
     company: profile?.company || "",
@@ -56,7 +58,7 @@ const mapProfileToState = (profile, userName, userEmail, userPicture) => {
 export const useRecruiterProfile = (userProp) => {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const { user, logout } = useAuth();
 
   const currentUserId = normalizeId(user?._id || user?.id || "");
 
@@ -96,6 +98,12 @@ export const useRecruiterProfile = (userProp) => {
     (data.profileId && normalizeId(paramId) === normalizeId(data.profileId));
 
   const set = (field, value) => setData((prev) => ({ ...prev, [field]: value }));
+
+  const clearRecruiterSessionAndRedirect = () => {
+    localStorage.clear();
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   const mapStateToApi = (includeEmail = false) => {
     const normalizedTeamSize = Number.isFinite(Number(data.teamSize))
@@ -147,7 +155,7 @@ export const useRecruiterProfile = (userProp) => {
 
         const userName = !paramId
           ? userProp?.userName || user?.userName || user?.name || ""
-          : profile?.userName || profile?.user?.userName || profile?.user?.name || "User";
+          : profile?.userName || profile?.name || profile?.user?.userName || profile?.user?.name || "";
         const userEmail = !paramId
           ? userProp?.email || user?.email || ""
           : profile?.email || profile?.user?.email || "";
@@ -187,15 +195,16 @@ export const useRecruiterProfile = (userProp) => {
   }, [paramId, currentUserId, user?.userName, user?.email, user?.picture, userProp]);
 
   useEffect(() => {
-    if (userProp) {
+    if (userProp && !paramId) {
       setData((prev) => ({
         ...prev,
         name: userProp.userName || prev.name,
+        userName: userProp.userName || prev.userName,
         email: userProp.email || prev.email,
         profilePicture: userProp.picture || prev.profilePicture,
       }));
     }
-  }, [userProp]);
+  }, [userProp, paramId]);
 
   const startEditing = () => {
     setEditSnapshot({ ...data });
@@ -285,52 +294,18 @@ export const useRecruiterProfile = (userProp) => {
 
   const handleDelete = async () => {
     if (!profileExists) {
-      setData(
-        createFallbackProfile({
-          name: userProp?.userName || user?.userName || user?.name || "",
-          email: userProp?.email || user?.email || "",
-          picture: userProp?.picture || user?.picture || "",
-        })
-      );
-      setEditing(false);
-      setDeleteModalOpen(false);
-      setDeleteConfirmText("");
+      clearRecruiterSessionAndRedirect();
       return;
     }
 
     setDeleting(true);
     try {
       await api.delete("/recruiter/profile");
-      setData(
-        createFallbackProfile({
-          name: userProp?.userName || user?.userName || user?.name || "",
-          email: userProp?.email || user?.email || "",
-          picture: userProp?.picture || user?.picture || "",
-        })
-      );
-      setProfileExists(false);
-      setEditing(false);
-      setEditSnapshot(null);
-      setDeleteModalOpen(false);
-      setDeleteConfirmText("");
-      setProfileOwnerId(currentUserId || "");
-      if (updateUser) {
-        updateUser({ picture: "", img: "" });
-      }
-      setSaved(false);
+      clearRecruiterSessionAndRedirect();
     } catch (err) {
       console.error("Error deleting profile:", err);
       if (err.response?.status === 404) {
-        setData(
-          createFallbackProfile({
-            name: userProp?.userName || user?.userName || user?.name || "",
-            email: userProp?.email || user?.email || "",
-            picture: userProp?.picture || user?.picture || "",
-          })
-        );
-        setProfileExists(false);
-        setDeleteModalOpen(false);
-        setDeleteConfirmText("");
+        clearRecruiterSessionAndRedirect();
       } else {
         alert(err.response?.data?.message || "Failed to delete recruiter profile.");
       }
@@ -341,12 +316,13 @@ export const useRecruiterProfile = (userProp) => {
 
   const handleShare = async () => {
     const shareId = data.profileId || paramId || currentUserId || "";
+    const profileName = (data.userName || data.name || "Recruiter Profile").trim();
     const profileUrl = shareId
       ? `${window.location.origin}/recruiter/profile/${shareId}`
       : `${window.location.origin}/recruiter/profile`;
     const shareData = {
-      title: `${data.name} — Recruiter Profile`,
-      text: `Connect with ${data.name}, ${data.position} at ${data.company} via JobFit.`,
+      title: `${profileName} — Recruiter Profile`,
+      text: `Connect with ${profileName}, ${data.position} at ${data.company} via JobFit.`,
       url: profileUrl,
     };
 
