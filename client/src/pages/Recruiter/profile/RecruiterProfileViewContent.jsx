@@ -67,7 +67,8 @@ const RecruiterProfileViewContent = ({
   setGallery,
   setDeleteModalOpen,
 }) => {
-  const deleteTarget = (data.name || data.company || "DELETE PROFILE").trim();
+  const displayName = (data.userName || data.name || "").trim();
+  const deleteTarget = (displayName || data.company || "DELETE PROFILE").trim();
   const deleteMatches = deleteConfirmText.trim() === deleteTarget;
 
   return (
@@ -107,7 +108,7 @@ const RecruiterProfileViewContent = ({
                 </div>
               ) : (
                 <>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{data.name}</h1>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{displayName}</h1>
                   {data.email && <p className="text-sm text-slate-500 font-medium mt-1">{data.email}</p>}
                 </>
               )}
