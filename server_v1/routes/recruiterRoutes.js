@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const recruiterController = require("../controllers/recruiterController");
-const { protect, authorize } = require("../middlewares/authMiddleware");
+const recruiterJobsController = require("../controllers/recruiterJobsController");
+const { recruiterAuth, validateJobPost, validateApplicationStatusUpdate } = require("../middlewares/recruiterMiddleware");
+const { validateIds } = require("../middlewares/commonMiddleware");
 const upload = require("../middlewares/uploadMiddleware");
-const { ROLES } = require("../utils/roles");
 
 // All recruiter routes are protected and require the RECRUITER role
-router.use(protect);
-router.use(authorize(ROLES.RECRUITER));
+router.use(recruiterAuth);
 
 /**
  * @swagger
@@ -26,7 +26,7 @@ router.use(authorize(ROLES.RECRUITER));
  *       200:
  *         description: Dashboard stats retrieved successfully
  */
-router.get("/dashboard", recruiterController.getDashboardStats);
+router.get("/dashboard", recruiterController.getRecruiterDashboard);
 
 /**
  * @swagger
@@ -60,7 +60,7 @@ router.get("/profile", recruiterController.getRecruiterProfile);
  *       404:
  *         description: Profile not found
  */
-router.get("/profile/:profileId", recruiterController.getRecruiterProfileById);
+router.get("/profile/:profileId", validateIds(["profileId"]), recruiterController.getRecruiterProfileById);
 
 /**
  * @swagger
@@ -172,7 +172,7 @@ router.delete("/profile", recruiterController.deleteRecruiterProfile);
  *       201:
  *         description: Job posted successfully
  */
-router.post("/jobs", upload.single("img"), recruiterController.postJob);
+router.post("/jobs", upload.single("img"), validateJobPost, recruiterJobsController.postJob);
 
 /**
  * @swagger
@@ -184,7 +184,7 @@ router.post("/jobs", upload.single("img"), recruiterController.postJob);
  *       200:
  *         description: List of active jobs
  */
-router.get("/jobs", recruiterController.getRecruiterJobs);
+router.get("/jobs", recruiterJobsController.getRecruiterJobs);
 
 /**
  * @swagger
@@ -196,7 +196,7 @@ router.get("/jobs", recruiterController.getRecruiterJobs);
  *       200:
  *         description: List of completed jobs
  */
-router.get("/jobs/history", recruiterController.getJobHistory);
+router.get("/jobs/history", recruiterJobsController.getJobHistory);
 
 /**
  * @swagger
@@ -214,7 +214,7 @@ router.get("/jobs/history", recruiterController.getJobHistory);
  *       200:
  *         description: List of applicants with candidate and job details
  */
-router.get("/applicants", recruiterController.getApplicants);
+router.get("/applicants", validateIds(["jobId"]), recruiterJobsController.getApplicants);
 
 /**
  * @swagger
@@ -243,6 +243,6 @@ router.get("/applicants", recruiterController.getApplicants);
  *       200:
  *         description: Application status updated successfully (decrements job openings if status is "hired")
  */
-router.patch("/applicants/:applicationId/status", recruiterController.updateApplicationStatus);
+router.patch("/applicants/:applicationId/status", validateIds(["applicationId"]), validateApplicationStatusUpdate, recruiterJobsController.updateApplicationStatus);
 
 module.exports = router;

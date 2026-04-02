@@ -2,51 +2,96 @@ const Job = require("../models/jobs");
 const Application = require("../models/applications");
 const RecruiterProfile = require("../models/recruiterProfile");
 const mongoose = require("mongoose");
-const cloudinary = require("../config/cloudinary");
 
 /**
- * Helper to upload a buffer to Cloudinary
+ * Get recruiter dashboard analytics (Formerly getRecruiterDashboard)
  */
-const uploadToCloudinary = (fileBuffer, folder = "job_images") => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result.secure_url);
-      }
-    );
-    uploadStream.end(fileBuffer);
-  });
-};
-
-/**
- * Get recruiter dashboard statistics
- */
-exports.getDashboardStats = async (req, res) => {
+exports.getRecruiterDashboard = async (req, res) => {
   try {
     const recruiterId = req.user.id;
 
-    const totalJobs = await Job.countDocuments({ recruiterId });
-    const activeJobs = await Job.countDocuments({ recruiterId, openings: { $gt: 0 } });
-    
-    const myJobIds = await Job.find({ recruiterId }).distinct("_id");
-    const totalApplicants = await Application.countDocuments({ jobId: { $in: myJobIds } });
-    const hiredCount = await Application.countDocuments({ jobId: { $in: myJobIds }, status: "hired" });
+    const totalJobsPosted = await Job.countDocuments({ recruiterId });
+    const recruiterJobs = await Job.find({ recruiterId }, "_id jobTitle");
+
+    if (recruiterJobs.length === 0) {
+      return res.status(200).json({
+        error: false,
+        message: "Dashboard analytics retrieved (No jobs posted).",
+        data: {
+          recruiterId,
+          totalJobsPosted: 0,
+          totalApplications: 0,
+          avgApplicationsPerJob: 0,
+          applicationsPerJob: [],
+          topPerformingJob: null,
+          recentApplications: [],
+        },
+      });
+    }
+
+    const jobIds = recruiterJobs.map((job) => job._id);
+
+    const applicationsPerJob = await Application.aggregate([
+      { $match: { jobId: { $in: jobIds } } },
+      {
+        $group: {
+          _id: "$jobId",
+          applicationCount: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: "jobs",
+          localField: "_id",
+          foreignField: "_id",
+          as: "job",
+        },
+      },
+      { $unwind: "$job" },
+      {
+        $project: {
+          jobId: "$_id",
+          jobTitle: "$job.jobTitle",
+          applicationCount: 1,
+        },
+      },
+      { $sort: { applicationCount: -1 } },
+    ]);
+
+    const totalApplications = applicationsPerJob.reduce((sum, job) => sum + job.applicationCount, 0);
+    const avgApplicationsPerJob = totalJobsPosted > 0 ? (totalApplications / totalJobsPosted).toFixed(2) : 0;
+
+    const topPerformingJob =
+      applicationsPerJob.length > 0
+        ? {
+            jobId: applicationsPerJob[0].jobId,
+            jobTitle: applicationsPerJob[0].jobTitle,
+            applicationCount: applicationsPerJob[0].applicationCount,
+          }
+        : null;
+
+    const recentApplications = await Application.find({ jobId: { $in: jobIds } })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("candidateId", "userName email picture")
+      .populate("jobId", "jobTitle");
 
     res.status(200).json({
       error: false,
-      message: "Dashboard stats retrieved successfully.",
+      message: "Dashboard analytics retrieved successfully.",
       data: {
-        totalJobs,
-        activeJobs,
-        totalApplicants,
-        hiredCount,
+        recruiterId,
+        totalJobsPosted,
+        totalApplications,
+        avgApplicationsPerJob: parseFloat(avgApplicationsPerJob),
+        applicationsPerJob,
+        topPerformingJob,
+        recentApplications,
       },
     });
   } catch (error) {
-    console.error("Dashboard Stats Error:", error);
-    res.status(500).json({ error: true, message: "Failed to fetch dashboard stats." });
+    console.error("Dashboard Analytics Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch dashboard analytics." });
   }
 };
 
@@ -241,186 +286,5 @@ exports.deleteRecruiterProfile = async (req, res) => {
   } catch (error) {
     console.error("Delete Profile Error:", error);
     res.status(500).json({ error: true, message: "Failed to delete profile." });
-  }
-};
-
-/**
- * Post a new job
- */
-exports.postJob = async (req, res) => {
-  try {
-    const openingsParsed = parseInt(req.body.openings, 10);
-    if (isNaN(openingsParsed) || openingsParsed < 0) {
-      return res.status(400).json({ error: true, message: "Valid number of openings is required." });
-    }
-    const { jobTitle, companyName, location, jobDescription, department, experience, responsibilities, qualifications, workPlaceType, img } = req.body;
-
-    let imageUrl = img || null;
-
-    // 1. If a file is uploaded via multipart/form-data
-    if (req.file) {
-      try {
-        imageUrl = await uploadToCloudinary(req.file.buffer);
-      } catch (uploadError) {
-        console.error("Cloudinary Upload Error:", uploadError);
-        return res.status(500).json({ error: true, message: "Failed to upload image to cloud." });
-      }
-    } 
-    // 2. If no file, check if 'img' is a valid URL string (handled by imageUrl = img above)
-    // No additional logic needed as imageUrl is already set to req.body.img
-
-    const parseToArray = (val) => {
-      if (!val) return [];
-      if (Array.isArray(val)) return val;
-      try {
-        const parsed = JSON.parse(val);
-        return Array.isArray(parsed) ? parsed : [parsed];
-      } catch (e) {
-        return [val];
-      }
-    };
-
-    const newJob = new Job({
-      recruiterId: req.user.id,
-      jobTitle,
-      companyName,
-      location,
-      openings: openingsParsed,
-      jobDescription,
-      department,
-      experience,
-      responsibilities: parseToArray(responsibilities),
-      qualifications: parseToArray(qualifications),
-      workPlaceType,
-      img: imageUrl,
-    });
-
-    await newJob.save();
-
-    res.status(201).json({
-      error: false,
-      message: "Job posted successfully.",
-      data: newJob,
-    });
-  } catch (error) {
-    console.error("Post Job Error:", error);
-    res.status(500).json({ error: true, message: "Failed to post job." });
-  }
-};
-
-/**
- * Get jobs posted by the recruiter (Active)
- */
-exports.getRecruiterJobs = async (req, res) => {
-  try {
-    const jobs = await Job.find({ recruiterId: req.user.id, openings: { $gt: 0 } }).sort({ createdAt: -1 });
-
-    res.status(200).json({
-      error: false,
-      message: "Jobs retrieved successfully.",
-      data: jobs,
-    });
-  } catch (error) {
-    console.error("Get Jobs Error:", error);
-    res.status(500).json({ error: true, message: "Failed to fetch jobs." });
-  }
-};
-
-/**
- * Get job history (Completed jobs with 0 openings)
- */
-exports.getJobHistory = async (req, res) => {
-  try {
-    const jobs = await Job.find({ recruiterId: req.user.id, openings: 0 }).sort({ updatedAt: -1 });
-
-    res.status(200).json({
-      error: false,
-      message: "Job history retrieved successfully.",
-      data: jobs,
-    });
-  } catch (error) {
-    console.error("Get History Error:", error);
-    res.status(500).json({ error: true, message: "Failed to fetch job history." });
-  }
-};
-
-/**
- * Get applicants for recruiter's jobs
- */
-exports.getApplicants = async (req, res) => {
-  try {
-    const { jobId } = req.query;
-    const filter = {};
-
-    const myJobIds = await Job.find({ recruiterId: req.user.id }).distinct("_id");
-    
-    if (jobId) {
-       if (!myJobIds.map(id => id.toString()).includes(jobId)) {
-           return res.status(403).json({ error: true, message: "Unauthorized access to this job's applicants." });
-       }
-       filter.jobId = jobId;
-    } else {
-       filter.jobId = { $in: myJobIds };
-    }
-
-    const applicants = await Application.find(filter)
-      .populate("candidateId", "userName email picture")
-      .populate("jobId", "jobTitle companyName")
-      .sort({ appliedAt: -1 });
-
-    res.status(200).json({
-      error: false,
-      message: "Applicants retrieved successfully.",
-      data: applicants,
-    });
-  } catch (error) {
-    console.error("Get Applicants Error:", error);
-    res.status(500).json({ error: true, message: "Failed to fetch applicants." });
-  }
-};
-
-/**
- * Update application status (Shortlist, Hire, Reject)
- */
-exports.updateApplicationStatus = async (req, res) => {
-  try {
-    const { applicationId } = req.params;
-    const { status } = req.body;
-
-    const application = await Application.findById(applicationId);
-    if (!application) {
-      return res.status(404).json({ error: true, message: "Application not found." });
-    }
-
-    const job = await Job.findById(application.jobId);
-    if (String(job.recruiterId) !== String(req.user.id)) {
-      return res.status(403).json({ error: true, message: "Unauthorized to update this application." });
-    }
-
-    const oldStatus = application.status;
-    application.status = status;
-
-    // Special Logic: If status becomes "hired", decrement job openings
-    if (status === "hired" && oldStatus !== "hired") {
-      if (job.openings > 0) {
-        job.openings -= 1;
-        job.updatedAt = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
-        await job.save();
-      } else {
-        return res.status(400).json({ error: true, message: "No openings available for this job." });
-      }
-      application.hiredAt = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
-    }
-
-    await application.save();
-
-    res.status(200).json({
-      error: false,
-      message: `Application status updated to ${status}.`,
-      data: { application, openingsRemaining: job.openings },
-    });
-  } catch (error) {
-    console.error("Update Status Error:", error);
-    res.status(500).json({ error: true, message: "Failed to update application status." });
   }
 };

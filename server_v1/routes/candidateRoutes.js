@@ -1,28 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const {
-  getCandidateDashboard,
-  getCandidateAtsAnalyzer,
-  getCandidateProfile,
-  getCandidateProfileById,
-  createCandidateProfile,
-  updateCandidateProfile,
-  deleteCandidateProfile,
-  getCandidateJobs,
-  getCandidateJobById,
-  updateCandidateJob,
-  getSavedJobs,
-  patchSavedJob,
-  getAppliedJobs,
-  createAppliedJob,
-} = require("../controllers/candidateController");
-
-const { protect, authorize } = require("../middlewares/authMiddleware");
-const { ROLES } = require("../utils/roles");
+const candidateController = require("../controllers/candidateController");
+const candidateJobsController = require("../controllers/candidateJobsController");
+const { candidateAuth, validateJobApplication, validateSavedJob, validateWithdrawal } = require("../middlewares/candidateMiddleware");
+const { validateIds } = require("../middlewares/commonMiddleware");
 
 // All candidate routes are protected and require the CANDIDATE role
-router.use(protect);
-router.use(authorize(ROLES.CANDIDATE));
+router.use(candidateAuth);
 
 /**
  * @swagger
@@ -41,7 +25,7 @@ router.use(authorize(ROLES.CANDIDATE));
  *       200:
  *         description: Dashboard statistics retrieved successfully
  */
-router.get("/dashboard", getCandidateDashboard);
+router.get("/dashboard", candidateController.getCandidateDashboard);
 
 /**
  * @swagger
@@ -53,7 +37,7 @@ router.get("/dashboard", getCandidateDashboard);
  *       200:
  *         description: ATS score history retrieved
  */
-router.get("/ats-analyzer", getCandidateAtsAnalyzer);
+router.get("/ats-analyzer", candidateController.getCandidateAtsAnalyzer);
 
 /**
  * @swagger
@@ -67,7 +51,7 @@ router.get("/ats-analyzer", getCandidateAtsAnalyzer);
  *       404:
  *         description: Profile not found
  */
-router.get("/profile", getCandidateProfile);
+router.get("/profile", candidateController.getCandidateProfile);
 
 /**
  * @swagger
@@ -87,7 +71,7 @@ router.get("/profile", getCandidateProfile);
  *       404:
  *         description: Profile not found
  */
-router.get("/profile/:profileId", getCandidateProfileById);
+router.get("/profile/:profileId", validateIds(["profileId"]), candidateController.getCandidateProfileById);
 
 /**
  * @swagger
@@ -107,7 +91,7 @@ router.get("/profile/:profileId", getCandidateProfileById);
  *       400:
  *         description: Profile already exists
  */
-router.post("/profile", createCandidateProfile);
+router.post("/profile", candidateController.createCandidateProfile);
 
 /**
  * @swagger
@@ -127,7 +111,7 @@ router.post("/profile", createCandidateProfile);
  *       404:
  *         description: Profile not found
  */
-router.put("/profile", updateCandidateProfile);
+router.put("/profile", candidateController.updateCandidateProfile);
 
 /**
  * @swagger
@@ -141,7 +125,7 @@ router.put("/profile", updateCandidateProfile);
  *       404:
  *         description: Profile not found
  */
-router.delete("/profile", deleteCandidateProfile);
+router.delete("/profile", candidateController.deleteCandidateProfile);
 
 /**
  * @swagger
@@ -160,7 +144,7 @@ router.delete("/profile", deleteCandidateProfile);
  *       200:
  *         description: List of jobs
  */
-router.get("/jobs", getCandidateJobs);
+router.get("/jobs", candidateJobsController.getCandidateJobs);
 
 /**
  * @swagger
@@ -177,7 +161,7 @@ router.get("/jobs", getCandidateJobs);
  *       200:
  *         description: Job details
  */
-router.get("/jobs/:jobId", getCandidateJobById);
+router.get("/jobs/:jobId", validateIds(["jobId"]), candidateJobsController.getCandidateJobById);
 
 /**
  * @swagger
@@ -203,7 +187,7 @@ router.get("/jobs/:jobId", getCandidateJobById);
  *       200:
  *         description: Action successful
  */
-router.put("/jobs/:jobId", updateCandidateJob);
+router.put("/jobs/:jobId", validateIds(["jobId"]), validateWithdrawal, candidateJobsController.updateCandidateJob);
 
 /**
  * @swagger
@@ -224,7 +208,7 @@ router.put("/jobs/:jobId", updateCandidateJob);
  *       201:
  *         description: Application successful
  */
-router.post("/job/apply", createAppliedJob);
+router.post("/job/apply", validateJobApplication, validateIds(["jobId"]), candidateJobsController.createAppliedJob);
 
 /**
  * @swagger
@@ -235,33 +219,20 @@ router.post("/job/apply", createAppliedJob);
  *     responses:
  *       200:
  *         description: List of saved jobs retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error: { type: boolean, example: false }
- *                 message: { type: string, example: "Saved jobs retrieved successfully." }
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/SavedJob'
  */
-router.get("/saved-jobs", getSavedJobs);
+router.get("/saved-jobs", candidateJobsController.getSavedJobs);
 
 /**
  * @swagger
  * /api/candidate/saved-jobs/{jobId}:
  *   patch:
  *     summary: Save or unsave a job (toggle saved status)
- *     description: Update the saved status of a job. Set saved to true to save, or false to unsave.
  *     tags: [Candidate-Jobs]
  *     parameters:
  *       - in: path
  *         name: jobId
  *         required: true
  *         schema: { type: string }
- *         description: The ID of the job to save/unsave
  *     requestBody:
  *       required: true
  *       content:
@@ -271,34 +242,10 @@ router.get("/saved-jobs", getSavedJobs);
  *     responses:
  *       200:
  *         description: Job saved status updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error: { type: boolean, example: false }
- *                 message: { type: string, example: "Job unsaved successfully." }
- *                 data:
- *                   $ref: '#/components/schemas/SavedJob'
  *       201:
- *         description: Job saved successfully (new record created)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error: { type: boolean, example: false }
- *                 message: { type: string, example: "Job saved successfully." }
- *                 data:
- *                   $ref: '#/components/schemas/SavedJob'
- *       400:
- *         description: Invalid job ID or invalid saved status
- *       404:
- *         description: Job not found or job was not saved
- *       500:
- *         description: Server error
+ *         description: Job saved successfully
  */
-router.patch("/saved-jobs/:jobId", patchSavedJob);
+router.patch("/saved-jobs/:jobId", validateIds(["jobId"]), validateSavedJob, candidateJobsController.patchSavedJob);
 
 /**
  * @swagger
@@ -310,6 +257,6 @@ router.patch("/saved-jobs/:jobId", patchSavedJob);
  *       200:
  *         description: List of applied jobs
  */
-router.get("/applied-jobs", getAppliedJobs);
+router.get("/applied-jobs", candidateJobsController.getAppliedJobs);
 
 module.exports = router;
