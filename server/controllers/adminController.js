@@ -1,31 +1,39 @@
-const AdminDashboard = require("../models/adminDashboard");
 const User = require("../models/users");
 const CandidateProfile = require("../models/candidateProfile");
 const RecruiterProfile = require("../models/recruiterProfile");
 const Job = require("../models/jobs");
 const Application = require("../models/applications");
 const { ROLES } = require("../utils/roles");
-const mongoose = require("mongoose");
 
 // GET -> api/admin/dashboard
 exports.getDashboardData = async (req, res) => {
   try {
-    const totalCandidates = await User.countDocuments({ role: ROLES.CANDIDATE });
-    const totalRecruiter = await User.countDocuments({ role: ROLES.RECRUITER });
-    const totalJobs = await Job.countDocuments({});
+    const [
+      totalCandidates,
+      totalRecruiter,
+      totalJobs,
+      totalApplications,
+      totalHired,
+      totalShortlisted,
+    ] = await Promise.all([
+      User.countDocuments({ role: ROLES.CANDIDATE }),
+      User.countDocuments({ role: ROLES.RECRUITER }),
+      Job.countDocuments({}),
+      Application.countDocuments({}),
+      Application.countDocuments({ status: "hired" }),
+      Application.countDocuments({ status: "shortlisted" }),
+    ]);
+
     const totalCompanies = (await Job.distinct("companyName")).length;
-    
-    // Resume evaluated can be the total number of applications
-    const resumeEvaluated = await Application.countDocuments({});
 
     const data = {
       totalCandidates,
       totalRecruiter,
       totalJobs,
       totalCompanies,
-      resumeEvaluated,
-      userActivityByTime: 15, // Default/Placeholder as per model
-      jobPostsByIndustry: 8,  // Default/Placeholder as per model
+      totalApplications,
+      totalHired,
+      totalShortlisted,
     };
 
     res.status(200).json({
@@ -49,7 +57,7 @@ exports.getAllUsers = async (req, res) => {
     const users = await User.find({
       role: { $in: [ROLES.CANDIDATE, ROLES.RECRUITER] },
     }).sort({ createdAt: -1 });
-    
+
     res.status(200).json({
       error: false,
       message: "Operation successful",
