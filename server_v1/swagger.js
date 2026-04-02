@@ -97,13 +97,35 @@ const options = {
         // --- Jobs ---
         Job: {
           type: "object",
+          required: ["jobTitle", "companyName", "location", "openings", "jobDescription"],
           properties: {
-            _id: { type: "string" },
+            _id: { type: "string", readOnly: true },
+            recruiterId: { type: "string", readOnly: true },
             jobTitle: { type: "string", example: "Frontend Developer" },
             companyName: { type: "string", example: "TechCorp" },
             location: { type: "string", example: "Remote" },
-            jobDescription: { type: "string", example: "Building modern UIs..." },
+            department: { type: "string", example: "Engineering" },
             openings: { type: "number", example: 2 },
+            experience: { type: "string", example: "2-3 years" },
+            jobDescription: { type: "string", example: "Building modern UIs..." },
+            responsibilities: { type: "array", items: { type: "string" } },
+            qualifications: { type: "array", items: { type: "string" } },
+            workPlaceType: { type: "string", enum: ["Remote", "On-site", "Hybrid"], example: "Remote" },
+            img: { type: "string", example: "https://example.com/job-banner.jpg" },
+            createdAt: { type: "string", format: "date-time", readOnly: true },
+          },
+        },
+
+        // --- Applications ---
+        Application: {
+          type: "object",
+          properties: {
+            _id: { type: "string", readOnly: true },
+            jobId: { $ref: '#/components/schemas/Job' },
+            candidateId: { $ref: '#/components/schemas/User' },
+            status: { type: "string", enum: ["applied", "shortlisted", "hired", "rejected"], example: "applied" },
+            appliedAt: { type: "string", format: "date-time" },
+            hiredAt: { type: "string", format: "date-time", nullable: true },
           },
         },
 
