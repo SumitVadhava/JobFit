@@ -6,7 +6,27 @@ const { recruiterAuth, validateJobPost, validateApplicationStatusUpdate, validat
 const { validateIds } = require("../middlewares/commonMiddleware");
 const upload = require("../middlewares/uploadMiddleware");
 
-// All recruiter routes are protected and require the RECRUITER role
+/**
+ * @swagger
+ * /api/recruiter/profile/{profileId}:
+ *   get:
+ *     summary: Get recruiter profile by ID
+ *     tags: [Recruiter]
+ *     parameters:
+ *       - in: path
+ *         name: profileId
+ *         required: true
+ *         schema: { type: string }
+ *         description: The ID of the recruiter profile
+ *     responses:
+ *       200:
+ *         description: Recruiter profile retrieved successfully
+ *       404:
+ *         description: Profile not found
+ */
+router.get("/profile/:profileId", validateIds(["profileId"]), recruiterController.getRecruiterProfileById);
+
+// All other recruiter routes are protected and require the RECRUITER role
 router.use(recruiterAuth);
 
 /**
@@ -42,25 +62,6 @@ router.get("/dashboard", recruiterController.getRecruiterDashboard);
  */
 router.get("/profile", recruiterController.getRecruiterProfile);
 
-/**
- * @swagger
- * /api/recruiter/profile/{profileId}:
- *   get:
- *     summary: Get recruiter profile by ID
- *     tags: [Recruiter]
- *     parameters:
- *       - in: path
- *         name: profileId
- *         required: true
- *         schema: { type: string }
- *         description: The ID of the recruiter profile
- *     responses:
- *       200:
- *         description: Recruiter profile retrieved successfully
- *       404:
- *         description: Profile not found
- */
-router.get("/profile/:profileId", validateIds(["profileId"]), recruiterController.getRecruiterProfileById);
 
 /**
  * @swagger
