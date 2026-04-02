@@ -1,4 +1,6 @@
 const User = require("../models/users");
+const CandidateProfile = require("../models/candidateProfile");
+const RecruiterProfile = require("../models/recruiterProfile");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
@@ -13,11 +15,46 @@ const generateToken = (user) => {
   });
 };
 
+// Helper function to create profile based on user role
+const createUserProfile = async (user) => {
+  try {
+    const profileData = {
+      user: user._id,
+      email: user.email,
+      userName: user.userName,
+      img: user.picture || null,
+    };
+
+    if (user.role === ROLES.CANDIDATE) {
+      const candidateProfile = new CandidateProfile({
+        ...profileData,
+        userModel: "users",
+        experience: "0-2 years",
+        atsScore: 0,
+        education: [],
+        skills: [],
+        softSkills: [],
+      });
+      await candidateProfile.save();
+      console.log(`Candidate profile created for user ${user._id}`);
+    } else if (user.role === ROLES.RECRUITER) {
+      const recruiterProfile = new RecruiterProfile({
+        ...profileData,
+      });
+      await recruiterProfile.save();
+      console.log(`Recruiter profile created for user ${user._id}`);
+    }
+  } catch (error) {
+    console.error(`Error creating profile for user ${user._id}:`, error);
+    // Don't throw error - user should be created even if profile creation fails
+  }
+};
+
+
 
 exports.signup = async (req, res) => {
   try {
     const { userName, email, password, role } = req.body;
-
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -27,15 +64,12 @@ exports.signup = async (req, res) => {
       });
     }
 
-
     if (role && !Object.values(ROLES).includes(role)) {
       return res.status(400).json({ error: true, message: "Invalid role." });
     }
 
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
 
     const newUser = new User({
       userName,
@@ -46,6 +80,9 @@ exports.signup = async (req, res) => {
     });
 
     await newUser.save();
+
+    // Create profile automatically based on role
+    await createUserProfile(newUser);
 
     const userData = newUser.toObject();
     delete userData.password;
@@ -127,9 +164,9 @@ exports.googleLogin = async (req, res) => {
     }
 
     let user = await User.findOne({ email });
+    let isNewUser = false;
 
     if (user) {
-
       if (!user.google_id) {
         user.google_id = google_id;
         user.authProvider = "google";
@@ -137,6 +174,7 @@ exports.googleLogin = async (req, res) => {
       }
     }
     else {
+      isNewUser = true;
       user = new User({
         userName: name || email.split("@")[0],
         email,
@@ -146,6 +184,9 @@ exports.googleLogin = async (req, res) => {
         role: role || ROLES.CANDIDATE,
       });
       await user.save();
+
+      // Create profile automatically for new Google users
+      await createUserProfile(user);
     }
 
     res.status(200).json({

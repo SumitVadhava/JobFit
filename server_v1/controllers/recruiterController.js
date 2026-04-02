@@ -1,5 +1,6 @@
 const Job = require("../models/jobs");
 const Application = require("../models/applications");
+const RecruiterProfile = require("../models/recruiterProfile");
 const mongoose = require("mongoose");
 const cloudinary = require("../config/cloudinary");
 
@@ -46,6 +47,200 @@ exports.getDashboardStats = async (req, res) => {
   } catch (error) {
     console.error("Dashboard Stats Error:", error);
     res.status(500).json({ error: true, message: "Failed to fetch dashboard stats." });
+  }
+};
+
+/**
+ * Get recruiter profile
+ */
+exports.getRecruiterProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const profile = await RecruiterProfile.findOne({ user: userId });
+    if (!profile) {
+      return res.status(404).json({ error: true, message: "Recruiter profile not found." });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Recruiter profile retrieved successfully.",
+      data: profile,
+    });
+  } catch (error) {
+    console.error("Get Profile Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch profile." });
+  }
+};
+
+/**
+ * Get recruiter profile by ID
+ */
+exports.getRecruiterProfileById = async (req, res) => {
+  try {
+    const { profileId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(profileId)) {
+      return res.status(400).json({ error: true, message: "Invalid profile ID" });
+    }
+
+    const profile = await RecruiterProfile.findById(profileId);
+    if (!profile) {
+      return res.status(404).json({ error: true, message: "Recruiter profile not found." });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Recruiter profile retrieved successfully.",
+      data: profile,
+    });
+  } catch (error) {
+    console.error("Get Profile By ID Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch profile." });
+  }
+};
+
+/**
+ * Create recruiter profile
+ */
+exports.createRecruiterProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { email, userName, img, company, position, description, location, website, linkedIn, teamSize } = req.body;
+
+    // Check if profile already exists
+    const existingProfile = await RecruiterProfile.findOne({ user: userId });
+    if (existingProfile) {
+      return res.status(400).json({ error: true, message: "Recruiter profile already exists. Use PUT to update." });
+    }
+
+    const newProfile = new RecruiterProfile({
+      user: userId,
+      email: email || null,
+      userName: userName || null,
+      img: img || null,
+      company: company || null,
+      position: position || null,
+      description: description || null,
+      location: location || null,
+      website: website || null,
+      linkedIn: linkedIn || null,
+      teamSize: teamSize || 0,
+    });
+
+    await newProfile.save();
+
+    res.status(201).json({
+      error: false,
+      message: "Recruiter profile created successfully.",
+      data: newProfile,
+    });
+  } catch (error) {
+    console.error("Create Profile Error:", error);
+    res.status(500).json({ error: true, message: "Failed to create profile." });
+  }
+};
+
+/**
+ * Update recruiter profile
+ */
+exports.updateRecruiterProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { email, userName, img, company, position, description, location, website, linkedIn, teamSize } = req.body;
+
+    const updateData = {};
+    if (email !== undefined) updateData.email = email;
+    if (userName !== undefined) updateData.userName = userName;
+    if (img !== undefined) updateData.img = img;
+    if (company !== undefined) updateData.company = company;
+    if (position !== undefined) updateData.position = position;
+    if (description !== undefined) updateData.description = description;
+    if (location !== undefined) updateData.location = location;
+    if (website !== undefined) updateData.website = website;
+    if (linkedIn !== undefined) updateData.linkedIn = linkedIn;
+    if (teamSize !== undefined) updateData.teamSize = teamSize;
+
+    const updatedProfile = await RecruiterProfile.findOneAndUpdate(
+      { user: userId },
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProfile) {
+      return res.status(404).json({ error: true, message: "Recruiter profile not found." });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Recruiter profile updated successfully.",
+      data: updatedProfile,
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    res.status(500).json({ error: true, message: "Failed to update profile." });
+  }
+};
+
+/**
+ * Patch recruiter profile (partial update)
+ */
+exports.patchRecruiterProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const updateData = { ...req.body };
+
+    // Only allow specific fields
+    const allowedFields = ["email", "userName", "img", "company", "position", "description", "location", "website", "linkedIn", "teamSize"];
+    const filteredData = {};
+    
+    allowedFields.forEach(field => {
+      if (updateData[field] !== undefined) {
+        filteredData[field] = updateData[field];
+      }
+    });
+
+    const updatedProfile = await RecruiterProfile.findOneAndUpdate(
+      { user: userId },
+      filteredData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProfile) {
+      return res.status(404).json({ error: true, message: "Recruiter profile not found." });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Recruiter profile updated successfully.",
+      data: updatedProfile,
+    });
+  } catch (error) {
+    console.error("Patch Profile Error:", error);
+    res.status(500).json({ error: true, message: "Failed to update profile." });
+  }
+};
+
+/**
+ * Delete recruiter profile
+ */
+exports.deleteRecruiterProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const deletedProfile = await RecruiterProfile.findOneAndDelete({ user: userId });
+    if (!deletedProfile) {
+      return res.status(404).json({ error: true, message: "Recruiter profile not found." });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Recruiter profile deleted successfully.",
+      data: null,
+    });
+  } catch (error) {
+    console.error("Delete Profile Error:", error);
+    res.status(500).json({ error: true, message: "Failed to delete profile." });
   }
 };
 

@@ -1,209 +1,458 @@
 const mongoose = require("mongoose");
 const Job = require("../models/jobs");
-const AppliedJob = require("../models/appliedJobs");
+const Application = require("../models/applications");
 const SavedJob = require("../models/savedJobs");
 const AtsHistory = require("../models/atsHistory");
+const CandidateProfile = require("../models/candidateProfile");
 
+/**
+ * Get candidate dashboard stats
+ */
 const getCandidateDashboard = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-
     const totalSavedJobs = await SavedJob.countDocuments({ userId });
-    const totalAppliedJobs = await AppliedJob.countDocuments({ userId });
+    const totalAppliedJobs = await Application.countDocuments({ candidateId: userId });
 
     const latestAts = await AtsHistory.findOne({ userId }).sort({ updatedAt: -1 });
     const avgAtsScore = latestAts
       ? latestAts.atsScores.reduce((sum, item) => sum + item.score, 0) / (latestAts.atsScores.length || 1)
       : 0;
 
-    res.json({
-      userId,
-      totalSavedJobs,
-      totalAppliedJobs,
-      atsTracker: {
-        latestAtsHistory: latestAts || null,
-        averageScore: Number(avgAtsScore.toFixed(2)),
+    res.status(200).json({
+      error: false,
+      message: "Dashboard stats retrieved successfully.",
+      data: {
+        totalSavedJobs,
+        totalAppliedJobs,
+        atsTracker: {
+          latestAtsHistory: latestAts || null,
+          averageScore: Number(avgAtsScore.toFixed(2)),
+        },
       },
     });
   } catch (error) {
-    console.error("Candidate dashboard error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Dashboard Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch dashboard stats." });
   }
 };
 
+/**
+ * Get ATS analysis history
+ */
 const getCandidateAtsAnalyzer = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
+    const history = await AtsHistory.findOne({ userId });
+    if (!history) {
+      return res.status(200).json({
+        error: false,
+        message: "No ATS history found.",
+        data: { atsScores: [] },
+      });
     }
 
-    const history = await AtsHistory.findOne({ userId });
-    if (!history) return res.json({ userId, atsScores: [] });
-
-    res.json({ userId, atsScores: history.atsScores });
+    res.status(200).json({
+      error: false,
+      message: "ATS history retrieved successfully.",
+      data: { atsScores: history.atsScores },
+    });
   } catch (error) {
-    console.error("ATS analyzer error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("ATS Analyzer Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch ATS history." });
   }
 };
 
+/**
+ * Get all active jobs (openings > 0)
+ */
 const getCandidateJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({}).sort({ createdAt: -1 });
-    res.json(jobs);
+    const jobs = await Job.find({ openings: { $gt: 0 } }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      error: false,
+      message: "Active jobs retrieved successfully.",
+      data: jobs,
+    });
   } catch (error) {
-    console.error("Candidate jobs error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Get Jobs Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch jobs." });
   }
 };
 
+/**
+ * Get job details by ID
+ */
 const getCandidateJobById = async (req, res) => {
   try {
     const { jobId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
-      return res.status(400).json({ message: "Invalid job ID" });
+      return res.status(400).json({ error: true, message: "Invalid job ID format." });
     }
 
     const job = await Job.findById(jobId);
-    if (!job) return res.status(404).json({ message: "Job not found" });
+    if (!job) {
+      return res.status(404).json({ error: true, message: "Job not found." });
+    }
 
-    res.json(job);
+    res.status(200).json({
+      error: false,
+      message: "Job details retrieved successfully.",
+      data: job,
+    });
   } catch (error) {
-    console.error("Candidate job by id error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Get Job Detail Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch job details." });
   }
 };
 
+/**
+ * Apply for a job
+ */
+const createAppliedJob = async (req, res) => {
+  try {
+    const candidateId = req.user.id;
+    const { jobId } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ error: true, message: "Invalid job ID provided." });
+    }
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: true, message: "Job not found." });
+    }
+
+    if (job.openings <= 0) {
+      return res.status(400).json({ error: true, message: "This job is no longer accepting applications." });
+    }
+
+    const existingApplication = await Application.findOne({ jobId, candidateId });
+    if (existingApplication) {
+      return res.status(400).json({ error: true, message: "You have already applied for this job." });
+    }
+
+    const newApplication = new Application({
+      jobId,
+      candidateId,
+      status: "applied",
+    });
+
+    await newApplication.save();
+
+    res.status(201).json({
+      error: false,
+      message: "Application submitted successfully.",
+      data: newApplication,
+    });
+  } catch (error) {
+    console.error("Apply Job Error:", error);
+    res.status(500).json({ error: true, message: "Failed to submit application." });
+  }
+};
+
+/**
+ * Withdraw application or update status
+ */
 const updateCandidateJob = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const candidateId = req.user.id;
     const { jobId } = req.params;
-    const { action, status } = req.body;
+    const { action } = req.body; // e.g., "withdraw"
 
-    if (!mongoose.Types.ObjectId.isValid(jobId) || !mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid ID" });
+    if (action !== "withdraw") {
+      return res.status(400).json({ error: true, message: "Invalid action. Currently only 'withdraw' is supported." });
     }
 
-    const job = await Job.findById(jobId);
-    if (!job) return res.status(404).json({ message: "Job not found" });
-
-    if (action === "apply") {
-      const applied = await AppliedJob.findOneAndUpdate(
-        { userId, jobId },
-        { status: status || "applied", updatedAt: new Date() },
-        { new: true, upsert: true }
-      );
-      return res.json({ message: "Applied to job", applied });
+    const application = await Application.findOneAndDelete({ jobId, candidateId });
+    if (!application) {
+      return res.status(404).json({ error: true, message: "No application found to withdraw." });
     }
 
-    if (action === "withdraw") {
-      const applied = await AppliedJob.findOneAndUpdate(
-        { userId, jobId },
-        { status: "rejected", updatedAt: new Date() },
-        { new: true }
-      );
-      if (!applied) return res.status(404).json({ message: "No application found to withdraw" });
-      return res.json({ message: "Application withdrawn", applied });
-    }
-
-    res.status(400).json({ message: "Invalid action. Use apply or withdraw." });
+    res.status(200).json({
+      error: false,
+      message: "Application withdrawn successfully.",
+      data: null,
+    });
   } catch (error) {
-    console.error("Update candidate job error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Withdraw Error:", error);
+    res.status(500).json({ error: true, message: "Failed to withdraw application." });
   }
 };
 
+/**
+ * Get all saved jobs
+ */
 const getSavedJobs = async (req, res) => {
   try {
     const userId = req.user.id;
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-
     const savedJobs = await SavedJob.find({ userId }).populate("jobId");
-    res.json(savedJobs);
+
+    res.status(200).json({
+      error: false,
+      message: "Saved jobs retrieved successfully.",
+      data: savedJobs,
+    });
   } catch (error) {
-    console.error("Saved jobs error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Get Saved Jobs Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch saved jobs." });
   }
 };
 
-const getAppliedJobs = async (req, res) => {
+/**
+ * Toggle save/unsave status of a job
+ */
+const patchSavedJob = async (req, res) => {
   try {
     const userId = req.user.id;
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-
-    const appliedJobs = await AppliedJob.find({ userId }).populate("jobId");
-    res.json(appliedJobs);
-  } catch (error) {
-    console.error("Applied jobs error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-const createAppliedJob = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { jobId } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
+    const { jobId } = req.params;
+    const { saved } = req.body;
 
     if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
-      return res.status(400).json({ message: "Invalid job ID" });
+      return res.status(400).json({ error: true, message: "Invalid job ID" });
+    }
+
+    if (saved === undefined || typeof saved !== "boolean") {
+      return res.status(400).json({ error: true, message: "Saved status must be a boolean (true or false)" });
     }
 
     // Check if job exists
     const job = await Job.findById(jobId);
     if (!job) {
-      return res.status(404).json({ message: "Job not found" });
+      return res.status(404).json({ error: true, message: "Job not found" });
     }
 
-    // Check if already applied
-    const existingApplication = await AppliedJob.findOne({ userId, jobId });
-    if (existingApplication) {
-      return res.status(400).json({ message: "You have already applied to this job" });
+    let savedJobRecord = await SavedJob.findOne({ userId, jobId });
+
+    if (!savedJobRecord) {
+      if (saved) {
+        // Create new saved job record
+        savedJobRecord = new SavedJob({
+          userId,
+          jobId,
+          saved: true,
+        });
+        await savedJobRecord.save();
+        const populatedRecord = await SavedJob.findById(savedJobRecord._id).populate("jobId");
+        return res.status(201).json({
+          error: false,
+          message: "Job saved successfully.",
+          data: populatedRecord,
+        });
+      } else {
+        // Trying to unsave a job that wasn't saved
+        return res.status(404).json({ error: true, message: "Job was not saved by this candidate" });
+      }
     }
 
-    // Create new application
-    const appliedJob = new AppliedJob({
-      userId,
-      jobId,
-      status: "applied",
-    });
+    // Update existing record
+    savedJobRecord.saved = saved;
+    savedJobRecord.updatedAt = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+    await savedJobRecord.save();
 
-    await appliedJob.save();
-    const populatedApplication = await AppliedJob.findById(appliedJob._id).populate("jobId");
+    const populatedRecord = await SavedJob.findById(savedJobRecord._id).populate("jobId");
 
-    res.status(201).json({
-      message: "Successfully applied to job",
-      applied: populatedApplication,
+    res.status(200).json({
+      error: false,
+      message: saved ? "Job saved successfully." : "Job unsaved successfully.",
+      data: populatedRecord,
     });
   } catch (error) {
-    console.error("Create applied job error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Patch Saved Job Error:", error);
+    res.status(500).json({ error: true, message: "Failed to update job saved status." });
+  }
+};
+
+/**
+ * Get all applications submitted by candidate
+ */
+const getAppliedJobs = async (req, res) => {
+  try {
+    const candidateId = req.user.id;
+    const applications = await Application.find({ candidateId }).populate("jobId");
+
+    res.status(200).json({
+      error: false,
+      message: "Applications retrieved successfully.",
+      data: applications,
+    });
+  } catch (error) {
+    console.error("Get Applications Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch applications." });
+  }
+};
+
+/**
+ * Get candidate profile by ID
+ */
+const getCandidateProfileById = async (req, res) => {
+  try {
+    const { profileId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(profileId)) {
+      return res.status(400).json({ error: true, message: "Invalid profile ID" });
+    }
+
+    const profile = await CandidateProfile.findById(profileId);
+    if (!profile) {
+      return res.status(404).json({ error: true, message: "Candidate profile not found." });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Candidate profile retrieved successfully.",
+      data: profile,
+    });
+  } catch (error) {
+    console.error("Get Profile By ID Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch profile." });
+  }
+};
+
+/**
+ * Get candidate profile
+ */
+const getCandidateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const profile = await CandidateProfile.findOne({ user: userId });
+    if (!profile) {
+      return res.status(404).json({ error: true, message: "Candidate profile not found." });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Candidate profile retrieved successfully.",
+      data: profile,
+    });
+  } catch (error) {
+    console.error("Get Profile Error:", error);
+    res.status(500).json({ error: true, message: "Failed to fetch profile." });
+  }
+};
+
+/**
+ * Create candidate profile
+ */
+const createCandidateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { email, userName, img, resumeLink, description, experience, education, skills, softSkills } = req.body;
+
+    // Check if profile already exists
+    const existingProfile = await CandidateProfile.findOne({ user: userId });
+    if (existingProfile) {
+      return res.status(400).json({ error: true, message: "Candidate profile already exists. Use PUT to update." });
+    }
+
+    const newProfile = new CandidateProfile({
+      user: userId,
+      email: email || null,
+      userName: userName || null,
+      img: img || null,
+      resumeLink: resumeLink || null,
+      description: description || null,
+      experience: experience || "0-2 years",
+      education: education || [],
+      skills: skills || [],
+      softSkills: softSkills || [],
+    });
+
+    await newProfile.save();
+
+    res.status(201).json({
+      error: false,
+      message: "Candidate profile created successfully.",
+      data: newProfile,
+    });
+  } catch (error) {
+    console.error("Create Profile Error:", error);
+    res.status(500).json({ error: true, message: "Failed to create profile." });
+  }
+};
+
+/**
+ * Update candidate profile
+ */
+const updateCandidateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { email, userName, img, resumeLink, description, experience, education, skills, softSkills, atsScore } = req.body;
+
+    const updateData = {};
+    if (email !== undefined) updateData.email = email;
+    if (userName !== undefined) updateData.userName = userName;
+    if (img !== undefined) updateData.img = img;
+    if (resumeLink !== undefined) updateData.resumeLink = resumeLink;
+    if (description !== undefined) updateData.description = description;
+    if (experience !== undefined) updateData.experience = experience;
+    if (education !== undefined) updateData.education = education;
+    if (skills !== undefined) updateData.skills = skills;
+    if (softSkills !== undefined) updateData.softSkills = softSkills;
+    if (atsScore !== undefined) updateData.atsScore = atsScore;
+
+    const updatedProfile = await CandidateProfile.findOneAndUpdate(
+      { user: userId },
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProfile) {
+      return res.status(404).json({ error: true, message: "Candidate profile not found." });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Candidate profile updated successfully.",
+      data: updatedProfile,
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    res.status(500).json({ error: true, message: "Failed to update profile." });
+  }
+};
+
+/**
+ * Delete candidate profile
+ */
+const deleteCandidateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const deletedProfile = await CandidateProfile.findOneAndDelete({ user: userId });
+    if (!deletedProfile) {
+      return res.status(404).json({ error: true, message: "Candidate profile not found." });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "Candidate profile deleted successfully.",
+      data: null,
+    });
+  } catch (error) {
+    console.error("Delete Profile Error:", error);
+    res.status(500).json({ error: true, message: "Failed to delete profile." });
   }
 };
 
 module.exports = {
   getCandidateDashboard,
   getCandidateAtsAnalyzer,
+  getCandidateProfile,
+  getCandidateProfileById,
+  createCandidateProfile,
+  updateCandidateProfile,
+  deleteCandidateProfile,
   getCandidateJobs,
   getCandidateJobById,
   updateCandidateJob,
   getSavedJobs,
+  patchSavedJob,
   getAppliedJobs,
   createAppliedJob,
 };

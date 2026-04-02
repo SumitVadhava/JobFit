@@ -17,6 +17,12 @@ const savedJobSchema = new mongoose.Schema(
       ref: "jobs",
       required: true,
     },
+    saved: {
+      type: Boolean,
+      enum: [true, false],
+      default: true,
+      required: true,
+    },
     savedAt: {
       type: Date,
       default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),

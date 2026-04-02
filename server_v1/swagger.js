@@ -21,6 +21,13 @@ const options = {
         description: "Production Server",
       },
     ],
+    tags: [
+      { name: "Auth", description: "User authentication & registration" },
+      { name: "Candidate", description: "Candidate specific operations (Dashboard, ATS, Profile)" },
+      { name: "Candidate-Jobs", description: "Candidate job operations (Browse, Apply, Save)" },
+      { name: "Recruiter", description: "Recruiter specific operations (Dashboard, Profile)" },
+      { name: "Recruiter-Jobs", description: "Recruiter job operations (Post, Browse, Manage Applicants)" },
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -116,16 +123,150 @@ const options = {
           },
         },
 
-        // --- Applications ---
-        Application: {
+        // --- Saved Jobs ---
+        SavedJob: {
+          type: "object",
+          properties: {
+            _id: { type: "string", readOnly: true, example: "64abc123def456" },
+            userId: { type: "string", readOnly: true, example: "64abc123def457" },
+            jobId: { $ref: '#/components/schemas/Job' },
+            saved: { type: "boolean", example: true, description: "Job saved status (true) or unsaved (false)" },
+            savedAt: { type: "string", format: "date-time", readOnly: true },
+            createdAt: { type: "string", format: "date-time", readOnly: true },
+            updatedAt: { type: "string", format: "date-time", readOnly: true },
+          },
+        },
+
+        SavedJobPatchRequest: {
+          type: "object",
+          required: ["saved"],
+          properties: {
+            saved: { type: "boolean", example: true, description: "Set to true to save job, false to unsave" },
+          },
+        },
+
+        // --- Candidate Profile ---
+        CandidateProfile: {
           type: "object",
           properties: {
             _id: { type: "string", readOnly: true },
-            jobId: { $ref: '#/components/schemas/Job' },
-            candidateId: { $ref: '#/components/schemas/User' },
-            status: { type: "string", enum: ["applied", "shortlisted", "hired", "rejected"], example: "applied" },
-            appliedAt: { type: "string", format: "date-time" },
-            hiredAt: { type: "string", format: "date-time", nullable: true },
+            user: { type: "string", readOnly: true },
+            userModel: { type: "string", readOnly: true, default: "users" },
+            email: { type: "string", example: "candidate@example.com" },
+            userName: { type: "string", example: "John Doe" },
+            img: { type: "string", example: "https://example.com/profile.jpg" },
+            resumeLink: { type: "string", example: "https://example.com/resume.pdf" },
+            description: { type: "string", example: "Experienced software developer" },
+            atsScore: { type: "number", example: 85.5 },
+            experience: { type: "string", example: "5-7 years" },
+            education: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  degree: { type: "string", example: "B.Tech" },
+                  university: { type: "string", example: "MIT" },
+                  yearOfPassing: { type: "number", example: 2020 },
+                },
+              },
+            },
+            skills: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  skillName: { type: "string", example: "JavaScript" },
+                },
+              },
+            },
+            softSkills: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  skillName: { type: "string", example: "Communication" },
+                },
+              },
+            },
+          },
+        },
+
+        CandidateProfileRequest: {
+          type: "object",
+          properties: {
+            email: { type: "string", example: "candidate@example.com" },
+            userName: { type: "string", example: "John Doe" },
+            img: { type: "string", example: "https://example.com/profile.jpg" },
+            resumeLink: { type: "string", example: "https://example.com/resume.pdf" },
+            description: { type: "string", example: "Experienced software developer" },
+            atsScore: { type: "number", example: 85.5 },
+            experience: { type: "string", example: "5-7 years" },
+            education: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  degree: { type: "string", example: "B.Tech" },
+                  university: { type: "string", example: "MIT" },
+                  yearOfPassing: { type: "number", example: 2020 },
+                },
+              },
+            },
+            skills: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  skillName: { type: "string", example: "JavaScript" },
+                },
+              },
+            },
+            softSkills: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  skillName: { type: "string", example: "Communication" },
+                },
+              },
+            },
+          },
+        },
+
+        // --- Recruiter Profile ---
+        RecruiterProfile: {
+          type: "object",
+          properties: {
+            _id: { type: "string", readOnly: true },
+            user: { type: "string", readOnly: true },
+            email: { type: "string", example: "recruiter@example.com" },
+            userName: { type: "string", example: "Jane Smith" },
+            img: { type: "string", example: "https://example.com/profile.jpg" },
+            company: { type: "string", example: "TechCorp Inc" },
+            position: { type: "string", example: "HR Manager" },
+            description: { type: "string", example: "Experienced recruiter with 10 years in tech recruitment" },
+            location: { type: "string", example: "San Francisco, CA" },
+            website: { type: "string", example: "https://techcorp.com" },
+            linkedIn: { type: "string", example: "https://linkedin.com/in/janesmith" },
+            jobsPosted: { type: "number", example: 15, readOnly: true },
+            candidatesHired: { type: "number", example: 8, readOnly: true },
+            teamSize: { type: "number", example: 5 },
+          },
+        },
+
+        RecruiterProfileRequest: {
+          type: "object",
+          properties: {
+            email: { type: "string", example: "recruiter@example.com" },
+            userName: { type: "string", example: "Jane Smith" },
+            img: { type: "string", example: "https://example.com/profile.jpg" },
+            company: { type: "string", example: "TechCorp Inc" },
+            position: { type: "string", example: "HR Manager" },
+            description: { type: "string", example: "Experienced recruiter with 10 years in tech recruitment" },
+            location: { type: "string", example: "San Francisco, CA" },
+            website: { type: "string", example: "https://techcorp.com" },
+            linkedIn: { type: "string", example: "https://linkedin.com/in/janesmith" },
+            teamSize: { type: "number", example: 5 },
           },
         },
 

@@ -1,12 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const { getRecruiterDashboard } = require("../controllers/recruiterDashboardController");
-const { recruiterAuth } = require("../middlewares/recruiterDashboardMid");
-
-// Kept legacy dashboard route to avoid merge loss
-router.get("/dashboard/legacy", recruiterAuth, getRecruiterDashboard);
-
-
 const recruiterController = require("../controllers/recruiterController");
 const { protect, authorize } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/uploadMiddleware");
@@ -20,7 +13,7 @@ router.use(authorize(ROLES.RECRUITER));
  * @swagger
  * tags:
  *   name: Recruiter
- *   description: Recruiter specific operations (Dashboard, Job Posting, Applicant Management)
+ *   description: Recruiter specific operations (Dashboard, Profile)
  */
 
 /**
@@ -37,16 +30,132 @@ router.get("/dashboard", recruiterController.getDashboardStats);
 
 /**
  * @swagger
+ * /api/recruiter/profile:
+ *   get:
+ *     summary: Get recruiter profile
+ *     tags: [Recruiter]
+ *     responses:
+ *       200:
+ *         description: Recruiter profile retrieved successfully
+ *       404:
+ *         description: Profile not found
+ */
+router.get("/profile", recruiterController.getRecruiterProfile);
+
+/**
+ * @swagger
+ * /api/recruiter/profile/{profileId}:
+ *   get:
+ *     summary: Get recruiter profile by ID
+ *     tags: [Recruiter]
+ *     parameters:
+ *       - in: path
+ *         name: profileId
+ *         required: true
+ *         schema: { type: string }
+ *         description: The ID of the recruiter profile
+ *     responses:
+ *       200:
+ *         description: Recruiter profile retrieved successfully
+ *       404:
+ *         description: Profile not found
+ */
+router.get("/profile/:profileId", recruiterController.getRecruiterProfileById);
+
+/**
+ * @swagger
+ * /api/recruiter/profile:
+ *   post:
+ *     summary: Create recruiter profile
+ *     tags: [Recruiter]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RecruiterProfileRequest'
+ *     responses:
+ *       201:
+ *         description: Recruiter profile created successfully
+ *       400:
+ *         description: Profile already exists
+ */
+router.post("/profile", recruiterController.createRecruiterProfile);
+
+/**
+ * @swagger
+ * /api/recruiter/profile:
+ *   put:
+ *     summary: Update recruiter profile
+ *     tags: [Recruiter]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RecruiterProfileRequest'
+ *     responses:
+ *       200:
+ *         description: Recruiter profile updated successfully
+ *       404:
+ *         description: Profile not found
+ */
+router.put("/profile", recruiterController.updateRecruiterProfile);
+
+/**
+ * @swagger
+ * /api/recruiter/profile:
+ *   patch:
+ *     summary: Partial update of recruiter profile
+ *     tags: [Recruiter]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RecruiterProfileRequest'
+ *     responses:
+ *       200:
+ *         description: Recruiter profile updated successfully
+ *       404:
+ *         description: Profile not found
+ */
+router.patch("/profile", recruiterController.patchRecruiterProfile);
+
+/**
+ * @swagger
+ * /api/recruiter/profile:
+ *   delete:
+ *     summary: Delete recruiter profile
+ *     tags: [Recruiter]
+ *     responses:
+ *       200:
+ *         description: Recruiter profile deleted successfully
+ *       404:
+ *         description: Profile not found
+ */
+router.delete("/profile", recruiterController.deleteRecruiterProfile);
+
+/**
+ * @swagger
+ * tags:
+ *   name: Recruiter-Jobs
+ *   description: Recruiter job operations (Post, Browse, Manage Applicants)
+ */
+
+/**
+ * @swagger
  * /api/recruiter/jobs:
  *   post:
  *     summary: Post a new job listing
- *     tags: [Recruiter]
+ *     tags: [Recruiter-Jobs]
  *     requestBody:
  *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required: [jobTitle, companyName, location, openings]
  *             properties:
  *               jobTitle: { type: string }
  *               companyName: { type: string }
@@ -57,19 +166,24 @@ router.get("/dashboard", recruiterController.getDashboardStats);
  *               experience: { type: string }
  *               responsibilities: { type: array, items: { type: string } }
  *               qualifications: { type: array, items: { type: string } }
- *               workPlaceType: { type: string, enum: [Remote, On-site, Hybrid] }
+ *               workPlaceType: { type: string, enum: [Remote, "On-site", Hybrid] }
  *               img: { type: string, format: binary }
  *     responses:
  *       201:
  *         description: Job posted successfully
+ */
+router.post("/jobs", upload.single("img"), recruiterController.postJob);
+
+/**
+ * @swagger
+ * /api/recruiter/jobs:
  *   get:
  *     summary: Get active jobs posted by the recruiter
- *     tags: [Recruiter]
+ *     tags: [Recruiter-Jobs]
  *     responses:
  *       200:
  *         description: List of active jobs
  */
-router.post("/jobs", upload.single("img"), recruiterController.postJob);
 router.get("/jobs", recruiterController.getRecruiterJobs);
 
 /**
@@ -77,7 +191,7 @@ router.get("/jobs", recruiterController.getRecruiterJobs);
  * /api/recruiter/jobs/history:
  *   get:
  *     summary: Get completed job history (0 openings remaining)
- *     tags: [Recruiter]
+ *     tags: [Recruiter-Jobs]
  *     responses:
  *       200:
  *         description: List of completed jobs
@@ -89,7 +203,7 @@ router.get("/jobs/history", recruiterController.getJobHistory);
  * /api/recruiter/applicants:
  *   get:
  *     summary: Get applicants for jobs posted by the recruiter
- *     tags: [Recruiter]
+ *     tags: [Recruiter-Jobs]
  *     parameters:
  *       - in: query
  *         name: jobId
@@ -107,7 +221,7 @@ router.get("/applicants", recruiterController.getApplicants);
  * /api/recruiter/applicants/{applicationId}/status:
  *   patch:
  *     summary: Update the status of a job application (Hire, Shortlist, Reject)
- *     tags: [Recruiter]
+ *     tags: [Recruiter-Jobs]
  *     parameters:
  *       - in: path
  *         name: applicationId
