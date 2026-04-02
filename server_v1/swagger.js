@@ -375,9 +375,8 @@ The **JobFit API** is maintained by the dedicated development team. For technica
 
         CandidateProfileRequest: {
           type: "object",
-          description: "Schema for initializing or synchronizing candidate profile data.",
+          description: "Schema for initializing or synchronizing candidate profile data (email update not allowed).",
           properties: {
-            email: { type: "string", example: "candidate@example.com" },
             userName: { type: "string", example: "John Doe" },
             img: { type: "string", example: "https://example.com/profile.jpg" },
             resumeLink: { type: "string", example: "https://example.com/resume.pdf" },
@@ -430,9 +429,8 @@ The **JobFit API** is maintained by the dedicated development team. For technica
 
         RecruiterProfileRequest: {
           type: "object",
-          description: "Model for updating recruiter-specific organizational and professional metadata.",
+          description: "Model for updating recruiter-specific organizational and professional metadata (email update not allowed).",
           properties: {
-            email: { type: "string", example: "recruiter@techcorp.com" },
             userName: { type: "string", example: "Jane Smith" },
             img: { type: "string", example: "https://example.com/profile.jpg" },
             company: { type: "string", example: "TechCorp Global" },
