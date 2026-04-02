@@ -20,7 +20,6 @@ const getStatusConfig = (status) => {
 const JobSearch = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
-  const [filterSourceData, setFilterSourceData] = useState({ Location: [], Department: [], Experience: [], "Workplace Type": [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +38,42 @@ const JobSearch = () => {
   const [hoveredJob, setHoveredJob] = useState(null);
   const jobsPerPage = 5;
 
+  // ── Static filter options ─ always shown regardless of current job data ──
+  const FILTER_OPTIONS = {
+    Location: [
+      "Mumbai",
+      "Bangalore",
+      "Delhi",
+      "Hyderabad",
+      "Pune",
+      "Chennai",
+      "Kolkata",
+      "Ahmedabad",
+      "Remote",
+    ],
+    Department: [
+      "Engineering",
+      "Product",
+      "Design",
+      "Analytics",
+      "Marketing",
+      "Human Resources",
+      "Finance",
+      "Operations",
+      "Sales",
+    ],
+    Experience: [
+      "0-1 years",
+      "1-3 years",
+      "3-5 years",
+      "5-8 years",
+      "8-10 years",
+      "10+ years",
+    ],
+    "Workplace Type": ["On-site", "Remote", "Hybrid"],
+  };
+
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
@@ -51,24 +86,26 @@ const JobSearch = () => {
 
         // Fetch data using your custom Axios instance
         const [jobsResponse, savedJobsResponse, appliedJobsResponse] = await Promise.all([
-          api.get("/jobs"),
-          api.get("/user/savedJobs").catch(() => ({ data: { savedJobs: [] } })),
-          api.get("/user/applied-companies").catch(() => ({ data: { applications: [], appliedJobs: [] } }))
+          api.get("/candidate/jobs"),
+          api.get("/candidate/saved-jobs").catch(() => ({ data: { data: [] } })),
+          api.get("/candidate/applied-jobs").catch(() => ({ data: { data: [] } }))
         ]);
 
         const savedJobsIds = new Set(
-          (savedJobsResponse.data.savedJobs || []).map(saved => saved.jobId)
+          (savedJobsResponse.data.data || []).map(saved => saved.jobId?._id || saved.jobId)
         );
 
-        const apps = appliedJobsResponse.data.applications || appliedJobsResponse.data.appliedJobs || [];
+        const apps = appliedJobsResponse.data.data || [];
         const appliedJobsMap = {};
         apps.forEach(app => {
-          appliedJobsMap[app.jobId || app._id] = app.status || "applied";
+          const id = app.jobId?._id || app.jobId || app._id;
+          appliedJobsMap[id] = app.status || "applied";
         });
         setAppliedJobs(appliedJobsMap);
 
         // Format the API response to match our component structure
-        const formattedJobs = jobsResponse.data.jobs.map(job => ({
+        const rawJobs = jobsResponse.data.data || jobsResponse.data.jobs || [];
+        const formattedJobs = rawJobs.map(job => ({
           ...job,
           _id: job._id,
           jobTitle: job.jobTitle,
@@ -87,22 +124,6 @@ const JobSearch = () => {
         }));
 
         setJobs(formattedJobs);
-
-        // Compute filter options ONCE from initial data — capped at top 6 to avoid too many filters
-        const getTopFilters = (arr) => {
-          const counts = arr.reduce((acc, val) => {
-            if (val) acc[val] = (acc[val] || 0) + 1;
-            return acc;
-          }, {});
-          return Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 6);
-        };
-
-        setFilterSourceData({
-          Location: getTopFilters(formattedJobs.map((j) => j.location)),
-          Department: getTopFilters(formattedJobs.map((j) => j.department)),
-          Experience: getTopFilters(formattedJobs.map((j) => j.experience)),
-          "Workplace Type": getTopFilters(formattedJobs.map((j) => j.workPlaceType)),
-        });
 
         // Initialize bookmarks based on API response
         const initialBookmarks = {};
@@ -126,8 +147,8 @@ const JobSearch = () => {
     try {
       setApplyingJobs(prev => new Set([...prev, jobId]));
 
-      const profileRes = await api.get("/profile").catch(() => null);
-      const profile = profileRes?.data?.profile;
+      const profileRes = await api.get("/candidate/profile").catch(() => null);
+      const profile = profileRes?.data?.data || profileRes?.data?.profile;
 
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
@@ -159,7 +180,9 @@ const JobSearch = () => {
         return;
       }
 
-      await api.post(`/jobs/${jobId}/apply`);
+      await api.post(`/candidate/job/apply`, { jobId });
+      console.log("Applied for job successfully!");
+      console.log(profile);
 
       setAppliedJobs(prev => ({ ...prev, [jobId]: "applied" }));
       toast.success("Applied for job successfully!", { position: "top-center", autoClose: 2000 });
@@ -306,11 +329,7 @@ const JobSearch = () => {
     );
 
     try {
-      if (newBookmarkState) {
-        await api.post(`/jobs/${jobId}/save`);
-      } else {
-        await api.delete(`/jobs/${jobId}/unsave`);
-      }
+      await api.patch(`/candidate/saved-jobs/${jobId}`, { saved: newBookmarkState });
 
       toast.success(
         newBookmarkState
@@ -373,8 +392,9 @@ const JobSearch = () => {
 
   const activeFilterCount = Object.values(filters).flat().length;
 
-  // Filter options are fixed after initial fetch — not re-derived from mutable jobs state
-  const filterOptions = filterSourceData;
+  // Static filter options — always the same curated set
+  const filterOptions = FILTER_OPTIONS;
+
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
@@ -387,13 +407,13 @@ const JobSearch = () => {
     return (
       matchesSearch &&
       (filters.Location.length === 0 ||
-        filters.Location.includes(job.location)) &&
+        filters.Location.some((f) => f.toLowerCase() === (job.location || "").toLowerCase())) &&
       (filters.Department.length === 0 ||
-        filters.Department.includes(job.department)) &&
+        filters.Department.some((f) => f.toLowerCase() === (job.department || "").toLowerCase())) &&
       (filters.Experience.length === 0 ||
-        filters.Experience.includes(job.experience)) &&
+        filters.Experience.some((f) => f.toLowerCase() === (job.experience || "").toLowerCase())) &&
       (filters["Workplace Type"].length === 0 ||
-        filters["Workplace Type"].includes(job.workPlaceType))
+        filters["Workplace Type"].some((f) => f.toLowerCase() === (job.workPlaceType || "").toLowerCase()))
     );
   });
 
@@ -487,7 +507,6 @@ const JobSearch = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 font-['Inter',sans-serif]">
-      <ToastContainer />
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -866,8 +885,8 @@ const JobSearch = () => {
                             <button
                               onClick={() => handleBookMarkClick(job._id)}
                               className={`shrink-0 p-3 rounded-2xl transition-all duration-300 ${isBookmarked
-                                  ? "text-blue-600 bg-blue-50 shadow-md shadow-blue-100 hover:bg-blue-100 scale-110"
-                                  : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"
+                                ? "text-blue-600 bg-blue-50 shadow-md shadow-blue-100 hover:bg-blue-100 scale-110"
+                                : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"
                                 }`}
                               aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
                             >

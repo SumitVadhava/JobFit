@@ -245,7 +245,7 @@ function AtsScreenBrackDown({ atsData }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ToastContainer position="top-right" autoClose={3000} theme="light" />
+
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 

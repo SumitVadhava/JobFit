@@ -192,87 +192,64 @@ const Recruiter_Analytics_view = () => {
   const [jobs, setJobs] = useState([]);
   const [allCandidates, setAllCandidates] = useState([]);
   const [perJobData, setPerJobData] = useState([]);
+  const [topPerformingJob, setTopPerformingJob] = useState(null);
   const [candidateSummary, setCandidateSummary] = useState({
     totalJobs: 0,
     totalCandidates: 0,
   });
   const [loading, setLoading] = useState(true);
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const userId = user._id || user.id;
-
   useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
     const fetchAll = async () => {
       try {
         setLoading(true);
+        const dashboardRes = await api.get("/recruiter/dashboard");
+        const dashboardData = dashboardRes?.data?.data || {};
+        const dashboardPerJob = Array.isArray(dashboardData.applicationsPerJob)
+          ? dashboardData.applicationsPerJob
+          : [];
+        const recentApplications = Array.isArray(dashboardData.recentApplications)
+          ? dashboardData.recentApplications
+          : [];
 
-        const jobsRes = await api
-          .get(`/jobs/recruiter/${userId}`)
-          .catch(() => null);
-        const recruiterJobs = jobsRes?.data?.jobs || [];
-        setJobs(recruiterJobs);
+        const normalizedRecentApplications = recentApplications.map((app) => ({
+          _id: app._id,
+          status: app.status || "applied",
+          appliedAt: app.appliedAt || app.createdAt || null,
+          candidateName:
+            app.candidateId?.userName || app.userName || app.name || "Unknown Candidate",
+          candidateEmail:
+            app.candidateId?.email || app.email || "-",
+          candidatePicture:
+            app.candidateId?.picture || app.picture || app.avatar || app.profileImage || "",
+          jobId: app.jobId?._id || app.jobId || null,
+          jobTitle: app.jobId?.jobTitle || app.jobTitle || "Untitled Job",
+          atsScore:
+            app.atsScore ?? app.profile?.atsScore ?? null,
+        }));
 
-        const allCandRes = await api
-          .get(`/jobs/recruiter/${userId}/candidates`)
-          .catch(() => null);
+        const mappedPerJob = dashboardPerJob.map((job) => ({
+          _id: job.jobId || job._id,
+          jobTitle: job.jobTitle || "Untitled Job",
+          applicants: Number(job.applicationCount) || 0,
+        }));
 
-        const totalCandidates = Number(allCandRes?.data?.totalCandidates) || 0;
-        const totalJobsFromCandidatesApi =
-          Number(allCandRes?.data?.totalJobs) || recruiterJobs.length;
-        const candidates =
-          allCandRes?.data?.candidates || allCandRes?.data?.applications || [];
-
+        setJobs(mappedPerJob);
+        setPerJobData(mappedPerJob);
+        setAllCandidates(normalizedRecentApplications);
+        setTopPerformingJob(
+          dashboardData.topPerformingJob
+            ? {
+                _id: dashboardData.topPerformingJob.jobId,
+                jobTitle: dashboardData.topPerformingJob.jobTitle || "Untitled Job",
+                applicants: Number(dashboardData.topPerformingJob.applicationCount) || 0,
+              }
+            : null,
+        );
         setCandidateSummary({
-          totalJobs: totalJobsFromCandidatesApi,
-          totalCandidates,
+          totalJobs: Number(dashboardData.totalJobsPosted) || 0,
+          totalCandidates: Number(dashboardData.totalApplications) || 0,
         });
-        setAllCandidates(candidates);
-
-        if (recruiterJobs.length > 0) {
-          const byJob = candidates.reduce((acc, candidate) => {
-            const jobId = candidate.jobId;
-            if (!jobId) return acc;
-
-            if (!acc[jobId]) {
-              const matchedJob = recruiterJobs.find((j) => j._id === jobId);
-              acc[jobId] = {
-                _id: jobId,
-                jobTitle:
-                  candidate.jobTitle || matchedJob?.jobTitle || "Untitled Job",
-                companyName:
-                  candidate.companyName ||
-                  matchedJob?.companyName ||
-                  "Unknown Company",
-                img: matchedJob?.img || "",
-                applicants: 0,
-              };
-            }
-
-            acc[jobId].applicants += 1;
-            return acc;
-          }, {});
-
-          const jobsWithApplicants = recruiterJobs.map((job) =>
-            byJob[job._id]
-              ? byJob[job._id]
-              : {
-                  _id: job._id,
-                  jobTitle: job.jobTitle,
-                  companyName: job.companyName,
-                  img: job.img,
-                  applicants: 0,
-                },
-          );
-
-          setPerJobData(jobsWithApplicants);
-        } else {
-          setPerJobData([]);
-        }
       } catch (err) {
         console.error("Error loading recruiter analytics:", err);
         toast.error("Failed to load analytics data.");
@@ -282,7 +259,7 @@ const Recruiter_Analytics_view = () => {
     };
 
     fetchAll();
-  }, [userId]);
+  }, []);
 
   const totalJobs = candidateSummary.totalJobs || jobs.length;
   const totalApplications =
@@ -293,19 +270,37 @@ const Recruiter_Analytics_view = () => {
 
   // True when jobs exist but nobody has applied yet
   const noApplications = perJobData.length > 0 && totalApplications === 0;
+  const hasApplicationsPerJobData = perJobData.some(
+    (job) => Number(job.applicants) > 0,
+  );
 
-  const topJob = !noApplications
-    ? perJobData.reduce(
+  const greyBarData =
+    perJobData.length > 0
+      ? perJobData.map((job) => ({
+          _id: job._id,
+          jobTitle: job.jobTitle,
+          applicants: 1,
+        }))
+      : [
+          { _id: "placeholder-1", jobTitle: "Job 1", applicants: 1 },
+          { _id: "placeholder-2", jobTitle: "Job 2", applicants: 1 },
+          { _id: "placeholder-3", jobTitle: "Job 3", applicants: 1 },
+          { _id: "placeholder-4", jobTitle: "Job 4", applicants: 1 },
+        ];
+
+  const topJob =
+    !noApplications && topPerformingJob
+      ? topPerformingJob
+      : !noApplications
+        ? perJobData.reduce(
         (best, job) => (job.applicants > (best?.applicants ?? -1) ? job : best),
         null,
       )
-    : null;
+        : null;
 
   const recentApplications = [...allCandidates]
     .sort(
-      (a, b) =>
-        new Date(b.appliedAt || b.createdAt || 0) -
-        new Date(a.appliedAt || a.createdAt || 0),
+      (a, b) => new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0),
     )
     .slice(0, 5);
 
@@ -417,13 +412,56 @@ const Recruiter_Analytics_view = () => {
               </div>
             </div>
 
-            {perJobData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-14 text-gray-400">
-                <Briefcase size={40} className="mb-3 opacity-30" />
-                <p className="text-sm font-medium">No job data yet.</p>
-                <p className="text-xs mt-1">
-                  Post a job to see application stats here.
-                </p>
+            {!hasApplicationsPerJobData ? (
+              <div className="relative" style={{ height: 260 }}>
+                <div
+                  className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl"
+                  style={{ background: "rgba(248,250,252,0.72)" }}
+                >
+                  <p className="text-sm font-bold text-slate-400">No Data Found</p>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    No applications received yet
+                  </p>
+                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={greyBarData}
+                    margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
+                    barCategoryGap="35%"
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#E2E8F0"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="jobTitle"
+                      tick={{ fontSize: 11, fill: "#94A3B8" }}
+                      axisLine={false}
+                      tickLine={false}
+                      interval={0}
+                      tickFormatter={(v) =>
+                        v.length > 12 ? `${v.slice(0, 12)}...` : v
+                      }
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11, fill: "#94A3B8" }}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                    />
+                    <Bar
+                      dataKey="applicants"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={52}
+                      isAnimationActive={false}
+                    >
+                      {greyBarData.map((entry, i) => (
+                        <Cell key={entry._id || i} fill="#CBD5E1" />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             ) : (
               <div style={{ height: 260 }}>
@@ -614,10 +652,12 @@ const Recruiter_Analytics_view = () => {
                     <h3 className="text-base font-bold text-black truncate">
                       {topJob.jobTitle}
                     </h3>
-                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                      <Building2 size={11} />
-                      {topJob.companyName}
-                    </p>
+                    {!!topJob.companyName && (
+                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                        <Building2 size={11} />
+                        {topJob.companyName}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right shrink-0">
                     <p
@@ -676,22 +716,11 @@ const Recruiter_Analytics_view = () => {
             ) : (
               <div className="space-y-3">
                 {recentApplications.map((app, i) => {
-                  const candidateName =
-                    app.name || app.userName || "Unknown Candidate";
+                  const candidateName = app.candidateName || "Unknown Candidate";
 
-                  const candidateAvatarSrc =
-                    app.profileImage ||
-                    app.avatar ||
-                    app.avatarUrl ||
-                    (typeof app.profile === "string" ? app.profile : "") ||
-                    app.profile?.avatar ||
-                    app.profile?.profilePic ||
-                    app.profile?.photo ||
-                    app.profile?.img ||
-                    app.profile?.url ||
-                    "";
+                  const candidateAvatarSrc = app.candidatePicture || "";
 
-                  const applicationTime = app.appliedAt || app.createdAt;
+                  const applicationTime = app.appliedAt;
                   const formattedDateTime =
                     formatBackendDateTime(applicationTime);
 
@@ -713,7 +742,7 @@ const Recruiter_Analytics_view = () => {
                           {candidateName}
                         </p>
                         <p className="text-xs text-gray-400 truncate mt-0.5">
-                          {app.email || "-"}
+                          {app.candidateEmail}
                           {app.jobTitle && ` - ${app.jobTitle}`}
                         </p>
                       </div>

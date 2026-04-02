@@ -75,17 +75,18 @@ const CandidatesView = () => {
           return;
         }
 
-        const res = await api.get(`/jobs/recruiter/${userId}`);
-        const recruiterJobs = res.data.jobs || [];
+        const res = await api.get("/recruiter/jobs");
+        const recruiterJobs = res.data?.data || [];
 
+        // Fetch total candidate count per job using the applicants endpoint
         const jobsWithCandidateStats = await Promise.all(
           recruiterJobs.map(async (job) => {
             try {
-              const candidatesResponse = await api.get(
-                `/jobs/${job._id}/candidates`,
-              );
+              const candidatesResponse = await api.get("/recruiter/applicants", {
+                params: { jobId: job._id },
+              });
               const totalCandidates =
-                Number(candidatesResponse?.data?.totalCandidates) || 0;
+                Number(candidatesResponse?.data?.data?.length) || 0;
 
               return {
                 ...job,
@@ -116,22 +117,27 @@ const CandidatesView = () => {
     fetchJobs();
   }, []);
 
+
   /* ── Fetch Candidates ── */
   const fetchCandidates = useCallback(async (jobId) => {
     try {
       setCandidatesLoading(true);
-      const res = await api.get(`/jobs/${jobId}/candidates`);
-      const apiCandidates = res.data.candidates || [];
+      const res = await api.get("/recruiter/applicants", {
+        params: { jobId },
+      });
+      const apiCandidates = res.data?.data || [];
 
       const normalized = apiCandidates.map((candidate, index) => ({
         _id:
+          candidate._id ||
           candidate.applicationId ||
-          candidate.candidateId ||
+          candidate.candidateId?._id ||
           `${jobId}-candidate-${index}`,
-        applicationId: candidate.applicationId,
-        candidateId: candidate.candidateId,
-        name: candidate.userName,
-        email: candidate.email,
+        applicationId: candidate._id || candidate.applicationId,
+        candidateId: candidate.candidateId?._id || candidate.candidateId,
+        name: candidate.candidateId?.userName || candidate.userName,
+        email: candidate.candidateId?.email || candidate.email,
+        picture: candidate.candidateId?.picture || candidate.picture,
         status: candidate.status,
         appliedAt: candidate.appliedAt,
         atsScore: candidate.profile?.atsScore,
@@ -154,6 +160,7 @@ const CandidatesView = () => {
       setCandidatesLoading(false);
     }
   }, []);
+
 
   const handleEdit = useCallback((job) => {
     if ((job.totalCandidates ?? 0) >= 1) {
@@ -181,7 +188,7 @@ const CandidatesView = () => {
   const handleDelete = useCallback(async (jobId) => {
     setIsDeleting(true);
     try {
-      await api.delete(`/jobs/${jobId}`);
+      await api.delete(`/recruiter/jobs/${jobId}`);
       setJobs((prev) => prev.filter((j) => j._id !== jobId));
       setSelectedJob((prev) => (prev?._id === jobId ? null : prev));
       setDeleteModalOpen(false);
@@ -288,9 +295,15 @@ const CandidatesView = () => {
       }
 
       const endpointMap = {
-        shortlist: `/jobs/${jobId}/candidates/${applicationId}/shortlist`,
-        reject: `/jobs/${jobId}/candidates/${applicationId}/reject`,
-        hire: `/jobs/${jobId}/candidates/${applicationId}/hire`,
+        shortlist: `/recruiter/applicants/${applicationId}/status`,
+        reject: `/recruiter/applicants/${applicationId}/status`,
+        hire: `/recruiter/applicants/${applicationId}/status`,
+      };
+
+      const statusMap = {
+        shortlist: "shortlisted",
+        reject: "rejected",
+        hire: "hired",
       };
 
       const successMessageMap = {
@@ -307,11 +320,11 @@ const CandidatesView = () => {
       closeConfirmModal();
 
       try {
-        const res = await api.patch(endpoint);
+        const res = await api.patch(endpoint, { status: statusMap[action] });
         toast.success(res?.data?.message || successMessageMap[action]);
 
         if (action === "hire") {
-          const openingsLeft = res?.data?.data?.openingsLeft;
+          const openingsLeft = res?.data?.data?.openingsRemaining;
           if (Number.isFinite(openingsLeft)) {
             setSelectedJob((prev) =>
               prev ? { ...prev, openings: openingsLeft } : prev,
@@ -388,8 +401,8 @@ const CandidatesView = () => {
   );
 
   const totalJobs = activeJobs.length;
-  const pendingJobs = activeJobs.filter((j) => j.adminReview === "pending").length;
-  const reviewedJobs = activeJobs.filter((j) => j.adminReview === "reviewed").length;
+  const pendingJobs = activeJobs.filter((j) => (j.status || "").toLowerCase() === "pending").length;
+  const verifiedJobs = activeJobs.filter((j) => (j.status || "").toLowerCase() === "reviewed").length;
   const totalOpenings = activeJobs.reduce(
     (sum, j) => sum + (Number(j.openings) || 0),
     0,
@@ -535,12 +548,12 @@ const CandidatesView = () => {
                         });
                         setCurrentPage(1);
                       }}
-                      className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 select-none ${isChecked
+                      className={`inline-flex items-center justify-between gap-3 px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 select-none min-w-[132px] ${isChecked
                         ? `${s.pill} shadow-md scale-[1.04]`
                         : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:shadow-sm"
                         }`}
                     >
-                      {/* Custom checkbox tick */}
+                      <span className="truncate">{label}</span>
                       <span
                         className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${isChecked ? s.checked : "border-gray-300 bg-white"
                           }`}
@@ -551,7 +564,6 @@ const CandidatesView = () => {
                           </svg>
                         )}
                       </span>
-                      {label}
                     </button>
                   );
                 })}
@@ -769,8 +781,8 @@ const CandidatesView = () => {
               delay={0.1}
             />
             <RecruiterHistoryStatCard
-              label="Reviewed"
-              value={reviewedJobs}
+              label="Verified Jobs"
+              value={verifiedJobs}
               icon={CheckCircleOutlineIcon}
               color={HISTORY_CARD_COLORS.green}
               delay={0.2}

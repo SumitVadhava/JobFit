@@ -36,7 +36,7 @@ exports.postJob = async (req, res) => {
         console.error("Cloudinary Upload Error:", uploadError);
         return res.status(500).json({ error: true, message: "Failed to upload image to cloud." });
       }
-    } 
+    }
 
     const parseToArray = (val) => {
       if (!val) return [];
@@ -122,14 +122,14 @@ exports.getApplicants = async (req, res) => {
     const filter = {};
 
     const myJobIds = await Job.find({ recruiterId: req.user.id }).distinct("_id");
-    
+
     if (jobId) {
-       if (!myJobIds.map(id => id.toString()).includes(jobId)) {
-           return res.status(403).json({ error: true, message: "Unauthorized access to this job's applicants." });
-       }
-       filter.jobId = jobId;
+      if (!myJobIds.map(id => id.toString()).includes(jobId)) {
+        return res.status(403).json({ error: true, message: "Unauthorized access to this job's applicants." });
+      }
+      filter.jobId = jobId;
     } else {
-       filter.jobId = { $in: myJobIds };
+      filter.jobId = { $in: myJobIds };
     }
 
     const applicants = await Application.find(filter)
