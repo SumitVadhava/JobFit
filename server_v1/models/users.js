@@ -47,7 +47,7 @@ const usersSchema = new mongoose.Schema(
     createdAt: {
       type: Date,
       default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
-    }
+    },
   },
 );
 
