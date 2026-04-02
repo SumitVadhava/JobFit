@@ -84,11 +84,8 @@ const ApplyJob = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append("coverLetter", coverLetter);
-      if (resumeFile) formData.append("resume", resumeFile);
-      await api.post(`/jobs/${jobId}/apply`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      await api.post(`/candidate/job/apply`, { jobId }, {
+        headers: { "Content-Type": "application/json" },
       });
       setHasApplied(true);
       toast.success("Application submitted successfully!", { position: "top-center", autoClose: 2000 });

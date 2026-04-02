@@ -199,24 +199,22 @@ function UserAnalytics() {
         setLoading(true);
 
         const [profileRes, savedRes, appliedRes, resumeRes, atsHistoryRes] = await Promise.all([
-          api.get("/profile").catch(() => null),
-          api.get("/user/savedJobs").catch(() => null),
-          api.get("/user/applied-companies").catch(() => null),
-          userId
-            ? api.get(`/resume/${userId}`).catch(() => null)
-            : Promise.resolve(null),
-          api.get("/atshistory").catch(() => null),
+          api.get("/candidate/profile").catch(() => null),
+          api.get("/candidate/saved-jobs").catch(() => null),
+          api.get("/candidate/applied-jobs").catch(() => null),
+          api.get("/candidate/ats-analyzer").catch(() => null),
         ]);
 
         // Profile
-        const prof = profileRes?.data?.profile || {};
+        const prof = profileRes?.data?.data || profileRes?.data?.profile || {};
         setProfile(prof);
 
         // Saved jobs
-        setSavedJobsCount(savedRes?.data?.totalSavedJobs ?? 0);
+        setSavedJobsCount(savedRes?.data?.data?.length ?? savedRes?.data?.totalSavedJobs ?? 0);
 
         // Applied jobs
         const apps =
+          appliedRes?.data?.data ||
           appliedRes?.data?.applications ||
           appliedRes?.data?.appliedJobs ||
           [];
@@ -230,14 +228,25 @@ function UserAnalytics() {
         const normalised = Array.isArray(resumeList) ? resumeList : [];
         setResumes(normalised);
 
-        // ATS History from ATS analyzer
-        const atsData = atsHistoryRes?.data?.history || [];
-        setRawAtsHistory(atsData);
+        // ATS History from ATS analyzer endpoint
+        const atsData = atsHistoryRes?.data?.data?.atsScores || atsHistoryRes?.data?.history || [];
 
-        // Build ATS history from both resume data and ATS raw data
-        setAtsHistory(buildAtsHistory(normalised, atsData));
+        // ── Also merge localStorage ATS history (saved by client-side ATS calls) ──
+        let localAtsHistory = [];
+        try {
+          localAtsHistory = JSON.parse(localStorage.getItem('atsHistory') || '[]');
+        } catch (e) { /* ignore parse errors */ }
+
+        // Combine server history + localStorage history, de-dupe by timestamp
+        const serverTimestamps = new Set(atsData.map(e => e.analyzedAt));
+        const uniqueLocal = localAtsHistory.filter(e => !serverTimestamps.has(e.analyzedAt));
+        const mergedAtsData = [...atsData, ...uniqueLocal];
+
+        setRawAtsHistory(mergedAtsData);
+
+        // Build ATS history from both resume data and merged ATS data
+        setAtsHistory(buildAtsHistory(normalised, mergedAtsData));
       } catch (err) {
-        console.error("Analytics fetch error:", err);
         toast.error("Failed to load analytics data.");
       } finally {
         setLoading(false);
@@ -395,15 +404,7 @@ function UserAnalytics() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#faf5ff_0%,_#ffffff_48%)]">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        theme="light"
-      />
+
 
       <main className="min-w-0">
         <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-8">
@@ -590,10 +591,10 @@ function UserAnalytics() {
                       className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
                     >
                       {/* Company logo / fallback */}
-                      {app.img ? (
+                      {app.jobId?.img || app.img ? (
                         <img
-                          src={app.img}
-                          alt={app.companyName}
+                          src={app.jobId?.img || app.img}
+                          alt={app.jobId?.companyName || app.companyName}
                           className="w-10 h-10 rounded-xl object-cover border border-gray-100 shrink-0"
                           onError={(e) => { e.target.style.display = "none"; }}
                         />
@@ -602,19 +603,19 @@ function UserAnalytics() {
                           className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
                           style={{ background: ACCENT }}
                         >
-                          {(app.companyName || "?").charAt(0).toUpperCase()}
+                          {((app.jobId?.companyName || app.companyName) || "?").charAt(0).toUpperCase()}
                         </div>
                       )}
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-black truncate">
-                          {app.jobTitle || "Unknown Role"}
+                          {app.jobId?.jobTitle || app.jobTitle || "Unknown Role"}
                         </p>
                         <p className="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1">
                           <Building2 size={11} />
-                          {app.companyName || "—"}
-                          {app.location && ` · ${app.location}`}
+                          {app.jobId?.companyName || app.companyName || "—"}
+                          {(app.jobId?.location || app.location) && ` · ${app.jobId?.location || app.location}`}
                         </p>
                       </div>
 

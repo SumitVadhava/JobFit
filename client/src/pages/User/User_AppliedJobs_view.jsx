@@ -32,20 +32,15 @@ const AppliedJobs = () => {
         setError(null);
 
         const [savedJobsResponse, appliedJobsResponse] = await Promise.all([
-          api.get("/user/savedJobs").catch(() => ({ data: { savedJobs: [] } })),
-          api
-            .get("/user/applied-companies")
-            .catch(() => ({ data: { applications: [], appliedJobs: [] } })),
+          api.get("/candidate/saved-jobs").catch(() => ({ data: { data: [] } })),
+          api.get("/candidate/applied-jobs").catch(() => ({ data: { data: [] } })),
         ]);
 
         const savedJobsIds = new Set(
-          (savedJobsResponse.data.savedJobs || []).map((saved) => saved.jobId)
+          (savedJobsResponse.data.data || []).map((saved) => saved.jobId?._id || saved.jobId)
         );
 
-        const apps =
-          appliedJobsResponse.data.applications ||
-          appliedJobsResponse.data.appliedJobs ||
-          [];
+        const apps = appliedJobsResponse.data.data || [];
 
         const formattedJobs = apps.map((app) => {
           const jobData =
@@ -250,11 +245,7 @@ const AppliedJobs = () => {
     );
 
     try {
-      if (newBookmarkState) {
-        await api.post(`/jobs/${jobId}/save`);
-      } else {
-        await api.delete(`/jobs/${jobId}/unsave`);
-      }
+      await api.patch(`/candidate/saved-jobs/${jobId}`, { saved: newBookmarkState });
       toast.success(
         newBookmarkState ? "Job saved successfully!" : "Job removed from saved",
         { position: "top-center", autoClose: 2000 }
