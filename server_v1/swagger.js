@@ -13,16 +13,12 @@ const options = {
     },
     servers: [
       {
-        url: "http://jobfit-delta.vercel.app",
-        description: "Local Development Server",
-      },
-      {
         url: "http://localhost:5000",
         description: "Local Development Server",
       },
       {
         url: "https://jobfit-s5v7.onrender.com",
-        description: "Staging/Production Server",
+        description: "Production Server",
       },
     ],
     components: {
@@ -108,7 +104,7 @@ const options = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: [path.join(__dirname, "./routes/*.js")], // Points to all route files for automatic documentation
+  apis: [path.join(__dirname, "./routes/*.js")],
 };
 
 const specs = swaggerJsdoc(options);
