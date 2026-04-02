@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🎯 JobFit
+<img src="client/public/favicon.png" alt="JobFit Logo" width="110" />
+
+# JobFit
 
 ### *The Intelligent Full-Stack Job Portal*
 
@@ -67,10 +69,9 @@ Building JobFit reinforced deep practical skills in JWT-based role authenticatio
 
 <div align="center">
 
-<!-- Screenshot Placeholder — replace with actual screenshot -->
-<img src="assets/images/landing-page.png" alt="JobFit Landing Page" width="90%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);" />
+<img src="assets/Landing_Page.jpeg" alt="JobFit Landing Page" width="90%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);" />
 
-*JobFit Landing Page — replace this placeholder with an actual screenshot*
+*JobFit Landing Page*
 
 </div>
 
@@ -420,77 +421,50 @@ Create a `.env` file inside the `/server` directory using `.env.example` as a te
 
 ## 📸 Screenshots
 
-> 📂 Place your screenshots inside `client/src/assets/images/` and update the paths below.
+> 📂 All screenshots below are sourced from the repository `assets/` folder.
 
-<details>
-<summary>🏠 Landing Page</summary>
+### 🏠 Landing & Authentication
 
-![Landing Page](assets/images/landing-page.png)
+<p align="center">
+   <img src="assets/Landing_Page.jpeg" alt="Landing Page" width="48%" />
+   <img src="assets/Login_Page.jpeg" alt="Login Page" width="48%" />
+</p>
 
-</details>
+### 👤 Candidate Views
 
-<details>
-<summary>🔐 Authentication — Login / Register</summary>
+<p align="center">
+   <img src="assets/Candidate_Dashboard.jpeg" alt="Candidate Dashboard" width="48%" />
+   <img src="assets/Candidate_Profile.jpeg" alt="Candidate Profile" width="48%" />
+</p>
 
-![Auth Page](assets/images/auth-page.png)
+<p align="center">
+   <img src="assets/Candidate_ATS_Analyzer.jpeg" alt="Candidate ATS Analyzer" width="75%" />
+</p>
 
-</details>
+### 🏢 Recruiter Views
 
-<details>
-<summary>🔍 Candidate — Job Search & Browse</summary>
+<p align="center">
+   <img src="assets/Recruiter_Dashboard.jpeg" alt="Recruiter Dashboard" width="48%" />
+   <img src="assets/Recruiter_Post_Job.jpeg" alt="Recruiter Post Job" width="48%" />
+</p>
 
-![Job Search](assets/images/job-search.png)
+<p align="center">
+   <img src="assets/Candidates_Applications.jpeg" alt="Recruiter Candidates Applications" width="48%" />
+   <img src="assets/Recruiter_Profile.jpeg" alt="Recruiter Profile" width="48%" />
+</p>
 
-</details>
+### 👑 Admin View
 
-<details>
-<summary>🤖 Candidate — ATS Resume Scanner</summary>
+<p align="center">
+   <img src="assets/Admin_Dashboard.jpeg" alt="Admin Dashboard" width="75%" />
+</p>
 
-![ATS Scanner](assets/images/ats-scanner.png)
+### ✨ Landing Sections
 
-</details>
-
-<details>
-<summary>📊 Candidate — Analytics Dashboard</summary>
-
-![Candidate Analytics](assets/images/candidate-analytics.png)
-
-</details>
-
-<details>
-<summary>🏢 Recruiter — Post a Job</summary>
-
-![Post Job](assets/images/recruiter-post-job.png)
-
-</details>
-
-<details>
-<summary>👥 Recruiter — Candidate Management Pipeline</summary>
-
-![Candidate Management](assets/images/recruiter-candidates.png)
-
-</details>
-
-<details>
-<summary>📈 Recruiter — Analytics Dashboard</summary>
-
-![Recruiter Analytics](assets/images/recruiter-analytics.png)
-
-</details>
-
-<details>
-<summary>👑 Admin — Control Panel</summary>
-
-![Admin Dashboard](assets/images/admin-dashboard.png)
-
-</details>
-
-<details>
-<summary>📖 Swagger — API Documentation</summary>
-
-![Swagger Docs](assets/images/swagger-docs.png)
-
-</details>
+<p align="center">
+   <img src="assets/Jobfit_Key_Features.jpeg" alt="Key Features Section" width="48%" />
+   <img src="assets/Jobfit_FAQ_Section.jpeg" alt="FAQ Section" width="48%" />
+</p>
 
 ---
 
