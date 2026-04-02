@@ -23,7 +23,6 @@ const OTPDemo = ({
     setUserData,
     setIsRegister
 }) => {
-    console.log("OTPDemo Component Mounted! isOpen is:", isOpen);
     const [otp, setOtp] = useState(Array(length).fill(""));
     const [errors, setErrors] = useState({});
     const [isResending, setIsResending] = useState(false);

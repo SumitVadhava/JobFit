@@ -3,8 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
-import ButtonLogo from "../../assets/button_logo.png"
+import ButtonLogo from "../../assets/button_logo.png";
 import { Briefcase } from "lucide-react";
+import Skeleton from "../../components/Skeleton";
+
+const getStatusConfig = (status) => {
+  switch (status?.toLowerCase()) {
+    case "applied": return { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500", label: "Applied", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg> };
+    case "shortlisted": return { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", dot: "bg-purple-500", label: "Shortlisted", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> };
+    case "hired": return { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500", label: "Hired", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg> };
+    case "rejected": return { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", label: "Rejected", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg> };
+    default: return { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200", dot: "bg-gray-500", label: "Applied", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> };
+  }
+};
 
 const JobSearch = () => {
   const navigate = useNavigate();
@@ -22,7 +33,7 @@ const JobSearch = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [bookmarkedJobs, setBookmarkedJobs] = useState({});
-  const [appliedJobs, setAppliedJobs] = useState(new Set());
+  const [appliedJobs, setAppliedJobs] = useState({});
   const [applyingJobs, setApplyingJobs] = useState(new Set());
   const [expandedJob, setExpandedJob] = useState(null);
   const [hoveredJob, setHoveredJob] = useState(null);
@@ -50,10 +61,11 @@ const JobSearch = () => {
         );
 
         const apps = appliedJobsResponse.data.applications || appliedJobsResponse.data.appliedJobs || [];
-        const appliedJobsIds = new Set(
-          apps.map(app => app.jobId || app._id)
-        );
-        setAppliedJobs(appliedJobsIds);
+        const appliedJobsMap = {};
+        apps.forEach(app => {
+          appliedJobsMap[app.jobId || app._id] = app.status || "applied";
+        });
+        setAppliedJobs(appliedJobsMap);
 
         // Format the API response to match our component structure
         const formattedJobs = jobsResponse.data.jobs.map(job => ({
@@ -116,7 +128,7 @@ const JobSearch = () => {
 
       const profileRes = await api.get("/profile").catch(() => null);
       const profile = profileRes?.data?.profile;
-      
+
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
 
@@ -133,26 +145,29 @@ const JobSearch = () => {
 
       if (!isComplete) {
         toast.error(
-          "Please fill in all your profile details (photo, bio, experience, education, skills, soft skills, and resume) before applying.",
-          { position: "top-center", autoClose: 5000 }
+          "Please fill all details in profile",
+          { position: "top-center", autoClose: 3000 }
         );
         setApplyingJobs(prev => {
           const next = new Set(prev);
           next.delete(jobId);
           return next;
         });
+        setTimeout(() => {
+          navigate("/candidate/profile");
+        }, 1500);
         return;
       }
 
       await api.post(`/jobs/${jobId}/apply`);
 
-      setAppliedJobs(prev => new Set([...prev, jobId]));
+      setAppliedJobs(prev => ({ ...prev, [jobId]: "applied" }));
       toast.success("Applied for job successfully!", { position: "top-center", autoClose: 2000 });
 
     } catch (err) {
       if (err.response?.status === 409) {
         toast.info("You have already applied for this job.", { position: "top-center", autoClose: 2000 });
-        setAppliedJobs(prev => new Set([...prev, jobId]));
+        setAppliedJobs(prev => ({ ...prev, [jobId]: "applied" }));
       } else {
         toast.error("Failed to apply for job. Please try again.", { position: "top-center", autoClose: 2000 });
       }
@@ -398,15 +413,73 @@ const JobSearch = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 border-4 rounded-full animate-spin"
-            style={{ borderColor: "#f3e8ff", borderTopColor: "#9c44fe" }}
-          />
-          <p className="text-base font-medium text-gray-400 animate-pulse">
-            Finding the best jobs for you...
-          </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 font-['Inter',sans-serif]">
+        {/* Header Skeleton */}
+        <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="w-full sm:w-auto">
+              <Skeleton variant="title" className="h-8 w-48 mb-2" />
+              <Skeleton variant="text" className="h-4 w-32" />
+            </div>
+            <Skeleton className="w-full sm:w-96 h-11 rounded-xl" />
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
+          {/* Filter Sidebar Skeleton */}
+          <aside className="w-full lg:w-72 shrink-0">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-6">
+              <Skeleton variant="title" className="h-6 w-24" />
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton variant="text" className="h-4 w-32" />
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((j) => (
+                      <div key={j} className="flex gap-3 items-center">
+                        <Skeleton variant="circle" className="h-5 w-5" />
+                        <Skeleton variant="text" className="h-4 w-24" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+
+          {/* Main Content Skeleton */}
+          <main className="flex-1 space-y-6">
+            <div className="flex gap-2 mb-5">
+              <Skeleton className="h-8 w-20 rounded-full" />
+              <Skeleton className="h-8 w-24 rounded-full" />
+            </div>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-3xl border border-gray-200 p-5">
+                <div className="flex gap-5">
+                  <Skeleton variant="image" className="h-20 w-20 rounded-2xl shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton variant="title" className="h-6 w-3/4" />
+                    <Skeleton variant="text" className="h-4 w-1/2" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-24 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 space-y-2">
+                  <Skeleton variant="text" className="h-4 w-full" />
+                  <Skeleton variant="text" className="h-4 w-5/6" />
+                </div>
+                <div className="mt-6 flex justify-between items-center pt-5 border-t border-gray-100">
+                  <Skeleton variant="text" className="h-4 w-24" />
+                  <div className="flex gap-3">
+                    <Skeleton variant="button" className="h-10 w-24" />
+                    <Skeleton variant="button" className="h-10 w-32" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </main>
         </div>
       </div>
     );
@@ -670,6 +743,20 @@ const JobSearch = () => {
                   >
 
                     <div className="p-4 sm:p-5">
+                      {/* ── Status row if applied ── */}
+                      {appliedJobs[job._id] && (
+                        <div className="flex items-center justify-between mb-4">
+                          <span
+                            className={`inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full border ${getStatusConfig(appliedJobs[job._id]).bg} ${getStatusConfig(appliedJobs[job._id]).text} ${getStatusConfig(appliedJobs[job._id]).border}`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${getStatusConfig(appliedJobs[job._id]).dot}`}
+                            />
+                            {getStatusConfig(appliedJobs[job._id]).label}
+                          </span>
+                        </div>
+                      )}
+
                       {/* Header: Logo + Info + Bookmark */}
                       <div className="flex gap-4 sm:gap-5">
                         {/* Company Logo - SMALLER */}
@@ -778,11 +865,10 @@ const JobSearch = () => {
                             {/* Bookmark Button */}
                             <button
                               onClick={() => handleBookMarkClick(job._id)}
-                              className={`shrink-0 p-3 rounded-2xl transition-all duration-300 ${
-                                isBookmarked
+                              className={`shrink-0 p-3 rounded-2xl transition-all duration-300 ${isBookmarked
                                   ? "text-blue-600 bg-blue-50 shadow-md shadow-blue-100 hover:bg-blue-100 scale-110"
                                   : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"
-                              }`}
+                                }`}
                               aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
                             >
                               <svg
@@ -875,15 +961,21 @@ const JobSearch = () => {
                           {/* Apply Button */}
                           <button
                             onClick={() => {
-                              if (!appliedJobs.has(job._id) && !applyingJobs.has(job._id)) {
+                              if (!appliedJobs[job._id] && !applyingJobs.has(job._id)) {
                                 handleApplyJob(job._id);
                               }
                             }}
-                            disabled={appliedJobs.has(job._id) || applyingJobs.has(job._id)}
+                            disabled={!!appliedJobs[job._id] || applyingJobs.has(job._id)}
                             className={`group/btn relative inline-flex items-center gap-2.5 text-sm font-semibold px-7 py-3 rounded-2xl transition-all duration-300 shadow-md active:scale-[0.97]
-                              ${appliedJobs.has(job._id)
-                                ? "bg-green-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
-                                : "bg-gray-900 hover:bg-gray-800 text-white hover:shadow-xl hover:shadow-gray-900/25"
+                              ${!appliedJobs[job._id]
+                                ? "bg-gray-900 hover:bg-gray-800 text-white hover:shadow-xl hover:shadow-gray-900/25"
+                                : appliedJobs[job._id] === "rejected"
+                                  ? "bg-red-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                  : appliedJobs[job._id] === "shortlisted"
+                                    ? "bg-purple-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                    : appliedJobs[job._id] === "hired"
+                                      ? "bg-green-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                      : "bg-blue-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
                               }
                               ${applyingJobs.has(job._id) ? "opacity-75 cursor-wait" : ""}
                             `}
@@ -893,12 +985,10 @@ const JobSearch = () => {
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 Applying...
                               </>
-                            ) : appliedJobs.has(job._id) ? (
+                            ) : appliedJobs[job._id] ? (
                               <>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-                                  <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
-                                </svg>
-                                Applied
+                                {getStatusConfig(appliedJobs[job._id]).icon}
+                                <span className="capitalize">{appliedJobs[job._id]}</span>
                               </>
                             ) : (
                               <>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import api from '../../api/api';
+import Skeleton from '../../components/Skeleton';
 
 const ErrorBoundary = ({ children }) => {
   const [hasError, setHasError] = useState(false);
@@ -469,13 +470,11 @@ const Resumes = ({ atsData, setAtsData }) => {
       formData.append('pdf', file);
       formData.append('jobDesc', description);
 
-      console.log("Sending request with:", { file, description }); // Debug log
 
       const response = await api.post('/resume/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      console.log("Received response:", response.data); // Debug log
 
       if (response.data) {
         setAtsData(response.data);

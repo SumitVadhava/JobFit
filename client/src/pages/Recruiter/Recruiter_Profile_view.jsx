@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContexts";
 import api from "../../api/api";
+import { RecruiterSkeletonProfilePage } from "../../components/recruiter/RecruiterSkeletons";
 
 /* ── Inline Icon helper ─────────────────────────────────────── */
 const Ic = ({ d, size = 16 }) => (
@@ -115,27 +116,43 @@ const Recruiter_Profile_view = ({ userProp }) => {
 
   /* ── Helper to map API response into component state ────── */
   const mapProfileToState = (profile, userName, userEmail, userPicture) => ({
-    name: userName || profile?.name || "",
-    email: userEmail || profile?.email || "",
+    name: profile?.name || profile?.userName || userName || "",
+    email: profile?.email || userEmail || "",
     position: profile?.position || "",
     company: profile?.company || "",
     description: profile?.description || "",
     location: profile?.location || "",
     website: profile?.website || "",
-    profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=0f172a&color=fff&size=200`,
+    linkedIn: profile?.linkedIn || "",
+    jobsPosted: profile?.jobsPosted || 0,
+    candidatesHired: profile?.candidatesHired || 0,
+    teamSize: profile?.teamSize || 0,
+    profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || userName || "User")}&background=0f172a&color=fff&size=200`,
   });
 
   /* ── Helper to map state back to API shape ────────────── */
-  const mapStateToApi = () => ({
-    name: data.name || null,
-    email: data.email || null,
-    img: data.profilePicture || null,
-    description: data.description || null,
-    company: data.company || null,
-    position: data.position || null,
-    website: data.website || null,
-    location: data.location || null,
-  });
+  const mapStateToApi = () => {
+    const payload = {
+      userName: data.name || undefined,
+      img: data.profilePicture || undefined,
+      description: data.description || undefined,
+      company: data.company || undefined,
+      position: data.position || undefined,
+      website: data.website || undefined,
+      location: data.location || undefined,
+      linkedIn: data.linkedIn || undefined,
+      jobsPosted: data.jobsPosted !== undefined ? data.jobsPosted : undefined,
+      candidatesHired: data.candidatesHired !== undefined ? data.candidatesHired : undefined,
+      teamSize: data.teamSize !== undefined ? data.teamSize : undefined,
+    };
+    // Clean up undefined / empty strings for URL validation
+    Object.keys(payload).forEach(key => {
+      if (payload[key] === undefined || payload[key] === null || payload[key] === "") {
+        delete payload[key];
+      }
+    });
+    return payload;
+  };
 
   /* ── Fetch profile on mount ──────────────────────────────── */
   useEffect(() => {
@@ -148,9 +165,9 @@ const Recruiter_Profile_view = ({ userProp }) => {
         let profile = null;
         try {
           if (isOwnProfile) {
-            response = await api.get("/profile");
+            response = await api.get("/recruiter-profile");
           } else {
-            response = await api.get(`/profile/${paramId}`);
+            response = await api.get(`/recruiter-profile/${paramId}`);
           }
           if (response) profile = response.data.profile;
         } catch (e) {
@@ -210,7 +227,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
       formData.append('profilePhoto', profilePhotoFile);
       // Add other fields to formData
       Object.keys(payload).forEach(key => {
-        if (key !== 'img') { // Don't send img if we're uploading a file
+        if (key !== 'img' && payload[key] !== undefined) {
           formData.append(key, payload[key]);
         }
       });
@@ -221,7 +238,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
       const config = formData ? {
         headers: { 'Content-Type': 'multipart/form-data' }
       } : {};
-      const response = await api.put("/profile", formData || payload, config);
+      const response = await api.put("/recruiter-profile", formData || payload, config);
 
       const updatedProfile = response.data?.profile;
       
@@ -248,7 +265,10 @@ const Recruiter_Profile_view = ({ userProp }) => {
           const createConfig = formData ? {
             headers: { 'Content-Type': 'multipart/form-data' }
           } : {};
-          await api.post("/profile", formData || payload, createConfig);
+          const createPayload = { ...payload, email: data.email || null };
+          if (formData) formData.append('email', data.email || '');
+
+          await api.post("/recruiter-profile", formData || createPayload, createConfig);
           setEditing(false);
           setSaved(true);
           setProfilePhotoFile(null);
@@ -269,7 +289,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
   /* Native Share API ─────────────────────────────────────────── */
   const handleShare = async () => {
     const userId = paramId || user?._id || user?.id || "";
-    const profileUrl = `${window.location.origin}/user/profile/${userId}`;
+    const profileUrl = `${window.location.origin}/recruiter/profile/${userId}`;
     const shareData = {
       title: `${data.name} — Recruiter Profile`,
       text: `Connect with ${data.name}, ${data.position} at ${data.company} via JobFit.`,
@@ -298,14 +318,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
 
   /* ── Loading State ────────────────────────────────────────── */
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
-          <p className="text-lg font-medium text-gray-600 animate-pulse">Loading profile...</p>
-        </div>
-      </div>
-    );
+    return <RecruiterSkeletonProfilePage />;
   }
 
   /* ── Error State ──────────────────────────────────────────── */
@@ -371,33 +384,21 @@ const Recruiter_Profile_view = ({ userProp }) => {
                     onChange={e => set("name", e.target.value)}
                     placeholder="Full Name"
                   />
-                  <div className="flex gap-2">
-                    <input
-                      className="text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 w-1/2 outline-none"
-                      value={data.position}
-                      onChange={e => set("position", e.target.value)}
-                      placeholder="Title (e.g. Senior Recruiter)"
-                    />
-                    <input
-                      className="text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 w-1/2 outline-none"
-                      value={data.company}
-                      onChange={e => set("company", e.target.value)}
-                      placeholder="Company"
-                    />
-                  </div>
+                  {data.email && (
+                    <div className="px-2 mt-1">
+                      <span className="text-sm text-slate-400 font-medium inline-flex items-center gap-1.5">
+                        <Ic d={ICONS.check} size={12} /> {data.email}
+                        <span className="text-[10px] uppercase text-slate-300 tracking-wider">Immutable</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
                   <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{data.name}</h1>
-                  <p className="text-sm font-bold text-blue-600 mt-0.5">
-                    {data.position} <span className="text-slate-400 font-medium">at</span> {data.company}
-                  </p>
+                  {data.email && <p className="text-sm text-slate-500 font-medium mt-1">{data.email}</p>}
                 </>
               )}
-              <div className="flex flex-wrap gap-2 mt-2.5">
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 tracking-wide">● Actively Hiring</span>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 tracking-wide">{data.location}</span>
-              </div>
             </div>
 
             {/* Actions */}
@@ -428,8 +429,10 @@ const Recruiter_Profile_view = ({ userProp }) => {
                   >
                     {saving ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Saving...
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-white/90 animate-pulse" />
+                          <span>Saving...</span>
+                        </span>
                       </>
                     ) : (
                       <>
@@ -497,7 +500,16 @@ const Recruiter_Profile_view = ({ userProp }) => {
                           </div>
                           <div>
                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Organization</p>
-                            <p className="text-sm font-bold text-slate-800">{data.company || "Not set"}</p>
+                            {editing ? (
+                              <input
+                                className="text-sm font-bold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded outline-none w-full"
+                                value={data.company}
+                                onChange={e => set("company", e.target.value)}
+                                placeholder="Company Name"
+                              />
+                            ) : (
+                              <p className="text-sm font-bold text-slate-800">{data.company || "Not set"}</p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -550,7 +562,22 @@ const Recruiter_Profile_view = ({ userProp }) => {
                           </div>
                           <div>
                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">LinkedIn Profile</p>
-                            <p className="text-sm font-bold text-slate-800">Connected</p>
+                            {editing ? (
+                              <input
+                                className="text-sm font-bold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded outline-none w-full"
+                                value={data.linkedIn}
+                                onChange={e => set("linkedIn", e.target.value)}
+                                placeholder="linkedin.com/in/..."
+                              />
+                            ) : (
+                              data.linkedIn ? (
+                                <a href={data.linkedIn.startsWith('http') ? data.linkedIn : `https://${data.linkedIn}`} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-blue-600 hover:underline">
+                                  View Profile
+                                </a>
+                              ) : (
+                                <p className="text-sm font-bold text-slate-800">Not set</p>
+                              )
+                            )}
                           </div>
                         </div>
                       </div>
@@ -573,7 +600,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
                       <Ic d={ICONS.brief} size={20} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900 leading-none">12</p>
+                      <p className="text-sm font-bold text-slate-900 leading-none">{data.jobsPosted || 0}</p>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Jobs Posted</p>
                     </div>
                   </div>
@@ -583,7 +610,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
                       <Ic d={ICONS.check} size={20} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900 leading-none">48</p>
+                      <p className="text-sm font-bold text-slate-900 leading-none">{data.candidatesHired || 0}</p>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Candidates Hired</p>
                     </div>
                   </div>
@@ -593,8 +620,18 @@ const Recruiter_Profile_view = ({ userProp }) => {
                       <Ic d={ICONS.heart} size={20} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900 leading-none">1.2k</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Network Size</p>
+                      {editing ? (
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-20 text-sm font-bold text-slate-900 bg-violet-50/50 border border-slate-200 rounded px-2 outline-none"
+                          value={data.teamSize}
+                          onChange={e => set("teamSize", Math.max(0, Number(e.target.value)))}
+                        />
+                      ) : (
+                        <p className="text-sm font-bold text-slate-900 leading-none">{data.teamSize || 0}</p>
+                      )}
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Team Size</p>
                     </div>
                   </div>
                 </div>
@@ -653,7 +690,10 @@ const Recruiter_Profile_view = ({ userProp }) => {
               <label className="flex flex-col items-center justify-center gap-2 h-24 border-2 border-dashed border-slate-300 hover:border-blue-400 bg-slate-50 hover:bg-blue-50 rounded-xl cursor-pointer transition-all text-slate-400 hover:text-blue-500">
                 <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
                 {uploading ? (
-                  <div className="anim-spin w-6 h-6 border-2 border-slate-200 border-t-blue-500 rounded-full" />
+                  <span className="inline-flex items-center gap-1.5 text-slate-600 text-sm font-medium">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                    Uploading...
+                  </span>
                 ) : (
                   <>
                     <Ic d={ICONS.upload} size={22} />

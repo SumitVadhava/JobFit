@@ -145,7 +145,6 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
     try {
       // Validate the entire form
       await schema.validate(formValues, { context: { role }, abortEarly: false });
-      console.log("handleSubmit called with values:", formValues);
       // Simulate API call
 
       if (!isLogin) {
@@ -181,12 +180,10 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         const { userName, email, password, recruiterKey } = formValues;
 
         const status = "active";
-        console.log(userName, email, password, status, role, recruiterKey);
         role = "recruiter"
 
         const response = await api.post("/login", { email, password, role, recruiterKey });
-        console.log(response.data);
-
+      
         if (response.data.message === "Invalid credentials") {
           toast.error("Login Failed!", {
             autoClose: 900, // time in milliseconds (1 second)
@@ -206,7 +203,6 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
           });
         }
 
-        console.log('User saved:', response.data);
         const generatedToken = response.data.data.token;
         const postUser = response.data.data.user;
         const responserole = postUser.role;
@@ -257,7 +253,6 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
 
   const handleSuccess = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      console.log("Google token:", tokenResponse.access_token);
       try {
         const res = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
           headers: {
@@ -266,7 +261,6 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         });
 
         const userInfo = res.data;
-        console.log("User Info:", userInfo);
 
         const userToSave = {
           name: userInfo.name,
@@ -277,7 +271,6 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         };
 
         const response = await api.post("/Google_login", userToSave);
-        console.log("User saved:", response.data);
         login(response.data.user, response.data.token, role);
         setUserData({
           userName: response.data.user.name,

@@ -241,6 +241,10 @@ function App() {
               <Recruiter_Profile_view />
             </ProtectedRoute>}
         />
+        <Route
+          path='/recruiter/profile/:id'
+          element={<Recruiter_Profile_view />}
+        />
 
 
 

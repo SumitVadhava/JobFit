@@ -125,18 +125,25 @@ const NavShortcutItem = ({
                         <NavLink
                             key={idx}
                             to={item.href}
-                            className={({ isActive }) => `block px-5 py-2.5 text-base font-medium transition-colors ${isActive ? "text-[#9b44fe] bg-purple-50" : "text-gray-600 hover:text-[#9b44fe] hover:bg-purple-50/50"}`}
+                            className={({ isActive }) => `block relative group px-5 py-2.5 text-base font-medium transition-colors ${isActive ? "text-[#9b44fe] bg-purple-50" : "text-gray-600 hover:text-[#9b44fe] hover:bg-purple-50/50"}`}
                             onClick={(e) => {
                                 if (onClick) onClick(e);
                                 setIsOpen(false);
                             }}
                         >
-                            {item.label}
+                            <div className="flex items-center justify-between gap-4">
+                                <span className="whitespace-nowrap">{item.label}</span>
+                                {item.shortcut && (
+                                    <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 group-hover:border-purple-200 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors whitespace-nowrap">
+                                        {item.shortcut}
+                                    </span>
+                                )}
+                            </div>
                         </NavLink>
                     ))}
                 </div>
             )}
-            {shortcut && hovered && (
+            {shortcut && hovered && !isOpen && (
                 <span
                     style={{
                         position: "absolute",
@@ -210,9 +217,9 @@ const Navbar = ({ userData }) => {
                 href: "/candidate/job-search",
                 shortcut: "Ctrl + J",
                 dropdown: [
-                    { label: "Jobs", href: "/candidate/job-search" },
-                    { label: "Saved Jobs", href: "/candidate/saved-jobs" },
-                    { label: "Applied Jobs", href: "/candidate/applied-jobs" }
+                    { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
+                    { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+                    { label: "Applied Jobs", href: "/candidate/applied-jobs", shortcut: "Ctrl + AJ" }
                 ]
             },
         ],
@@ -229,9 +236,9 @@ const Navbar = ({ userData }) => {
                 href: "/candidate/job-search",
                 shortcut: "Ctrl + J",
                 dropdown: [
-                    { label: "Jobs", href: "/candidate/job-search" },
-                    { label: "Saved Jobs", href: "/candidate/saved-jobs" },
-                    { label: "Applied Jobs", href: "/candidate/dashboard" }
+                    { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
+                    { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+                    { label: "Applied Jobs", href: "/candidate/applied-jobs", shortcut: "Ctrl + AJ" }
                 ]
             },
         ],
@@ -312,17 +319,12 @@ const Navbar = ({ userData }) => {
                 pendingKey.current = null;
                 return;
             }
-            if (key === "r" && pendingKey.current !== "b") {
-                e.preventDefault();
-                if (userRole === "candidate" || userRole === "user")
-                    navigate("/candidate/resume");
-                pendingKey.current = null;
-                return;
-            }
+
             if (
                 key === "j" &&
                 pendingKey.current !== "s" &&
-                pendingKey.current !== "p"
+                pendingKey.current !== "p" &&
+                pendingKey.current !== "a"
             ) {
                 e.preventDefault();
                 if (userRole === "admin") navigate("/admin/jobs");
@@ -345,11 +347,17 @@ const Navbar = ({ userData }) => {
                 pendingKey.current = null;
                 return;
             }
-            if (key === "a") {
+            if (key === "a" && pendingKey.current !== "s") {
                 e.preventDefault();
-                if (userRole === "recruiter") navigate("/recruiter/profile");
-                else navigate("/candidate/profile");
-                pendingKey.current = null;
+                pendingKey.current = "a";
+                clearTimeout(seqTimer.current);
+                seqTimer.current = setTimeout(() => {
+                    if (pendingKey.current === "a") {
+                        if (userRole === "recruiter") navigate("/recruiter/profile");
+                        else navigate("/candidate/profile");
+                        pendingKey.current = null;
+                    }
+                }, 400);
                 return;
             }
             if (key === "h" && userRole === "recruiter") {
@@ -410,6 +418,14 @@ const Navbar = ({ userData }) => {
                 e.preventDefault();
                 if (userRole === "candidate" || userRole === "user")
                     navigate("/candidate/saved-jobs");
+                pendingKey.current = null;
+                clearTimeout(seqTimer.current);
+                return;
+            }
+            if (key === "j" && pendingKey.current === "a") {
+                e.preventDefault();
+                if (userRole === "candidate" || userRole === "user")
+                    navigate("/candidate/applied-jobs");
                 pendingKey.current = null;
                 clearTimeout(seqTimer.current);
                 return;

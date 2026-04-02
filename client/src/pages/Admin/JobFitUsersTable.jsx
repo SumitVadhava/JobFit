@@ -186,7 +186,7 @@ const TabBar = ({ active, onChange, counts }) => {
         { key: 'Candidate', label: 'Candidates', count: counts.candidates },
     ];
     return (
-        <div style={{ display: 'flex', gap: 4, background: t.card, borderRadius: 10, padding: 4, border: `1px solid ${t.border}` }}>
+        <div style={{ display: 'flex', gap: 4, background: t.card,  borderRadius: 10, padding: 4, border: `1px solid ${t.border}` }}>
             {tabs.map(tab => (
                 <button
                     key={tab.key}
@@ -811,7 +811,7 @@ const JobFitUserTable = () => {
                     </div>
 
                     {/* ── Search & Filters ── */}
-                    <div className="flex flex-col md:flex-row gap-4 items-center">
+                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between w-full">
                         <SearchBar value={searchTerm} onChange={setSearchTerm} />
                         <TabBar active={filterRole} onChange={setFilterRole} counts={counts} />
                     </div>
