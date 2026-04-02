@@ -191,6 +191,7 @@ The **JobFit API** is maintained by the dedicated development team. For technica
       { name: "Candidate-Jobs", description: "Candidate job operations (Browse, Apply, Save)" },
       { name: "Recruiter", description: "Recruiter specific operations (Dashboard, Profile)" },
       { name: "Recruiter-Jobs", description: "Recruiter job operations (Post, Browse, Manage Applicants)" },
+      { name: "Support", description: "Support & Helpdesk Operations" },
       { name: "Testimonial", description: "Platform Engagement & User Success Stories" },
     ],
     components: {

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, MessageSquare, Clock, CheckCircle, MapPin, SendHorizonal, Send } from "lucide-react";
+import { ArrowLeft, Mail, MessageSquare, Clock, CheckCircle, MapPin, SendHorizonal, Send, Loader2 } from "lucide-react";
+import api from "../api/api";
+import { toast } from "react-toastify";
 
 const ContactSupport = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -14,9 +17,23 @@ const ContactSupport = () => {
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    try {
+      const response = await api.post("/support/contact", form);
+      if (response.data.success) {
+        setSubmitted(true);
+        setForm({ name: "", email: "", subject: "", message: "" });
+      } else {
+        toast.error(response.data.message || "Failed to send message");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error(error.response?.data?.message || "An error occurred while sending your message.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const infoCards = [
@@ -25,11 +42,6 @@ const ContactSupport = () => {
       title: "Email Us",
       value: "jobfits024@gmail.com",
       href: "mailto:jobfits024@gmail.com",
-    },
-    {
-      icon: <MessageSquare className="text-purple-600" size={22} />,
-      title: "Live Chat",
-      value: "Mon–Fri, 9am–6pm IST",
     },
     {
       icon: <Clock className="text-purple-600" size={22} />,
@@ -71,7 +83,7 @@ const ContactSupport = () => {
         </div>
 
         {/* Info Cards Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
           {infoCards.map((c) => (
             <div
               key={c.title}
@@ -177,10 +189,20 @@ const ContactSupport = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-900 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                  disabled={loading}
+                  className={`w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-900 active:scale-[0.99] transition-all flex items-center justify-center gap-2 ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
                 >
-                  <Send size={18} />
-                  Send Message
+                  {loading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={18} />
+                      Send Message
+                    </>
+                  )}
                 </button>
               </form>
             </>
