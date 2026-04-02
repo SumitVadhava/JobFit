@@ -59,30 +59,16 @@ const CandidatesView = () => {
       try {
         setLoading(true);
 
-        const userData = localStorage.getItem("user");
-        if (!userData) {
-          console.log("No user found");
-          setJobs([]);
-          return;
-        }
+        // Use the authenticated recruiter endpoint — no userId needed
+        const res = await api.get("/recruiter/jobs");
+        const recruiterJobs = res.data.data || [];
 
-        const user = JSON.parse(userData);
-        const userId = user._id || user.id;
-
-        if (!userId) {
-          console.error("Could not find a valid user ID in:", user);
-          setJobs([]);
-          return;
-        }
-
-        const res = await api.get(`/jobs/recruiter/${userId}`);
-        const recruiterJobs = res.data.jobs || [];
-
+        // Fetch total candidate count per job using the applicants endpoint
         const jobsWithCandidateStats = await Promise.all(
           recruiterJobs.map(async (job) => {
             try {
               const candidatesResponse = await api.get(
-                `/jobs/${job._id}/candidates`,
+                `/recruiter/applicants?jobId=${job._id}`,
               );
               const totalCandidates =
                 Number(candidatesResponse?.data?.totalCandidates) || 0;
@@ -116,11 +102,13 @@ const CandidatesView = () => {
     fetchJobs();
   }, []);
 
+
   /* ── Fetch Candidates ── */
   const fetchCandidates = useCallback(async (jobId) => {
     try {
       setCandidatesLoading(true);
-      const res = await api.get(`/jobs/${jobId}/candidates`);
+      // Use the authenticated recruiter applicants endpoint with jobId query param
+      const res = await api.get(`/recruiter/applicants?jobId=${jobId}`);
       const apiCandidates = res.data.candidates || [];
 
       const normalized = apiCandidates.map((candidate, index) => ({
@@ -130,7 +118,7 @@ const CandidatesView = () => {
           `${jobId}-candidate-${index}`,
         applicationId: candidate.applicationId,
         candidateId: candidate.candidateId,
-        name: candidate.userName,
+        name: candidate.userName || "Unknown Candidate",
         email: candidate.email,
         status: candidate.status,
         appliedAt: candidate.appliedAt,
@@ -154,6 +142,7 @@ const CandidatesView = () => {
       setCandidatesLoading(false);
     }
   }, []);
+
 
   const handleEdit = useCallback((job) => {
     if ((job.totalCandidates ?? 0) >= 1) {

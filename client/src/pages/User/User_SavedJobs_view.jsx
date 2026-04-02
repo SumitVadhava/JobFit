@@ -113,26 +113,30 @@ const SavedJobs = () => {
       try {
         setIsLoading(true);
         const [response, appliedJobsResponse] = await Promise.all([
-          api.get(`/user/savedJobs`),
-          api.get("/user/applied-companies").catch(() => ({ data: { applications: [], appliedJobs: [] } }))
+          api.get(`/candidate/saved-jobs`),
+          api.get("/candidate/applied-jobs").catch(() => ({ data: { data: [] } }))
         ]);
 
-        const apps = appliedJobsResponse.data.applications || appliedJobsResponse.data.appliedJobs || [];
+        const apps = appliedJobsResponse.data.data || [];
         const appliedJobsMap = {};
         apps.forEach(app => {
-          appliedJobsMap[app.jobId || app._id] = app.status || "applied";
+          const jobId = app.jobId?._id || app.jobId || app._id;
+          appliedJobsMap[jobId] = app.status || "applied";
         });
         setAppliedJobs(appliedJobsMap);
 
-        // Data comes in response.data.savedJobs where each entry has jobId inside it
-        const savedJobsList = response.data.savedJobs || [];
+        // Data comes in response.data.data
+        const savedJobsList = response.data.data || [];
 
-        // Map jobId to _id so the rest of the component works as expected
-        const mappedJobs = savedJobsList.map(job => ({
-          ...job,
-          _id: job.jobId,
-          bookmarked: true
-        }));
+        // If backend populates jobId, job.jobId is the job object.
+        const mappedJobs = savedJobsList.map(job => {
+          const jobData = typeof job.jobId === 'object' && job.jobId !== null ? job.jobId : job;
+          return {
+            ...jobData,
+            _id: jobData._id || jobData.jobId,
+            bookmarked: true
+          };
+        }).filter(item => item._id);
 
         setSavedJobs(mappedJobs);
 
@@ -163,8 +167,8 @@ const SavedJobs = () => {
     try {
       setApplyingJobs(prev => new Set([...prev, jobId]));
 
-      const profileRes = await api.get("/profile").catch(() => null);
-      const profile = profileRes?.data?.profile;
+      const profileRes = await api.get("/candidate/profile").catch(() => null);
+      const profile = profileRes?.data?.data || profileRes?.data?.profile;
 
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
@@ -196,7 +200,7 @@ const SavedJobs = () => {
         return;
       }
 
-      await api.post(`/jobs/${jobId}/apply`);
+      await api.post(`/candidate/job/apply`, { jobId });
 
       setAppliedJobs(prev => ({ ...prev, [jobId]: "applied" }));
       toast.success("Applied for job successfully!", { position: "top-center", autoClose: 2000 });
@@ -231,7 +235,7 @@ const SavedJobs = () => {
 
     try {
       // Persist to backend using DELETE /api/jobs/:id/unsave
-      await api.delete(`/jobs/${jobId}/unsave`);
+      await api.patch(`/candidate/saved-jobs/${jobId}`, { saved: false });
 
       toast.success("Job removed from saved jobs", {
         position: "top-center",

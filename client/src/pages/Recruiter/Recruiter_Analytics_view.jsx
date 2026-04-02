@@ -261,12 +261,12 @@ const Recruiter_Analytics_view = () => {
             byJob[job._id]
               ? byJob[job._id]
               : {
-                  _id: job._id,
-                  jobTitle: job.jobTitle,
-                  companyName: job.companyName,
-                  img: job.img,
-                  applicants: 0,
-                },
+                _id: job._id,
+                jobTitle: job.jobTitle,
+                companyName: job.companyName,
+                img: job.img,
+                applicants: 0,
+              },
           );
 
           setPerJobData(jobsWithApplicants);
@@ -296,9 +296,9 @@ const Recruiter_Analytics_view = () => {
 
   const topJob = !noApplications
     ? perJobData.reduce(
-        (best, job) => (job.applicants > (best?.applicants ?? -1) ? job : best),
-        null,
-      )
+      (best, job) => (job.applicants > (best?.applicants ?? -1) ? job : best),
+      null,
+    )
     : null;
 
   const recentApplications = [...allCandidates]

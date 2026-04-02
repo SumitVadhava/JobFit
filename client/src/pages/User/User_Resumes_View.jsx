@@ -407,16 +407,21 @@ const Resumes = ({ atsData, setAtsData }) => {
       formData.append('pdf', file);
       formData.append('jobDesc', description);
 
-      const response = await api.post('/resume/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      // Call the external ATS API directly (the backend proxy route /api/resume/upload is not yet deployed)
+      // const response = await fetch(import.meta.env.VITE_ATS_API_URL, {
+      //   method: 'POST',
+      //   body: formData,
+      // });
 
-      // Make sure response.data exists and has the expected structure
-      if (response.data && response.data.analysis) {
-        setAtsData(response.data);
-        navigate('/user/ats');
+      const response = await api.get('/ats-analyzer');
+      const data = await response.json();
+
+      if (data && data.result) {
+        const atsResult = { success: true, analysis: data };
+        setAtsData(atsResult);
+        navigate('/candidate/ats-analyzer');
       } else {
-        showToast('Invalid response from server', 'error');
+        showToast('Invalid response from ATS server', 'error');
       }
     } catch (error) {
       console.error('Error uploading resume:', error);
@@ -459,41 +464,68 @@ const Resumes = ({ atsData, setAtsData }) => {
   };
 
   const handleUpload = async () => {
-    setLoading(true);
-
     if (!file) {
-      alert('Please select a file');
+      showToast('Please select a file', 'error');
       return;
     }
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append('pdf', file);
       formData.append('jobDesc', description);
 
-
-      const response = await api.post('/resume/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // Call the external ATS API directly (backend proxy route is not deployed)
+      const response = await fetch('https://jobfit-ats-api-1.onrender.com/analyze', {
+        method: 'POST',
+        body: formData,
       });
 
+      if (!response.ok) throw new Error(`ATS API error: ${response.status}`);
+      const data = await response.json();
 
-      if (response.data) {
-        setAtsData(response.data);
-        setResumes([...resumes, {
+      if (data && data.result) {
+        const atsResult = { success: true, analysis: data };
+        setAtsData(atsResult);
+
+        const atsScore = data.result['ATS Score'] || 0;
+
+        // ── Persist ATS score history to localStorage so analytics can read it ──
+        try {
+          const existing = JSON.parse(localStorage.getItem('atsHistory') || '[]');
+          const newEntry = {
+            score: atsScore,
+            analyzedAt: new Date().toISOString(),
+            resumeName: file.name,
+          };
+          // Keep most recent 50 entries
+          const updated = [newEntry, ...existing].slice(0, 50);
+          localStorage.setItem('atsHistory', JSON.stringify(updated));
+        } catch (storageErr) {
+          console.warn('Could not save ATS history to localStorage:', storageErr);
+        }
+
+        // Persist the ATS score to candidate profile via existing endpoint
+        try {
+          await api.put('/candidate/profile', { atsScore });
+        } catch (profileErr) {
+          console.warn('Could not save ATS score to profile:', profileErr.message);
+        }
+
+        setResumes(prev => [...prev, {
           name: file.name,
           uploadDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-          atsScore: response.data.analysis?.result?.ATSScore || 0
+          atsScore,
         }]);
         setFile(null);
-        showToast(`Resume "${file.name}" uploaded successfully!`, 'success');
+        showToast(`Resume "${file.name}" analyzed successfully!`, 'success');
         navigate('/candidate/ats-analyzer');
       } else {
-        showToast('Invalid response from server', 'error');
+        showToast('Invalid response from ATS server', 'error');
       }
     } catch (error) {
-      console.error('Error uploading resume:', error);
-      showToast('Failed to analyze resume', 'error');
-    }
-    finally {
+      console.error('Error analyzing resume:', error);
+      showToast('Failed to analyze resume. Please try again.', 'error');
+    } finally {
       setLoading(false);
     }
   }

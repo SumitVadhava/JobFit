@@ -329,6 +329,7 @@ const Candidate_Profile_View = ({ userProp }) => {
   const [activeSkillTab, setActiveSkillTab] = useState("tech");
   const [dragActive, setDragActive] = useState(false);
   const [profilePhotoFile, setProfilePhotoFile] = useState(null);
+  const [profileExists, setProfileExists] = useState(true);
 
   const galleryImages = [
     `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=0f172a&color=fff&size=200`,
@@ -339,7 +340,8 @@ const Candidate_Profile_View = ({ userProp }) => {
 
   /* ── Helper to map API response into component state ────── */
   const mapProfileToState = (profile, userName, userEmail, userPicture) => ({
-    name: profile?.name || userName || "",
+    // DB schema stores 'userName', not 'name' — use it as the primary display name source
+    name: profile?.userName || userName || "",
     userName: profile?.userName || userName || "",
     email: profile?.email || userEmail || "",
     resumeSummary: profile?.description || "",
@@ -364,17 +366,15 @@ const Candidate_Profile_View = ({ userProp }) => {
     techSkills: (profile?.skills || []).map(s => s.skillName || s),
     softSkills: (profile?.softSkills || []).map(s => s.skillName || s),
     atsScore: profile?.atsScore || 0,
-    profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=0f172a&color=fff&size=200`,
+    profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.userName || userName || "User")}&background=0f172a&color=fff&size=200`,
     resumeLink: profile?.resumeLink || "",
   });
 
   /* ── Helper to map state back to API shape ────────────── */
   const mapStateToApi = () => {
     const payload = {};
-    if (data.name?.trim()) payload.name = data.name.trim();
+    // DB schema only has 'userName' (not 'name') — sync data.name into userName
     if (data.userName?.trim()) payload.userName = data.userName.trim();
-    // Email is usually not sent if it shouldn't be updated, but backend handles it if sent.
-    // We display it but don't allow changing it in UI, so we can skip sending it to avoid accidental changes if server allows it.
 
     if (data.resumeSummary?.trim()) payload.description = data.resumeSummary.trim();
     if (data.profilePicture?.trim()) payload.img = data.profilePicture.trim();
@@ -419,22 +419,22 @@ const Candidate_Profile_View = ({ userProp }) => {
         try {
           const userIdToFetch = paramId || (user?._id || user?.id);
           if (isOwnProfile) {
-            response = await api.get("/profile");
+            response = await api.get("/candidate/profile");
           } else {
-            response = await api.get(`/profile/${userIdToFetch}`);
+            response = await api.get(`/candidate/profile/${userIdToFetch}`);
           }
-          if (response) profile = response.data.profile;
+          if (response) profile = response.data.data || response.data.profile;
 
           // Compute best ATS dynamically from ATS history and Resumes
           // Compute best ATS dynamically from ATS history and Resumes
           if (userIdToFetch) {
             const [resumeRes, atsHistoryRes] = await Promise.all([
               api.get(`/resume/${userIdToFetch}`).catch(() => null),
-              isOwnProfile ? api.get("/atshistory").catch(() => null) : Promise.resolve(null),
+              isOwnProfile ? api.get("/candidate/ats-analyzer").catch(() => null) : Promise.resolve(null),
             ]);
             const resumesList = resumeRes?.data?.resumes || resumeRes?.data || [];
             const normalised = Array.isArray(resumesList) ? resumesList : [];
-            const atsData = atsHistoryRes?.data?.history || [];
+            const atsData = atsHistoryRes?.data?.data?.atsScores || atsHistoryRes?.data?.history || [];
             const rScores = normalised.map(r => r.atsScore || 0);
             const hScores = atsData.map(h => h.score || 0);
             const allScores = [...rScores, ...hScores];
@@ -442,6 +442,9 @@ const Candidate_Profile_View = ({ userProp }) => {
           }
         } catch (e) {
           // Ignore API error and fallback to dummy data
+          if (e.response?.status === 404 && isOwnProfile) {
+            setProfileExists(false);
+          }
         }
 
         // Get user info — for own profile use userProp/auth, for others use populated data
@@ -459,6 +462,7 @@ const Candidate_Profile_View = ({ userProp }) => {
           const mappedProfile = mapProfileToState(profile, userName, userEmail, userPicture);
           if (bestAts > -1) mappedProfile.atsScore = bestAts;
           setData(mappedProfile);
+          setProfileExists(true);
         } else if (isOwnProfile) {
           // No profile? Start with auth info and zero'd stats
           setData({
@@ -481,7 +485,7 @@ const Candidate_Profile_View = ({ userProp }) => {
         console.error("Error fetching profile:", err);
         // If profile not found (404), show dummy data or empty state
         if (err.response?.status === 404 && isOwnProfile) {
-          setData(initial);
+          setProfileExists(false);
         } else if (!isOwnProfile) {
           setError("Profile not found.");
         }
@@ -498,6 +502,37 @@ const Candidate_Profile_View = ({ userProp }) => {
   }, [userProp]);
 
 
+  const uploadToCloudinary = async (file) => {
+    const cloudName = "ds5ohpmvm";
+    const apiKey = "956245423473788";
+    const apiSecret = "kgi5CQkQywbDrxvDeruKELohKXY";
+
+    // Generate signature using Web Crypto API
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const strToSign = `timestamp=${timestamp}${apiSecret}`;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(strToSign);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("api_key", apiKey);
+    formData.append("timestamp", timestamp);
+    formData.append("signature", signature);
+
+    // Use auto for generic files, or image for images explicitly
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error?.message || "Upload failed");
+    return result.secure_url;
+  };
+
   const set = (f, v) => setData(p => ({ ...p, [f]: v }));
   const setExp = (i, f, v) => { const a = [...data.experience]; a[i] = { ...a[i], [f]: v }; set("experience", a); };
   const setEdu = (i, f, v) => { const a = [...data.education]; a[i] = { ...a[i], [f]: v }; set("education", a); };
@@ -510,26 +545,37 @@ const Candidate_Profile_View = ({ userProp }) => {
     setUploading(true);
     setSaving(true);
     const payload = mapStateToApi();
-
-    let formData = null;
-    if (profilePhotoFile) {
-      formData = new FormData();
-      formData.append('profilePhoto', profilePhotoFile);
-      // Add other fields to formData
-      Object.keys(payload).forEach(key => {
-        if (key !== 'img') { // Don't send img if we're uploading a file
-          formData.append(key, JSON.stringify(payload[key]));
-        }
-      });
-    }
+    // Ensure userName is synced with name field
+    if (data.name?.trim()) payload.userName = data.name.trim();
 
     try {
-      const config = formData ? {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      } : {};
-      const response = await api.put("/profile", formData || payload, config);
+      if (profilePhotoFile) {
+        try {
+          const imgUrl = await uploadToCloudinary(profilePhotoFile);
+          payload.img = imgUrl; // override base64 with real URL
+        } catch (uploadErr) {
+          toast.error("Failed to upload profile picture.");
+        }
+      }
 
-      const updatedProfile = response.data?.profile;
+      let response;
+      if (profileExists) {
+        response = await api.put("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
+      } else {
+        response = await api.post("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
+        setProfileExists(true);
+      }
+
+      const updatedProfile = response.data?.data || response.data?.profile;
+
+      // Update local state from the API response so the view refreshes correctly
+      // Use data.name as the fallback since auth context userName hasn't updated yet at this point
+      if (updatedProfile) {
+        const freshName = data.name?.trim() || user?.userName || user?.name || "";
+        const userEmail = user?.email || data.email;
+        const userPicture = updatedProfile.img || data.profilePicture;
+        setData(mapProfileToState(updatedProfile, freshName, userEmail, userPicture));
+      }
 
       // Update global auth state to reflect changes in Navbar/Avatar
       const picToSync = updatedProfile?.img || data.profilePicture;
@@ -541,17 +587,19 @@ const Candidate_Profile_View = ({ userProp }) => {
 
       setEditing(false);
       setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
       setProfilePhotoFile(null); // Clear the file after save
-      toast.success("Profile saved successfully!", { position: "top-center", autoClose: 2000 });
+      toast.success("Profile saved successfully!", { position: "top-center", autoClose: 3000 });
     } catch (err) {
       console.error("Error saving profile:", err);
       const serverMsg = err.response?.data?.message || err.response?.data?.error || err.message;
-      toast.error(`Error saving profile: ${serverMsg}`);
+      toast.error(`Error saving profile: ${serverMsg}`, { position: "top-center", autoClose: 4000 });
     } finally {
       setUploading(false);
       setSaving(false);
     }
   }
+
 
   /* Native Share API ─────────────────────────────────────────── */
   const handleShare = async () => {
@@ -592,18 +640,27 @@ const Candidate_Profile_View = ({ userProp }) => {
       return toast.error("File exceeds 5MB limit. Please upload a smaller PDF.", { position: "top-center" });
     }
     setUploading(true);
-    const formData = new FormData();
-    formData.append("pdf", file);
+
     try {
-      const res = await api.post("/profile/upload-resume", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      set("resumeLink", res.data.profile.resumeLink);
+      const cloudinaryUrl = await uploadToCloudinary(file);
+
+      const payload = { resumeLink: cloudinaryUrl };
+      let res;
+      if (profileExists) {
+        res = await api.put("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
+      } else {
+        res = await api.post("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
+        setProfileExists(true);
+      }
+
+      const updatedResumeLink = res.data?.data?.resumeLink || cloudinaryUrl;
+      set("resumeLink", updatedResumeLink);
       setSaved(true);
       toast.success("Resume uploaded successfully!", { position: "top-center" });
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       toast.error("Resume upload failed.", { position: "top-center" });
+      console.error(err);
     } finally {
       setUploading(false);
     }
@@ -707,6 +764,8 @@ const Candidate_Profile_View = ({ userProp }) => {
       `}</style>
 
       <div className="min-h-screen bg-slate-50 font-poppins">
+
+
 
         {/* ── Main Container ─────────────────────────────────── */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 pb-16">
@@ -1143,7 +1202,6 @@ const Candidate_Profile_View = ({ userProp }) => {
           </div>
         )}
       </div>
-      <ToastContainer position="top-center" autoClose={3000} />
     </>
   );
 };

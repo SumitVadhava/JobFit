@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       setToken(jwtToken);
       setRole(decodedToken.role);
-      
+
       localStorage.setItem("token", jwtToken);
       localStorage.setItem("user", JSON.stringify(userData)); // Keeping user in storage for convenience
     } catch (error) {
