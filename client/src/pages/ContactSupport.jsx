@@ -171,7 +171,6 @@ const ContactSupport = () => {
                     <option value="resume">Resume & ATS Score</option>
                     <option value="jobs">Jobs & Applications</option>
                     <option value="recruiter">Recruiter / Job Posting</option>
-                    <option value="billing">Billing & Payments</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
