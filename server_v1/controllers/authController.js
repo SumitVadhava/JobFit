@@ -8,7 +8,7 @@ require("dotenv").config();
 
 const generateToken = (user) => {
   return jwt.sign({ id: user._id, email: user.email, picture: user.picture, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "30d",
+    expiresIn: process.env.JWT_EXPIRES_IN || "1d",
   });
 };
 
@@ -54,8 +54,7 @@ exports.signup = async (req, res) => {
       message: "User registered successfully.",
       data: {
         token: generateToken(newUser),
-        user: userData,
-      },
+      }
     });
   } catch (error) {
     console.error("Signup error:", error);
@@ -96,7 +95,6 @@ exports.login = async (req, res) => {
       message: "Login successful.",
       data: {
         token: generateToken(user),
-        user: userData,
       },
     });
   } catch (error) {
@@ -154,7 +152,6 @@ exports.googleLogin = async (req, res) => {
       message: "Google login successful.",
       data: {
         token: generateToken(user),
-        user,
       },
     });
   } catch (error) {
