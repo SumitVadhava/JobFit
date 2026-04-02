@@ -592,28 +592,18 @@ const JobFitUserTable = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const [candidatesRes, recruitersRes] = await Promise.all([
-                api.get('/admin/candidates'),
-                api.get('/admin/recruiters'),
-            ]);
+            const res = await api.get('/admin/users');
+            const allUsers = res.data?.data || [];
 
-            const candidates = (candidatesRes.data?.data || []).map(u => ({
+            const formattedUsers = allUsers.map(u => ({
                 id: u._id,
                 name: u.userName || 'Unknown',
                 email: u.email,
-                role: 'Candidate',
+                role: u.role === 'candidate' ? 'Candidate' : (u.role === 'recruiter' ? 'Recruiter' : u.role),
                 status: u.status || 'active',
             }));
 
-            const recruiters = (recruitersRes.data?.data || []).map(u => ({
-                id: u._id,
-                name: u.userName || 'Unknown',
-                email: u.email,
-                role: 'Recruiter',
-                status: u.status || 'active',
-            }));
-
-            setUsers([...candidates, ...recruiters]);
+            setUsers(formattedUsers);
         } catch (err) {
             console.error('Error fetching users:', err);
             toast.error('Failed to fetch users from server.');
@@ -650,10 +640,7 @@ const JobFitUserTable = () => {
         if (!userToDelete) return;
 
         try {
-            setIsDeleting(true);
-            const endpoint = userToDelete.role === 'Candidate'
-                ? `/admin/candidates/${userToDelete.id}`
-                : `/admin/recruiters/${userToDelete.id}`;
+            const endpoint = `/admin/users/${userToDelete.id}`;
 
             await api.delete(endpoint);
 
@@ -675,17 +662,14 @@ const JobFitUserTable = () => {
 
         try {
             setIsSaving(true);
-            const endpoint = currentUser.role === 'Candidate'
-                ? `/admin/candidates/${currentUser.id}`
-                : `/admin/recruiters/${currentUser.id}`;
+            const endpoint = `/admin/users/${currentUser.id}`;
 
             const payload = {
                 userName: editName,
                 email: editEmail,
-                status: editStatus
             };
 
-            await api.put(endpoint, payload);
+            await api.patch(endpoint, payload);
 
             setUsers(users.map(user =>
                 user.id === currentUser.id ? { ...user, name: editName, email: editEmail, status: editStatus } : user

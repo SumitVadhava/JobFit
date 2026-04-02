@@ -48,10 +48,10 @@ export const StatCard = ({ icon: Icon, label, value, color, delay = 0 }) => (
 );
 
 
-export const EmptyState = ({ icon, title, subtitle }) => (
+export const EmptyState = ({ icon: Icon, title, subtitle }) => (
   <div className="bg-white rounded-3xl border border-gray-100 p-16 text-center">
     <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-gray-50">
-      {icon}
+      {Icon && <Icon size={32} className="text-gray-300 mx-auto" />}
     </div>
     <h3 className="text-xl font-bold text-black mb-2">{title}</h3>
     <p className="text-sm text-gray-500 max-w-sm mx-auto">{subtitle}</p>

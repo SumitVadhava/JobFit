@@ -78,6 +78,7 @@ const CandidatesView = () => {
         const res = await api.get("/recruiter/jobs");
         const recruiterJobs = res.data?.data || [];
 
+        // Fetch total candidate count per job using the applicants endpoint
         const jobsWithCandidateStats = await Promise.all(
           recruiterJobs.map(async (job) => {
             try {
@@ -115,6 +116,7 @@ const CandidatesView = () => {
     };
     fetchJobs();
   }, []);
+
 
   /* ── Fetch Candidates ── */
   const fetchCandidates = useCallback(async (jobId) => {
@@ -158,6 +160,7 @@ const CandidatesView = () => {
       setCandidatesLoading(false);
     }
   }, []);
+
 
   const handleEdit = useCallback((job) => {
     if ((job.totalCandidates ?? 0) >= 1) {
