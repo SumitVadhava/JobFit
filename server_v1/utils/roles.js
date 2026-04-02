@@ -5,5 +5,5 @@ const ROLES = Object.freeze({
 });
 
 module.exports = {
-  ROLES,
+  ROLES
 };
