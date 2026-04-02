@@ -111,6 +111,26 @@ const AdminAnalytics = () => {
     <div className={`animate-pulse bg-slate-200/60 rounded-2xl ${className}`} />
   );
 
+  const JobIcon = ({ src, name, size = "w-12 h-12", textSize = "text-lg" }) => {
+    const [error, setError] = useState(false);
+    return (
+      <div className={`${size} rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-purple-50 group-hover:border-purple-100 transition-colors overflow-hidden`}>
+        {src && !error ? (
+          <img
+            src={src}
+            alt={name}
+            className="w-full h-full object-cover"
+            onError={() => setError(true)}
+          />
+        ) : (
+          <span className={`${textSize} font-black text-slate-400 group-hover:text-purple-600`}>
+            {name?.charAt(0).toUpperCase() || "?"}
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen p-4 sm:p-8 bg-[radial-gradient(circle_at_top_left,_#fdfbff_0%,_#ffffff_100%)]">
       <ToastContainer
@@ -317,11 +337,7 @@ const AdminAnalytics = () => {
                     transition={{ delay: 0.7 + i * 0.05 }}
                     className="group flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 hover:border-purple-200 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 cursor-pointer"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-purple-50 group-hover:border-purple-100 transition-colors">
-                      <span className="text-lg font-black text-slate-400 group-hover:text-purple-600">
-                        {job.companyName?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    <JobIcon src={job.img} name={job.companyName} />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-black text-slate-900 truncate tracking-tight group-hover:text-purple-700 transition-colors">
                         {job.jobTitle}

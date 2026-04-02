@@ -893,14 +893,7 @@ const JobDescriptions = () => {
                     </button>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                      <div style={{
-                        width: 64, height: 64, borderRadius: 18,
-                        background: '#FFF', border: `1px solid ${t.border}`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 28, boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-                      }}>
-                         {selectedJob.companyName.charAt(0).toUpperCase()}
-                      </div>
+                      <JobLogo src={selectedJob.img} name={selectedJob.companyName} />
                       <div>
                         <h2 style={{ fontSize: 24, fontWeight: 800, color: t.text, margin: 0 }}>{selectedJob.jobTitle}</h2>
                         <p style={{ fontSize: 16, color: t.accent, fontWeight: 600, margin: '4px 0 0' }}>{selectedJob.companyName}</p>
@@ -997,5 +990,29 @@ const DetailSection = ({ title, content, color }) => (
   </div>
 );
 
+
+const JobLogo = ({ src, name }) => {
+  const [error, setError] = useState(false);
+  return (
+    <div style={{
+      width: 64, height: 64, borderRadius: 18,
+      background: '#FFF', border: `1px solid ${t.border}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 28, boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+      overflow: 'hidden'
+    }}>
+      {src && !error ? (
+        <img
+          src={src}
+          alt={name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={() => setError(true)}
+        />
+      ) : (
+        name?.charAt(0).toUpperCase() || "?"
+      )}
+    </div>
+  );
+};
 
 export default JobDescriptions;
