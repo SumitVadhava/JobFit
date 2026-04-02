@@ -194,9 +194,13 @@ exports.updateRecruiterProfile = async (req, res) => {
     const userId = req.user.id;
     const { email, userName, img, company, position, description, location, website, linkedIn, teamSize } = req.body;
 
+    if (email !== undefined) {
+      return res.status(400).json({ error: true, message: "Email changes are not allowed through this endpoint." });
+    }
+
     const updateData = {};
-    if (email !== undefined) updateData.email = email;
     if (userName !== undefined) updateData.userName = userName;
+    if (img !== undefined) updateData.img = img;
     if (img !== undefined) updateData.img = img;
     if (company !== undefined) updateData.company = company;
     if (position !== undefined) updateData.position = position;
@@ -235,8 +239,12 @@ exports.patchRecruiterProfile = async (req, res) => {
     const userId = req.user.id;
     const updateData = { ...req.body };
 
+    if (updateData.email !== undefined) {
+      return res.status(400).json({ error: true, message: "Email changes are not allowed through this endpoint." });
+    }
+
     // Only allow specific fields
-    const allowedFields = ["email", "userName", "img", "company", "position", "description", "location", "website", "linkedIn", "teamSize"];
+    const allowedFields = ["userName", "img", "company", "position", "description", "location", "website", "linkedIn", "teamSize"];
     const filteredData = {};
     
     allowedFields.forEach(field => {

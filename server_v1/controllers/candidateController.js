@@ -162,8 +162,11 @@ const updateCandidateProfile = async (req, res) => {
     const userId = req.user.id;
     const { email, userName, img, resumeLink, description, experience, education, skills, softSkills, atsScore } = req.body;
 
+    if (email !== undefined) {
+      return res.status(400).json({ error: true, message: "Email changes are not allowed through this endpoint." });
+    }
+
     const updateData = {};
-    if (email !== undefined) updateData.email = email;
     if (userName !== undefined) updateData.userName = userName;
     if (img !== undefined) updateData.img = img;
     if (resumeLink !== undefined) updateData.resumeLink = resumeLink;
