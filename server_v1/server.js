@@ -9,6 +9,8 @@ const connectDB = require("./config/connection");
 const { specs, swaggerUi } = require("./swagger");
 
 const authRoutes = require("./routes/authRoutes");
+const recruiterRoutes = require("./routes/recruiterRoutes");
+const candidateRoutes = require("./routes/candidateRoutes");
 
 const app = express();
 
@@ -72,6 +74,8 @@ app.get("/", (req, res) => res.json({ message: "Welcome to JobFit API (v1) 😊"
 app.get("/ping", (req, res) => res.json({ message: "JobFit (v1) Ping!" }));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/recruiter", recruiterRoutes);
+app.use("/api/candidate", candidateRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({ error: true, message: "Route not found" });
