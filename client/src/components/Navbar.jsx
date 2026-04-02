@@ -203,6 +203,7 @@ const Navbar = ({ userData }) => {
             { label: "Users", href: "/admin/users", shortcut: "Ctrl + U" },
             { label: "Jobs", href: "/admin/jobs", shortcut: "Ctrl + J" },
             { label: "Companies", href: "/admin/companies", shortcut: "Ctrl + C" },
+            { label: "Testimonials", href: "/admin/testimonials", shortcut: "Alt + T" },
         ],
         candidate: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
@@ -302,6 +303,16 @@ const Navbar = ({ userData }) => {
                 e.preventDefault();
                 if (userRole === "candidate" || userRole === "user") {
                     navigate("/candidate/ats");
+                }
+                pendingKey.current = null;
+                return;
+            }
+
+            // Handle Alt + T for Admin Testimonials
+            if (e.altKey && key === "t") {
+                e.preventDefault();
+                if (userRole === "admin") {
+                    navigate("/admin/testimonials");
                 }
                 pendingKey.current = null;
                 return;
