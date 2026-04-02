@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import * as Yup from "yup";
-import { useGoogleLogin } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import axios from "axios";
 import api from "../api/api";
@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/AuthContexts";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import OTPDemo from "../components/Otp";
+import { jwtDecode } from "jwt-decode";
 
 const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToLogin }) => {
   const navigate = useNavigate();
@@ -151,13 +152,13 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         // For signup, first send OTP
         setIsOtpLoading(true); // Start loading
         try {
-          const response = await api.post("/auth/send-otp", {
+          const response = await api.post("/auth/signup/send-otp", {
             email: formValues.email,
           });
 
-          if (response.data.message === "OTP sent to your email") {
+          if (response.data.message === "OTP sent to your email" || response.data.message === "OTP sent successfully to your email.") {
             setIsOTPOpen(true);
-          } else if (response.data.message === "User already exists") {
+          } else if (response.data.alreadyRegistered) {
             toast.error("Email already registered!", {
               autoClose: 900,
               closeOnClick: true,
@@ -177,16 +178,13 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
           setIsOtpLoading(false); // Stop loading regardless of outcome
         }
       } else {
-        const { userName, email, password, recruiterKey } = formValues;
+        const { email, password } = formValues;
 
-        const status = "active";
-        role = "recruiter"
-
-        const response = await api.post("/login", { email, password, role, recruiterKey });
+        const response = await api.post("/auth/login", { email, password });
       
-        if (response.data.message === "Invalid credentials") {
-          toast.error("Login Failed!", {
-            autoClose: 900, // time in milliseconds (1 second)
+        if (response.data.error) {
+          toast.error(response.data.message || "Login Failed!", {
+            autoClose: 900,
             closeOnClick: true,
             pauseOnHover: false,
             draggable: false,
@@ -194,9 +192,9 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
           return;
         }
 
-        if (response.data.message === "Login successful") {
+        if (response.data.message === "Login successful.") {
           toast.success("Login Successful!", {
-            autoClose: 900, // time in milliseconds (1 second)
+            autoClose: 900,
             closeOnClick: true,
             pauseOnHover: false,
             draggable: false,
@@ -204,23 +202,11 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
         }
 
         const generatedToken = response.data.data.token;
-        const postUser = response.data.data.user;
-        const responserole = postUser.role;
+        login(generatedToken);
 
-        login(
-          postUser,
-          generatedToken,
-          responserole,
-        )
+        const decodedToken = jwtDecode(generatedToken);
+        const responserole = decodedToken.role;
 
-        setUserData({
-          userName: postUser.userName,
-          email: postUser.email,
-          sub: "",
-          picture: postUser.picture,
-          role: postUser.role,
-        });
-        setIsLogin(true);
         setTimeout(() => {
           if (responserole === "admin") navigate("/admin/dashboard");
           else if (responserole === "recruiter")
@@ -251,92 +237,63 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
     }
   };
 
-  const handleSuccess = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const res = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: {
-            Authorization: `Bearer ${tokenResponse.access_token}`,
-          },
-        });
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const { credential } = credentialResponse;
+      
+      const response = await api.post("/auth/google-login", { 
+        id_token: credential,
+        role: role || (isLogin ? undefined : "candidate")
+      });
 
-        const userInfo = res.data;
-
-        const userToSave = {
-          name: userInfo.name,
-          email: userInfo.email,
-          picture: userInfo.picture,
-          google_id: userInfo.sub,
-          role: role,
-        };
-
-        const response = await api.post("/Google_login", userToSave);
-        login(response.data.user, response.data.token, role);
-        setUserData({
-          userName: response.data.user.name,
-          email: response.data.user.email,
-          sub: response.data.user.google_id,
-          picture: response.data.user.picture,
-          role: response.data.user.role,
-        });
-
-        // onClose();
-        if (response.data.user.role === "admin") navigate("/admin/dashboard");
-        else if (response.data.user.role === "recruiter") navigate("/recruiter/dashboard");
-        else navigate("/candidate/dashboard");
-
-
-
-
-      } catch (err) {
-        console.error("Failed to fetch user info", err);
+      if (response.data.error) {
+        toast.error(response.data.message || "Google Login Failed");
+        return;
       }
-    },
-    onError: (errorResponse) => {
-      console.error("Google login error:", errorResponse);
-    },
-    flow: "implicit",
-  });
+
+      const { token } = response.data.data;
+      login(token);
+
+      const decodedToken = jwtDecode(token);
+      const userRole = decodedToken.role;
+
+      toast.success("Google Login Successful!");
+      
+      setTimeout(() => {
+        if (userRole === "admin") navigate("/admin/dashboard");
+        else if (userRole === "recruiter") navigate("/recruiter/dashboard");
+        else navigate("/candidate/dashboard");
+      }, 1200);
+
+    } catch (err) {
+      console.error("Google login failed", err);
+      toast.error("Google Login Failed");
+    }
+  };
+
+  const handleGoogleError = () => {
+    console.error("Google login failed");
+    toast.error("Google Login Failed");
+  };
 
   return (
     <div className="flex items-center justify-center h-[85vh] bg-white p-5">
       <div className="flex flex-col gap-2.5 bg-white p-8 w-[450px] rounded-2xl font-sans border-2 border-purple-300">
         <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
           {role !== "admin" && (
-            <div className="flex flex-col gap-2.5 google-btn">
-              <div>
-                <button
-                  type="button"
-                  onClick={handleSuccess}
-                  className="mt-2.5 w-full h-[50px] rounded-xl flex justify-center items-center font-medium gap-2.5 border border-[#ededef] bg-white cursor-pointer hover:border-[#2d79f3] transition-all group"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 48 48"
-                    width={20}
-                    className="google-icon transition-transform duration-500 ease-in-out group-hover:animate-[spin_0.8s_ease-in-out]"
-                  >
-                    <path
-                      fill="#4285F4"
-                      d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C2.92 15.07 2 17.87 2 20.83c0 2.96 1.02 5.76 2.79 8.15l7.74-6.39z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-                    />
-                  </svg>
-                  Continue with Google
-                </button>
+            <div className="flex flex-col gap-2.5 items-center google-btn">
+              <div className="w-full flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="outline"
+                  size="large"
+                  width="100%"
+                  text="continue_with"
+                  shape="rectangular"
+                />
               </div>
-              <div className="flex items-center justify-center gap-2 text-gray-400 text-sm my-2">
+              <div className="flex items-center justify-center gap-2 text-gray-400 text-sm my-2 w-full">
                 <span className="border-t flex-1"></span>
                 <span className="uppercase">or {isLogin ? "Login" : "Sign Up"} with email</span>
                 <span className="border-t flex-1"></span>
@@ -506,7 +463,7 @@ const AuthForm = ({ role, setUserData, forceLogin, onSwitchToSignup, onSwitchToL
           setUserData={setUserData}
           onResend={async () => {
             try {
-              await api.post("/auth/send-otp", {
+              await api.post("/auth/signup/send-otp", {
                 email: formValues.email,
               });
               return Promise.resolve();

@@ -1,39 +1,49 @@
 import { useGoogleOneTapLogin } from '@react-oauth/google'
-import { useState } from 'react'
-
+import api from '../api/api'
+import { useAuth } from '../contexts/AuthContexts'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import { jwtDecode } from 'jwt-decode'
 
 const GoogleOneTapLogin = () => {
-  // const { user, token } = useAuth();
-  // const isLoggedIn = !!user && !!token;
+  const { user, token, login } = useAuth();
+  const navigate = useNavigate();
+  const isLoggedIn = !!user && !!token;
 
   useGoogleOneTapLogin({
-    onSuccess: (credentialResponse) => {
-      // if (isLoggedIn) return;
+    onSuccess: async (credentialResponse) => {
+      if (isLoggedIn) return;
 
-      const payload = decodeJwt(credentialResponse.credential);
+      try {
+        const { credential } = credentialResponse;
+        
+        const response = await api.post("/auth/google-login", { 
+          id_token: credential,
+          role: "candidate" // default role for one-tap
+        });
 
-      const userToSave = {
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture,
-        google_id: payload.sub,
-      };
+        if (response.data.error) {
+          toast.error(response.data.message || "Google Login Failed");
+          return;
+        }
 
-      // setUserProp({
-      //   userName: userToSave.name,
-      //   email: userToSave.email,
-      //   sub: userToSave.google_id,
-      //   picture: userToSave.picture,
-      // });
+        const { token: generatedToken } = response.data.data;
+        login(generatedToken);
 
-      // axios  
-      //     .post("http://localhost:7100/api/Google_login", userToSave)
-      //     .then((response) => {
-      //         login(response.data.user, response.data.token);
-      //     })
-      //     .catch((error) => {
-      //         console.error("Error saving user:", error);
-      //     });
+        const decodedToken = jwtDecode(generatedToken);
+        const userRole = decodedToken.role;
+
+        toast.success("Google Login Successful!");
+        
+        setTimeout(() => {
+          if (userRole === "admin") navigate("/admin/dashboard");
+          else if (userRole === "recruiter") navigate("/recruiter/dashboard");
+          else navigate("/candidate/dashboard");
+        }, 1200);
+
+      } catch (err) {
+        console.error("One tap login failed:", err);
+      }
     },
     onError: () => {
       console.log("One Tap Login Failed");

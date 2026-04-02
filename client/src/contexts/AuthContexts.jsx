@@ -15,10 +15,9 @@ export const AuthProvider = ({ children }) => {
 
   // Load user/token from localStorage on app load
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
     const storedToken = localStorage.getItem("token");
 
-    if (storedUser && storedToken) {
+    if (storedToken) {
       try {
         const decodedToken = jwtDecode(storedToken);
         const currentTime = Date.now() / 1000;
@@ -28,9 +27,15 @@ export const AuthProvider = ({ children }) => {
           console.warn("Token expired. Logging out...");
           logout();
         } else {
-          setUser(storedUser);
           setToken(storedToken);
-          setRole(storedUser.role || null);
+          setUser({
+            id: decodedToken.id,
+            email: decodedToken.email,
+            picture: decodedToken.picture,
+            userName: decodedToken.userName || decodedToken.name, // accommodate different field names
+            role: decodedToken.role
+          });
+          setRole(decodedToken.role || null);
         }
       } catch (error) {
         console.error("Invalid token found in storage. Clearing...", error);
@@ -40,13 +45,26 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (userData, jwtToken, userRole) => {
-    setUser(userData);
-    setToken(jwtToken);
-    setRole(userRole || userData.role);
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", jwtToken);
+  const login = (jwtToken) => {
+    try {
+      const decodedToken = jwtDecode(jwtToken);
+      const userData = {
+        id: decodedToken.id,
+        email: decodedToken.email,
+        picture: decodedToken.picture,
+        userName: decodedToken.userName || decodedToken.name,
+        role: decodedToken.role
+      };
 
+      setUser(userData);
+      setToken(jwtToken);
+      setRole(decodedToken.role);
+      
+      localStorage.setItem("token", jwtToken);
+      localStorage.setItem("user", JSON.stringify(userData)); // Keeping user in storage for convenience
+    } catch (error) {
+      console.error("Error during login (token decode):", error);
+    }
   };
 
   const logout = () => {
