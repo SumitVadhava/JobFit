@@ -5,7 +5,27 @@ const candidateJobsController = require("../controllers/candidateJobsController"
 const { candidateAuth, validateJobApplication, validateSavedJob, validateWithdrawal, validateCandidateProfileUpdate } = require("../middlewares/candidateMiddleware");
 const { validateIds } = require("../middlewares/commonMiddleware");
 
-// All candidate routes are protected and require the CANDIDATE role
+/**
+ * @swagger
+ * /api/candidate/profile/{profileId}:
+ *   get:
+ *     summary: Get candidate profile by ID
+ *     tags: [Candidate]
+ *     parameters:
+ *       - in: path
+ *         name: profileId
+ *         required: true
+ *         schema: { type: string }
+ *         description: The ID of the candidate profile
+ *     responses:
+ *       200:
+ *         description: Candidate profile retrieved successfully
+ *       404:
+ *         description: Profile not found
+ */
+router.get("/profile/:profileId", validateIds(["profileId"]), candidateController.getCandidateProfileById);
+
+// All other candidate routes are protected and require the CANDIDATE role
 router.use(candidateAuth);
 
 /**
@@ -53,25 +73,6 @@ router.get("/ats-analyzer", candidateController.getCandidateAtsAnalyzer);
  */
 router.get("/profile", candidateController.getCandidateProfile);
 
-/**
- * @swagger
- * /api/candidate/profile/{profileId}:
- *   get:
- *     summary: Get candidate profile by ID
- *     tags: [Candidate]
- *     parameters:
- *       - in: path
- *         name: profileId
- *         required: true
- *         schema: { type: string }
- *         description: The ID of the candidate profile
- *     responses:
- *       200:
- *         description: Candidate profile retrieved successfully
- *       404:
- *         description: Profile not found
- */
-router.get("/profile/:profileId", validateIds(["profileId"]), candidateController.getCandidateProfileById);
 
 /**
  * @swagger

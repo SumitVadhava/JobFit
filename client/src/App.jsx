@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import Navbar from './components/Navbar'
-import { BrowserRouter, Route, Router, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import UserAnalytics from './pages/User/User_Analytics_view';
@@ -13,6 +13,7 @@ import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import JobFitUsersTable from './pages/Admin/JobFitUsersTable';
 import JobDescription from './pages/Admin/JobDescription';
 import Companies from './pages/Admin/Companies';
+import AdminTestimonials from './pages/Admin/AdminTestimonials';
 import Recruiter_Analytics_view from './pages/Recruiter/Recruiter_Analytics_view';
 import Recruiter_Post_view from './pages/Recruiter/Recruiter_Post_view';
 import Recruiter_Candidates_view from './pages/Recruiter/Recruiter_Candidates_view';
@@ -22,7 +23,6 @@ import User_Best_Resume_view from './pages/User/User_Best_Resume_view'
 import { ToastContainer } from 'react-toastify'
 import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_view'
 import ProtectedRoute from './components/ProtectedRoute'
-import Unauthorized from './pages/Unauthorized'
 import AboutUs from './pages/AboutUs'
 import ContactSupport from './pages/ContactSupport'
 import PrivacyPolicy from './pages/PrivacyPolicy'
@@ -34,6 +34,7 @@ import FeatureATSAnalytics from './pages/FeatureATSAnalytics'
 import Recruiter_Profile_view from './pages/Recruiter/Recruiter_Profile_view'
 import Candidate_Profile_View from './pages/User/Candidate_Profile_View'
 import AppliedJobs from './pages/User/User_AppliedJobs_view'
+import ErrorPage from './pages/ErrorPage'
 
 
 
@@ -63,6 +64,9 @@ function App() {
 
   const [atsData, setAtsData] = useState(null);
 
+  const location = useLocation();
+  const isErrorPage = location.pathname.startsWith('/error/');
+
 
   return (
     <>
@@ -78,7 +82,7 @@ function App() {
         pauseOnHover
         theme="light"
       />
-      <Navbar userData={userProp} />
+      {!isErrorPage && <Navbar userData={userProp} />}
       <Routes>
         <Route path='/' element={<LandingPage />} />
         <Route path='/login' element={<AuthPage userData={userProp} setUserData={setUserProp} isLogin={isLoggedIn} />} />
@@ -186,6 +190,14 @@ function App() {
             >
               <Companies />
             </ProtectedRoute>} />
+        <Route
+          path='/admin/testimonials'
+          element={
+            <ProtectedRoute
+              allowedRoles={['admin']}
+            >
+              <AdminTestimonials />
+            </ProtectedRoute>} />
 
 
         <Route
@@ -222,7 +234,7 @@ function App() {
               <Recruiter_History />
             </ProtectedRoute>} />
 
-        <Route path="/unauthorized" element={<Unauthorized />} />
+
         <Route
           path="/recruiter/postedjobs"
           element={
@@ -257,6 +269,13 @@ function App() {
         <Route path="/features/user-registration" element={<FeatureUserRegistration />} />
         <Route path="/features/resume-matching" element={<FeatureResumeMatching />} />
         <Route path="/features/ats-analytics" element={<FeatureATSAnalytics />} />
+
+        {/* ─── Error pages ─── */}
+        {/* Navigate programmatically: navigate('/error/403'), navigate('/error/404'), etc. */}
+        <Route path="/error/:code" element={<ErrorPage />} />
+
+        {/* Catch-all — redirect to /error/404 so Navbar is hidden */}
+        <Route path="*" element={<Navigate to="/error/404" replace />} />
       </Routes>
     </>
   )

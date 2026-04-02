@@ -13,6 +13,7 @@ const recruiterRoutes = require("./routes/recruiterRoutes");
 const candidateRoutes = require("./routes/candidateRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const testimonialRoutes = require("./routes/testimonialRoutes");
+const supportRoutes = require("./routes/supportRoutes");
 
 const app = express();
 
@@ -80,6 +81,7 @@ app.use("/api/recruiter", recruiterRoutes);
 app.use("/api/candidate", candidateRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/support", supportRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({ error: true, message: "Route not found" });

@@ -45,6 +45,7 @@ const t = {
 
 // ─── Status Badge Component ─────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {
+  const normalizedStatus = String(status || "").toLowerCase();
   const config = {
     pending: {
       bg: "bg-amber-50",
@@ -52,6 +53,20 @@ const StatusBadge = ({ status }) => {
       border: "border-amber-200",
       icon: <AlertCircle className="w-3.5 h-3.5" />,
       label: "Pending Review",
+    },
+    risky: {
+      bg: "bg-orange-50",
+      text: "text-orange-700",
+      border: "border-orange-200",
+      icon: <AlertCircle className="w-3.5 h-3.5" />,
+      label: "Risky",
+    },
+    verified: {
+      bg: "bg-green-50",
+      text: "text-green-700",
+      border: "border-green-200",
+      icon: <CheckCircle className="w-3.5 h-3.5" />,
+      label: "Verified",
     },
     reviewed: {
       bg: "bg-green-50",
@@ -69,7 +84,7 @@ const StatusBadge = ({ status }) => {
     },
   };
 
-  const style = config[status] || config.pending;
+  const style = config[normalizedStatus] || config.pending;
 
   return (
     <span
@@ -83,6 +98,7 @@ const StatusBadge = ({ status }) => {
 
 // ─── Workplace Type Badge ────────────────────────────────────────────────────
 const WorkplaceBadge = ({ type }) => {
+  const normalizedType = String(type || "").toLowerCase();
   const config = {
     remote: {
       bg: "bg-purple-50",
@@ -104,7 +120,7 @@ const WorkplaceBadge = ({ type }) => {
     },
   };
 
-  const style = config[type] || config.onsite;
+  const style = config[normalizedType] || config.onsite;
 
   return (
     <span
@@ -162,7 +178,7 @@ const JobCard = ({ job, onViewDetails, onDelete }) => {
                 </p>
 
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <StatusBadge status={job.adminReview} />
+                  <StatusBadge status={job.status || job.adminReview} />
                   <WorkplaceBadge type={job.workPlaceType} />
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                     <BadgeCheck className="w-3.5 h-3.5" />
@@ -281,7 +297,7 @@ const JobDetailModal = ({ job, isOpen, onClose }) => {
         >
           {/* Status & Badges */}
           <div className="flex items-center flex-wrap gap-2">
-            <StatusBadge status={job.adminReview} />
+            <StatusBadge status={job.status || job.adminReview} />
             <WorkplaceBadge type={job.workPlaceType} />
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
               <BadgeCheck className="w-3.5 h-3.5" />
@@ -481,17 +497,17 @@ const Recruiter_History = () => {
           return;
         }
 
-        const response = await api.get(`/jobs/recruiter/${userId}`);
-        const recruiterJobs = response.data.jobs || [];
+        const response = await api.get("/recruiter/jobs/history");
+        const recruiterJobs = response.data?.data || [];
 
         const jobsWithCandidateStats = await Promise.all(
           recruiterJobs.map(async (job) => {
             try {
-              const candidatesResponse = await api.get(
-                `/jobs/${job._id}/candidates`,
-              );
+              const candidatesResponse = await api.get("/recruiter/applicants", {
+                params: { jobId: job._id },
+              });
               const totalCandidates =
-                Number(candidatesResponse?.data?.totalCandidates) || 0;
+                Number(candidatesResponse?.data?.data?.length) || 0;
               return { ...job, totalCandidates };
             } catch {
               return { ...job, totalCandidates: 0 };
@@ -533,7 +549,7 @@ const Recruiter_History = () => {
   const handleDelete = async (jobId) => {
     setIsDeleting(true);
     try {
-      await api.delete(`/jobs/${jobId}`);
+      await api.delete(`/recruiter/jobs/${jobId}`);
       setJobs((prev) => prev.filter((j) => j._id !== jobId));
       setSelectedJob((prev) => (prev?._id === jobId ? null : prev));
       setDeleteModalOpen(false);

@@ -71,14 +71,13 @@ const Recruiter_Profile_view = ({ userProp }) => {
   const [saved, setSaved] = useState(false);
   const [shared, setShared] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [profilePhotoFile, setProfilePhotoFile] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const response = await api.get("/recruiter-profile");
-        const profile = response.data?.profile;
+        const response = await api.get("/recruiter/profile");
+        const profile = response.data?.data || response.data?.profile;
 
         const userName = userProp?.userName || user?.userName || user?.name || "";
         const userEmail = userProp?.email || user?.email || "";
@@ -162,25 +161,12 @@ const Recruiter_Profile_view = ({ userProp }) => {
       linkedIn: data.linkedIn.trim(),
       teamSize: Number(data.teamSize) || 0,
     };
-    if (data.img?.trim() && !profilePhotoFile) payload.img = data.img.trim();
-
-    let formData = null;
-    if (profilePhotoFile) {
-      formData = new FormData();
-      formData.append('profilePhoto', profilePhotoFile);
-      Object.keys(payload).forEach(key => {
-        formData.append(key, JSON.stringify(payload[key]));
-      });
-    }
+    if (data.img?.trim()) payload.img = data.img.trim();
 
     try {
-      const config = formData ? {
-        headers: { 'Content-Type': 'application/json' }
-      } : {};
+      const response = await api.patch("/recruiter/profile", payload);
 
-      const response = await api.put("/recruiter-profile", formData || payload, config);
-
-      const updatedProfile = response.data?.profile;
+      const updatedProfile = response.data?.data || response.data?.profile;
 
       // Update global auth state to reflect changes
       const picToSync = updatedProfile?.img || data.img;
@@ -194,7 +180,6 @@ const Recruiter_Profile_view = ({ userProp }) => {
 
       setEditing(false);
       setSaved(true);
-      setProfilePhotoFile(null); // Clear the file after save
       toast.success("Profile saved successfully!", { position: "top-center", autoClose: 2000 });
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
@@ -210,7 +195,6 @@ const Recruiter_Profile_view = ({ userProp }) => {
   const handleUpload = (e) => {
     const file = e.target.files[0];
     if (file?.type.startsWith("image/")) {
-      setProfilePhotoFile(file);
       const r = new FileReader();
       r.onload = ev => { setField("img", ev.target.result); };
       r.onerror = () => { alert("Upload failed."); };
@@ -339,7 +323,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
                 {editing ? (
                   <div className="flex flex-col sm:flex-row gap-2">
                     <button
-                      onClick={() => { setEditing(false); setProfilePhotoFile(null); }}
+                      onClick={() => { setEditing(false); }}
                       className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
                     >
                       Cancel

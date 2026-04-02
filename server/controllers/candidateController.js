@@ -3,6 +3,7 @@ const Application = require("../models/applications");
 const SavedJob = require("../models/savedJobs");
 const AtsHistory = require("../models/atsHistory");
 const CandidateProfile = require("../models/candidateProfile");
+const User = require("../models/users");
 
 /**
  * Get candidate dashboard stats
@@ -209,6 +210,9 @@ const deleteCandidateProfile = async (req, res) => {
     if (!deletedProfile) {
       return res.status(404).json({ error: true, message: "Candidate profile not found." });
     }
+
+    // Now delete the user record from the users collection
+    await User.findByIdAndDelete(userId);
 
     res.status(200).json({
       error: false,

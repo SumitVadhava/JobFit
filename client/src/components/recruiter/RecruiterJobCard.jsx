@@ -20,12 +20,13 @@ const RecruiterJobCard = ({
   showDeleteAction = true,
 }) => {
   const canEdit = (job.totalCandidates ?? 0) < 1;
+  const jobStatus = job.status || job.adminReview || "pending";
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition-all duration-300 group">
       <div className="p-5 pb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start space-x-4 min-w-0 flex-1">
             <div className="w-12 h-12 rounded-xl bg-purple-100 border border-purple-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {job.img && !job.img.includes("example.com") ? (
                 <img
@@ -38,17 +39,17 @@ const RecruiterJobCard = ({
               )}
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-700 transition-colors truncate">
                 {job.jobTitle}
               </h3>
-              <p className="text-sm text-gray-500 font-medium mt-0.5">
+              <p className="text-sm text-gray-500 font-medium mt-0.5 truncate">
                 {job.companyName}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             {showEditAction && canEdit && (
               <button
                 onClick={() => onViewApplicants?.(job, "edit")}
@@ -73,7 +74,7 @@ const RecruiterJobCard = ({
         </div>
 
         <div className="flex items-center flex-wrap gap-2 mt-4">
-          <RecruiterStatusBadge status={job.adminReview} />
+          <RecruiterStatusBadge status={jobStatus} />
           <RecruiterWorkplaceBadge type={job.workPlaceType} />
           {job.bookmarked && (
             <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
