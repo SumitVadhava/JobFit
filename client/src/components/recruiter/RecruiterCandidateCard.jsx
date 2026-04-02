@@ -14,6 +14,7 @@ const RecruiterCandidateCard = ({
   const isShortlisted = candidateStatus === "shortlisted";
   const isHired = candidateStatus === "hired";
   const isRejected = candidateStatus === "rejected";
+  const candidateAvatar = c.picture || c.avatar || c.avatarUrl || c.profilePicture || "";
   const initials = (c.name || "?")
     .split(" ")
     .map((w) => w[0])
@@ -36,7 +37,15 @@ const RecruiterCandidateCard = ({
               boxShadow: `0 4px 14px ${ACCENT}30`,
             }}
           >
-            {initials}
+            {candidateAvatar ? (
+              <img
+                src={candidateAvatar}
+                alt={c.name || "Candidate"}
+                className="w-full h-full object-cover rounded-2xl"
+              />
+            ) : (
+              initials
+            )}
           </div>
 
           {/* Info */}

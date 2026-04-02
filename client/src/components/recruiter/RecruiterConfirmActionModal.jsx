@@ -83,16 +83,6 @@ const RecruiterConfirmActionModal = ({
 
       {/* Card */}
       <div className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
-        {/* Header accent bar */}
-        <div
-          className={`h-1.5 rounded-t-2xl ${action === "shortlist"
-            ? "bg-green-500"
-            : action === "reject"
-              ? "bg-red-500"
-              : "bg-indigo-500"
-            }`}
-        />
-
         <div className="p-6">
           {/* Icon */}
           <div

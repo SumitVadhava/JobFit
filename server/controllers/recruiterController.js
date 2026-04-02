@@ -1,6 +1,7 @@
 const Job = require("../models/jobs");
 const Application = require("../models/applications");
 const RecruiterProfile = require("../models/recruiterProfile");
+const User = require("../models/users");
 const mongoose = require("mongoose");
 
 /**
@@ -285,6 +286,9 @@ exports.deleteRecruiterProfile = async (req, res) => {
     if (!deletedProfile) {
       return res.status(404).json({ error: true, message: "Recruiter profile not found." });
     }
+
+    // Now delete the user record from the users collection
+    await User.findByIdAndDelete(userId);
 
     res.status(200).json({
       error: false,
