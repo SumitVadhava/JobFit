@@ -39,9 +39,17 @@ const validateWithdrawal = (req, res, next) => {
   next();
 };
 
+const validateCandidateProfileUpdate = (req, res, next) => {
+  if (req.body.email !== undefined) {
+    return res.status(400).json({ error: true, message: "Email changes are not allowed through profile update endpoints." });
+  }
+  next();
+};
+
 module.exports = {
   candidateAuth,
   validateJobApplication,
   validateSavedJob,
   validateWithdrawal,
+  validateCandidateProfileUpdate,
 };

@@ -43,8 +43,16 @@ const validateApplicationStatusUpdate = (req, res, next) => {
   next();
 };
 
+const validateRecruiterProfileUpdate = (req, res, next) => {
+  if (req.body.email !== undefined) {
+    return res.status(400).json({ error: true, message: "Email changes are not allowed through profile update endpoints." });
+  }
+  next();
+};
+
 module.exports = {
   recruiterAuth,
   validateJobPost,
   validateApplicationStatusUpdate,
+  validateRecruiterProfileUpdate,
 };

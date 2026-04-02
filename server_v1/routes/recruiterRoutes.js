@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const recruiterController = require("../controllers/recruiterController");
 const recruiterJobsController = require("../controllers/recruiterJobsController");
-const { recruiterAuth, validateJobPost, validateApplicationStatusUpdate } = require("../middlewares/recruiterMiddleware");
+const { recruiterAuth, validateJobPost, validateApplicationStatusUpdate, validateRecruiterProfileUpdate } = require("../middlewares/recruiterMiddleware");
 const { validateIds } = require("../middlewares/commonMiddleware");
 const upload = require("../middlewares/uploadMiddleware");
 
@@ -100,7 +100,7 @@ router.post("/profile", recruiterController.createRecruiterProfile);
  *       404:
  *         description: Profile not found
  */
-router.put("/profile", recruiterController.updateRecruiterProfile);
+router.put("/profile", validateRecruiterProfileUpdate, recruiterController.updateRecruiterProfile);
 
 /**
  * @swagger
@@ -120,7 +120,7 @@ router.put("/profile", recruiterController.updateRecruiterProfile);
  *       404:
  *         description: Profile not found
  */
-router.patch("/profile", recruiterController.patchRecruiterProfile);
+router.patch("/profile", validateRecruiterProfileUpdate, recruiterController.patchRecruiterProfile);
 
 /**
  * @swagger

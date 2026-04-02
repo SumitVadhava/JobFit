@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const candidateController = require("../controllers/candidateController");
 const candidateJobsController = require("../controllers/candidateJobsController");
-const { candidateAuth, validateJobApplication, validateSavedJob, validateWithdrawal } = require("../middlewares/candidateMiddleware");
+const { candidateAuth, validateJobApplication, validateSavedJob, validateWithdrawal, validateCandidateProfileUpdate } = require("../middlewares/candidateMiddleware");
 const { validateIds } = require("../middlewares/commonMiddleware");
 
 // All candidate routes are protected and require the CANDIDATE role
@@ -111,7 +111,7 @@ router.post("/profile", candidateController.createCandidateProfile);
  *       404:
  *         description: Profile not found
  */
-router.put("/profile", candidateController.updateCandidateProfile);
+router.put("/profile", validateCandidateProfileUpdate, candidateController.updateCandidateProfile);
 
 /**
  * @swagger
