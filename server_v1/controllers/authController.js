@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { ROLES } = require("../utils/roles");
+const { sendOtp, verifyOtp } = require("../services/otp.service");
 require("dotenv").config();
 
 
@@ -160,6 +161,71 @@ exports.googleLogin = async (req, res) => {
       error: true,
       message: "Invalid Google token.",
       details: error.response?.data || error.message,
+    });
+  }
+};
+
+
+exports.requestOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: true, message: "Email is required." });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(200).json({
+        error: false,
+        message: "User already exists.",
+        alreadyRegistered: true
+      });
+    }
+
+    await sendOtp(email);
+
+    res.status(200).json({
+      error: false,
+      message: "OTP sent successfully to your email.",
+    });
+  } catch (error) {
+    console.error("Request OTP error:", error);
+    res.status(500).json({
+      error: true,
+      message: "Failed to send OTP.",
+      details: error.message,
+    });
+  }
+};
+
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ error: true, message: "Email and OTP are required." });
+    }
+
+    const isValid = verifyOtp(email, otp);
+
+    if (!isValid) {
+      return res.status(400).json({
+        error: true,
+        message: "Invalid or expired OTP.",
+      });
+    }
+
+    res.status(200).json({
+      error: false,
+      message: "OTP verified successfully.",
+    });
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    res.status(500).json({
+      error: true,
+      message: "Server error during OTP verification.",
     });
   }
 };

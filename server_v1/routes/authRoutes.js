@@ -6,7 +6,7 @@ const authController = require("../controllers/authController");
  * @swagger
  * tags:
  *   name: Auth
- *   description: User authentication (Signup, Login, Google Auth)
+ *   description: User authentication (Signup, Login, Google Auth, OTP)
  */
 
 /**
@@ -46,6 +46,64 @@ router.post("/signup", authController.signup);
 
 /**
  * @swagger
+ * /api/auth/signup/send-otp:
+ *   post:
+ *     summary: Send OTP to email for signup verification
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SendOtpRequest'
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         description: Email is missing or user already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post("/signup/send-otp", authController.requestOtp);
+
+/**
+ * @swagger
+ * /api/auth/signup/verify-otp:
+ *   post:
+ *     summary: Verify email OTP for signup
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/VerifyOtpRequest'
+ *     responses:
+ *       200:
+ *         description: OTP verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         description: Invalid or expired OTP
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post("/signup/verify-otp", authController.verifyOtp);
+
+/**
+ * @swagger
  * /api/auth/login:
  *   post:
  *     summary: Authenticate a user (Local)
@@ -81,7 +139,7 @@ router.post("/login", authController.login);
 
 /**
  * @swagger
- * /api/auth/google:
+ * /api/auth/google-login:
  *   post:
  *     summary: Authenticate with Google
  *     tags: [Auth]
@@ -121,6 +179,6 @@ router.post("/login", authController.login);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/google", authController.googleLogin);
+router.post("/google-login", authController.googleLogin);
 
 module.exports = router;

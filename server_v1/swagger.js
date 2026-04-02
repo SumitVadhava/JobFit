@@ -64,6 +64,23 @@ const options = {
           },
         },
 
+        // --- OTP ---
+        SendOtpRequest: {
+          type: "object",
+          required: ["email"],
+          properties: {
+            email: { type: "string", format: "email", example: "user@example.com" },
+          },
+        },
+        VerifyOtpRequest: {
+          type: "object",
+          required: ["email", "otp"],
+          properties: {
+            email: { type: "string", format: "email", example: "user@example.com" },
+            otp: { type: "string", example: "123456" },
+          },
+        },
+
         // --- User ---
         User: {
           type: "object",
@@ -77,7 +94,7 @@ const options = {
           },
         },
 
-        // --- Jobs (Schema ready for future routes) ---
+        // --- Jobs ---
         Job: {
           type: "object",
           properties: {
@@ -90,7 +107,15 @@ const options = {
           },
         },
 
-        // --- Generic ---
+        // --- Generic Responses ---
+        SuccessResponse: {
+          type: "object",
+          properties: {
+            error: { type: "boolean", example: false },
+            message: { type: "string", example: "Operation successful" },
+            data: { type: "object", nullable: true, example: null },
+          },
+        },
         ErrorResponse: {
           type: "object",
           properties: {
