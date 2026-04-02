@@ -19,6 +19,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+const RECRUITER_JOBS_POST_API =
+  "https://jobfit-s5v7.onrender.com/api/recruiter/jobs";
+
 // ─── Extracted Outside to prevent remount on every render ─────────────────────
 const InputWrapper = ({
   children,
@@ -119,6 +122,7 @@ const Recruiter_Post_view = () => {
     img: "",
     openings: "",
   });
+  const [logoFile, setLogoFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [focusedField, setFocusedField] = useState(null);
@@ -175,12 +179,47 @@ const Recruiter_Post_view = () => {
     if (isValid) {
       setIsSubmitting(true);
       try {
-        const payload = {
-          ...formData,
-          openings: parseInt(formData.openings, 10),
-        };
-        const response = await api.post("/jobs", payload);
-        console.log("Form Data Response:", response.data);
+        const responsibilities = formData.responsibilities
+          .split("\n")
+          .map((item) => item.replace(/^[-•\s]+/, "").trim())
+          .filter(Boolean);
+        const qualifications = formData.qualifications
+          .split("\n")
+          .map((item) => item.replace(/^[-•\s]+/, "").trim())
+          .filter(Boolean);
+
+        const payload = new FormData();
+        payload.append("jobTitle", formData.jobTitle.trim());
+        payload.append("companyName", formData.companyName.trim());
+        payload.append("location", formData.location.trim());
+        payload.append("openings", String(parseInt(formData.openings, 10)));
+        payload.append("jobDescription", formData.jobDescription.trim());
+        payload.append("department", formData.department.trim());
+        payload.append("experience", formData.experience.trim());
+        payload.append("responsibilities", JSON.stringify(responsibilities.length ? responsibilities : [formData.responsibilities.trim()]));
+        payload.append("qualifications", JSON.stringify(qualifications.length ? qualifications : [formData.qualifications.trim()]));
+        payload.append("workPlaceType", formData.workPlaceType.trim());
+
+        if (logoFile) {
+          payload.append("img", logoFile);
+        } else if (formData.img.trim()) {
+          payload.append("img", formData.img.trim());
+        }
+
+        const response = await api.post(RECRUITER_JOBS_POST_API, payload, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          validateStatus: (status) => status >= 200 && status < 500,
+        });
+
+        if (response.status !== 201 || response.data?.error) {
+          throw new Error(
+            response.data?.message || "Unexpected response while posting job."
+          );
+        }
+
+        console.log("Job Post Response:", response.data);
         toast.success("🎉 Job posted successfully!", {
           position: "top-center",
           autoClose: 2500,
@@ -188,7 +227,7 @@ const Recruiter_Post_view = () => {
             background: "#f0e6ff",
             color: "#6b21a8",
             fontWeight: "600",
-          },
+          },  
         });
         setFormData({
           jobTitle: "",
@@ -203,12 +242,16 @@ const Recruiter_Post_view = () => {
           img: "",
           openings: "",
         });
+        setLogoFile(null);
         setErrors({});
       } catch (error) {
         console.error("Error posting job:", error);
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Please try again later.";
         toast.error(
-          "Failed to post job. " +
-          (error.response?.data?.message || "Please try again later."),
+          "Failed to post job. " + errorMessage,
           { position: "top-center", autoClose: 3000 }
         );
       } finally {
@@ -444,9 +487,9 @@ const Recruiter_Post_view = () => {
                     )}
                   >
                     <option value="">Select Work Place Type</option>
-                    <option value="onsite">On-Site</option>
-                    <option value="remote">Remote</option>
-                    <option value="hybrid">Hybrid</option>
+                    <option value="On-site">On-Site</option>
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
                   </select>
                   <ChevronDown
                     size={16}
@@ -504,9 +547,11 @@ const Recruiter_Post_view = () => {
                           img: "Only JPG, PNG, and WEBP formats are allowed.",
                         }));
                         setFormData((prev) => ({ ...prev, img: "" }));
+                        setLogoFile(null);
                         return;
                       }
 
+                      setLogoFile(file);
                       const reader = new FileReader();
                       reader.onloadend = () => {
                         setFormData((prev) => ({ ...prev, img: reader.result }));
@@ -515,6 +560,7 @@ const Recruiter_Post_view = () => {
                       reader.readAsDataURL(file);
                     } else {
                       setFormData((prev) => ({ ...prev, img: "" }));
+                      setLogoFile(null);
                     }
                   }}
                   onFocus={() => handleFocus("img")}

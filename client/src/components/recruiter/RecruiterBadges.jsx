@@ -8,6 +8,7 @@ import {
 
 /* ───────────── Status Badge ───────────── */
 export const RecruiterStatusBadge = ({ status }) => {
+  const normalizedStatus = String(status || "").toLowerCase();
   const config = {
     pending: {
       bg: "bg-amber-50",
@@ -15,6 +16,20 @@ export const RecruiterStatusBadge = ({ status }) => {
       border: "border-amber-200",
       icon: <AlertCircle className="w-3.5 h-3.5" />,
       label: "Pending Review",
+    },
+    risky: {
+      bg: "bg-orange-50",
+      text: "text-orange-700",
+      border: "border-orange-200",
+      icon: <AlertCircle className="w-3.5 h-3.5" />,
+      label: "Risky",
+    },
+    verified: {
+      bg: "bg-green-50",
+      text: "text-green-700",
+      border: "border-green-200",
+      icon: <CheckCircle className="w-3.5 h-3.5" />,
+      label: "Verified",
     },
     reviewed: {
       bg: "bg-green-50",
@@ -32,7 +47,7 @@ export const RecruiterStatusBadge = ({ status }) => {
     },
   };
 
-  const style = config[status] || config.pending;
+  const style = config[normalizedStatus] || config.pending;
 
   return (
     <span
@@ -46,6 +61,7 @@ export const RecruiterStatusBadge = ({ status }) => {
 
 /* ───────────── Workplace Badge ───────────── */
 export const RecruiterWorkplaceBadge = ({ type }) => {
+  const normalizedType = String(type || "").toLowerCase();
   const config = {
     remote: {
       bg: "bg-purple-50",
@@ -67,7 +83,7 @@ export const RecruiterWorkplaceBadge = ({ type }) => {
     },
   };
 
-  const style = config[type] || config.onsite;
+  const style = config[normalizedType] || config.onsite;
 
   return (
     <span
