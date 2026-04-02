@@ -8,8 +8,39 @@ const options = {
     info: {
       title: "API",
       version: "1.0.0",
-      description:
-        "REST API documentation for the JobFit platform — a job matching and resume analysis system built by Code Conquerors.",
+      description: `
+## Overview
+JobFit is a comprehensive job matching and resume analysis platform. Candidates can build profiles, upload resumes for ATS scoring, apply for jobs, and save listings. Recruiters can post jobs, manage candidate applications, review profiles, and update candidate statuses (shortlisted, hired, rejected). Admins have complete oversight over users, recruiters, and platform metrics with the ability to review jobs.
+
+## Major Features
+- **Role-based Authentication**: Email/Password & Google OAuth.
+- **Recruiter Dashboard**: Job posting, candidate application management, status tracking (hire/shortlist/reject).
+- **Candidate Dashboard**: Job discovery, application submission, saved jobs, ATS resume analysis.
+- **ATS (Applicant Tracking System)**: Upload resumes and parse them for skills, education, and ATS scoring.
+- **Admin Dashboard**: Full statistical overview, job review approvals/rejections, and CRUD operations for users/candidates.
+- **Testimonial System**: Submit and view platform testimonials.
+
+## Authentication
+This API uses **JSON Web Token (JWT)** for securing endpoints. To authenticate requests:
+1. Obtain a token by calling \`/api/login\` or \`/api/Google_login\`.
+2. Pass the token in the \`Authorization\` header using the Bearer schema: \`Authorization: Bearer <your_jwt_token>\`.
+
+## Role Permissions Summary
+- **Admin**: Has full access. Can view platform statistics, manage candidates and recruiters (CRUD), update job admin review status (pending, reviewed, risky), and delete any job.
+- **Recruiter**: Can create, read, update, and delete their own job postings. Can view candidates applied to their jobs and update status (shortlisted, hired, rejected). Cannot access other recruiters' data.
+- **Candidate / User**: Can search jobs, view job details, apply for jobs, save/unsave jobs, build profiles, test ATS score, and view application history. Cannot manage jobs.
+
+## Automatic Behaviors
+- **Profile Synchronization**: When a user signs up, their profile entry (Candidate or Recruiter) is automatically initialized.
+- **Resume Parsing**: When uploading a resume, ATS score and profile data are automatically calculated and populated using ML/AI checks.
+- **Hiring Cascades**: When a candidate is "hired" for a job, the job's \`openings\` count is automatically decremented. The system can handle auto-rejection logic if openings reach zero.
+- **Candidate Unique Counts**: Recruiter candidate stats are automatically aggregated representing unique applicants across all their active jobs.
+
+## Step-by-step Testing Guide
+1. **Login**: Use \`/api/login\` endpoint to authenticate and grab your \`token\`.
+2. **Authorize**: Click the **Authorize** button in Swagger UI, paste the token (\`Bearer <token>\`), and click Save.
+3. **Test API**: Now you can execute any endpoints permitted by your user role!
+      `,
     },
     servers: [
       {
