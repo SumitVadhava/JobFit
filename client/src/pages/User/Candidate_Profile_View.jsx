@@ -49,6 +49,7 @@ const Ic = ({ d, size = 16 }) => (
 );
 
 const ICONS = {
+  trash: "M216,48h-40V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z",
   edit: "M227.32,73.37,182.63,28.69a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.32,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.69,147.32,64l12.68-12.69L204.69,96Z",
   save: "M227.32,28.68a16,16,0,0,0-15.66-4.08l-192,64a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,256q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l64-192A16,16,0,0,0,227.32,28.68ZM158.46,233.15l-37-78.23L153.37,123A8,8,0,0,0,142.05,111.7l-31.91,31.92L31.91,106.6Z",
   camera: "M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z",
@@ -299,7 +300,7 @@ const Candidate_Profile_View = ({ userProp }) => {
 
   const { id: paramId } = useParams();
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = !paramId || (user && (paramId === user._id || paramId === user.id));
@@ -316,6 +317,7 @@ const Candidate_Profile_View = ({ userProp }) => {
     atsScore: 0,
     profilePicture: "",
     resumeLink: "",
+    profileId: "",
   });
 
   const [editing, setEditing] = useState(false);
@@ -330,6 +332,9 @@ const Candidate_Profile_View = ({ userProp }) => {
   const [dragActive, setDragActive] = useState(false);
   const [profilePhotoFile, setProfilePhotoFile] = useState(null);
   const [profileExists, setProfileExists] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingProfile, setDeletingProfile] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
 
   const galleryImages = [
     `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=0f172a&color=fff&size=200`,
@@ -345,6 +350,7 @@ const Candidate_Profile_View = ({ userProp }) => {
     userName: profile?.userName || userName || "",
     email: profile?.email || userEmail || "",
     resumeSummary: profile?.description || "",
+    profileId: profile?._id || "",
     totalExperience: (() => {
       const raw = profile?.experience;
       // If it's already a valid range string, use it directly
@@ -600,10 +606,38 @@ const Candidate_Profile_View = ({ userProp }) => {
   }
 
 
+  /* Delete Profile ─────────────────────────────────────────── */
+  const handleDeleteProfile = async () => {
+    if (deleteConfirmationText !== "delete profile") return;
+    try {
+      setDeletingProfile(true);
+
+      // Perform the API deletion first while the token is still active
+      await api.delete("/candidate/profile");
+
+      // Completely wipe local storage after the API responds successfully
+      localStorage.clear();
+
+      toast.success("Profile deleted successfully", { position: "top-center", autoClose: 2000 });
+      setTimeout(() => {
+        logout();
+        navigate("/");
+      }, 1000);
+    } catch (err) {
+      toast.error("Failed to delete profile", { position: "top-center", autoClose: 2000 });
+      setDeletingProfile(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   /* Native Share API ─────────────────────────────────────────── */
   const handleShare = async () => {
-    const userId = paramId || user?._id || user?.id || "";
-    const profileUrl = `${window.location.origin}/candidate/profile/${userId}`;
+    // Explicitly use the fetched Profile ID, ignoring any old URL parameters to avoid 404s
+    const idToShare = data.profileId;
+    if (!idToShare) {
+      return toast.error("Profile ID not found. Ensure profile is saved.");
+    }
+    const profileUrl = `${window.location.origin}/candidate/profile/${idToShare}`;
     const shareData = {
       title: `${data.name} — Candidate Profile`,
       text: `Check out ${data.name}'s profile: ${data.totalExperience !== 0 ? data.totalExperience + " years" : "Fresher"} · ATS Score ${data.atsScore}%`,
@@ -860,12 +894,20 @@ const Candidate_Profile_View = ({ userProp }) => {
                     <Ic d={ICONS.share} size={14} /> Share
                   </button>
                   {isOwnProfile && (
-                    <button
-                      onClick={() => setEditing(true)}
-                      className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl transition-all hover:-translate-y-px shadow-md"
-                    >
-                      <Ic d={ICONS.edit} size={14} /> Edit Profile
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all hover:-translate-y-px"
+                      >
+                        <Ic d={ICONS.trash} size={14} /> Delete Profile
+                      </button>
+                      <button
+                        onClick={() => setEditing(true)}
+                        className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl transition-all hover:-translate-y-px shadow-md"
+                      >
+                        <Ic d={ICONS.edit} size={14} /> Edit Profile
+                      </button>
+                    </>
                   )}
                 </>
               )}
@@ -1201,6 +1243,70 @@ const Candidate_Profile_View = ({ userProp }) => {
           </div>
         )}
       </div>
+
+      {/* ── Delete Profile Modal ────────────────────────────── */}
+      {showDeleteModal && typeof document !== 'undefined' && ReactDOM.createPortal(
+        <div
+          onClick={() => setShowDeleteModal(false)}
+          className="fixed inset-0 z-[99999] bg-slate-900/55 backdrop-blur-sm flex items-center justify-center p-4 anim-in"
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl border border-slate-200 text-center anim-modal"
+          >
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-100 flex items-center justify-center mx-auto mb-5 text-red-500">
+              <Ic d={ICONS.trash} size={28} />
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Delete Profile?</h3>
+            <p className="text-sm text-slate-500 mb-4 leading-relaxed">
+              Are you sure you want to delete your candidate profile? This action will permanently remove all your profile data and log you out.
+            </p>
+            
+            <div className="mb-7 text-left">
+              <label className="block text-xs font-semibold text-slate-700 mb-2">
+                Type <span className="w-fit inline-block px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-red-500 select-none">delete profile</span> to confirm.
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmationText}
+                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                autoComplete="off"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all placeholder:text-slate-400"
+                placeholder="delete profile"
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmationText("");
+                }}
+                className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold border-2 border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteProfile}
+                disabled={deletingProfile || deleteConfirmationText !== "delete profile"}
+                className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold border-none bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 hover:shadow-xl transition-all disabled:opacity-50 disabled:hover:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {deletingProfile ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full anim-spin inline-block" />
+                  </>
+                ) : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
     </>
   );
 };
