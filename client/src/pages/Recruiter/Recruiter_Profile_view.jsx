@@ -443,10 +443,10 @@ const Recruiter_Profile_view = ({ userProp }) => {
               className={`relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md ring-1 ring-slate-200 shrink-0 ${editing ? "cursor-pointer" : ""}`}
               onClick={() => editing && setGallery(true)}
             >
-              <img 
-                src={data.profilePicture} 
-                alt="Profile" 
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+              <img
+                src={data.profilePicture}
+                alt="Profile"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={handleImgError}
               />
               {editing && (
@@ -767,14 +767,13 @@ const Recruiter_Profile_view = ({ userProp }) => {
                       set("profilePicture", img);
                       setGallery(false);
                     }}
-                    className={`relative aspect-square rounded-full overflow-hidden border-2 transition-all hover:scale-105 ${
-                      data.profilePicture === img ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200 hover:border-blue-300"
-                    }`}
+                    className={`relative aspect-square rounded-full overflow-hidden border-2 transition-all hover:scale-105 ${data.profilePicture === img ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200 hover:border-blue-300"
+                      }`}
                   >
-                    <img 
-                      src={img} 
-                      alt="" 
-                      className="w-full h-full object-cover" 
+                    <img
+                      src={img}
+                      alt=""
+                      className="w-full h-full object-cover"
                       onError={handleImgError}
                     />
                     {data.profilePicture === img && (
