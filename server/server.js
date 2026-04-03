@@ -19,6 +19,7 @@ const app = express();
 
 const allowedOrigins = [
   "https://jobfit-delta.vercel.app",
+  "https://jobfit-portal.vercel.app",
   "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:5000",

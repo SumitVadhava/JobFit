@@ -174,13 +174,17 @@ The **JobFit API** is maintained by the dedicated development team. For technica
 `,
     },
     servers: [
+       {
+        url: "https://jobfit-server-4vz7.onrender.com",
+        description: "Production Server (Render Deployment)",
+      },
       {
         url: "https://jobfit-s5v7.onrender.com",
         description: "Production Server (Render Deployment)",
       },
       {
         url: "http://localhost:5000",
-        description: "Local Development Sandbox",
+        description: "Local Development Server",
       },
     ],
     tags: [
