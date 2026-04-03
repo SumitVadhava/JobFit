@@ -1,5 +1,5 @@
 import React from "react";
-// import Marquee from "react-fast-marquee";
+import Marquee from "react-fast-marquee";
 import { Link } from "react-router-dom";
 import Profile from "../assets/profile.gif";
 import JobOffer from "../assets/jobOffer.gif";
@@ -24,32 +24,67 @@ const KeyFeatures = () => {
   return (
     <div className="min-h-screen bg-white max-w-7xl mx-auto py-16">
       <div className="container mx-auto px-4">
-        <section className="py-12 bg-white rounded-2xl shadow-sm border border-gray-100 mb-16">
+        <section className="py-16 bg-white rounded-2xl shadow-sm border border-gray-100 mb-16">
           <div className="container mx-auto px-6">
-            <div className="text-center mb-8">
+            <div className="text-center mb-12">
               <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                Popular Hiring Ecosystem
+                Trusted by Industry Leaders
               </h2>
               <p className="text-gray-600 text-lg">
-                Logos are served from local assets for safer and more reliable
-                loading.
+                Join thousands of companies that trust our platform
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {companies.map((company) => (
-                <div
-                  key={company.name}
-                  className="px-4 py-3 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
-                >
-                  <img
-                    src={company.logo}
-                    alt={company.name}
-                    loading="lazy"
-                    className="h-10 w-full object-contain"
-                  />
-                </div>
-              ))}
+            <div className="relative overflow-hidden" id="key-features">
+              <div className="absolute left-0 top-0 z-10 h-full w-24 sm:w-32 bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
+              <div className="absolute right-0 top-0 z-10 h-full w-24 sm:w-32 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
+
+              <Marquee
+                gradient={false}
+                speed={42}
+                pauseOnHover={true}
+                style={{ width: "100%", height: "auto" }}
+              >
+                {companies.map((company) => (
+                  <div
+                    key={company.name}
+                    className="flex-shrink-0 mx-4 sm:mx-6 px-4 py-3 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group"
+                  >
+                    <div className="h-12 w-28 sm:w-32 flex items-center justify-center">
+                      <img
+                        src={company.logo}
+                        alt={company.name}
+                        loading="lazy"
+                        className="max-h-10 w-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </Marquee>
+
+              <Marquee
+                gradient={false}
+                speed={42}
+                pauseOnHover={true}
+                direction="right"
+                style={{ width: "100%", height: "auto" }}
+              >
+                {companies.map((company) => (
+                  <div
+                    key={`${company.name}-reverse`}
+                    className="flex-shrink-0 mx-4 sm:mx-6 px-4 py-3 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group"
+                  >
+                    <div className="h-12 w-28 sm:w-32 flex items-center justify-center">
+                      <img
+                        src={company.logo}
+                        alt={company.name}
+                        loading="lazy"
+                        className="max-h-10 w-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </Marquee>
             </div>
           </div>
         </section>
