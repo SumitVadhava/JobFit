@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Resume and ATS Analysis Data Flow</title>
+  <desc id="desc">Candidate resume upload, ATS processing, persistence, and frontend rendering flow.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#eefcf7"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#14532d" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L0,10 L10,5 z" fill="#166534"/>
+    </marker>
+    <style>
+      .title { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 34px; font-weight: 600; fill: #14532d; }
+      .subtitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 16px; font-weight: 450; fill: #3f6212; }
+      .node { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 15px; font-weight: 540; fill: #14532d; }
+      .hint { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 12px; font-weight: 450; fill: #4b5563; }
+      .label { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 12px; font-weight: 500; fill: #166534; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" rx="24" fill="url(#bg)"/>
+  <text x="800" y="64" text-anchor="middle" class="title">Resume and ATS Analysis Data Flow</text>
+  <text x="800" y="96" text-anchor="middle" class="subtitle">Upload-to-score lifecycle with persistence and report rendering</text>
+
+  <g filter="url(#shadow)">
+    <rect x="90" y="180" width="1420" height="620" rx="24" fill="#ffffff" fill-opacity="0.9" stroke="#d1fae5"/>
+
+    <rect x="150" y="320" width="230" height="88" rx="14" fill="#e0f2fe" stroke="#7dd3fc"/>
+    <text x="265" y="358" text-anchor="middle" class="node">Candidate Upload</text>
+    <text x="265" y="379" text-anchor="middle" class="hint">resume PDF</text>
+
+    <rect x="430" y="320" width="250" height="88" rx="14" fill="#e0f2fe" stroke="#7dd3fc"/>
+    <text x="555" y="358" text-anchor="middle" class="node">Frontend Module</text>
+    <text x="555" y="379" text-anchor="middle" class="hint">/resume/upload request</text>
+
+    <rect x="730" y="320" width="260" height="88" rx="14" fill="#dcfce7" stroke="#86efac"/>
+    <text x="860" y="358" text-anchor="middle" class="node">Backend Upload API</text>
+    <text x="860" y="379" text-anchor="middle" class="hint">validation + temporary store</text>
+
+    <rect x="1050" y="220" width="280" height="84" rx="14" fill="#ecfccb" stroke="#bef264"/>
+    <text x="1190" y="257" text-anchor="middle" class="node">ATS Analyzer API</text>
+    <text x="1190" y="278" text-anchor="middle" class="hint">extract and score</text>
+
+    <rect x="1050" y="370" width="280" height="84" rx="14" fill="#f5f3ff" stroke="#c4b5fd"/>
+    <text x="1190" y="407" text-anchor="middle" class="node">atsHistory Collection</text>
+    <text x="1190" y="428" text-anchor="middle" class="hint">score and metadata</text>
+
+    <rect x="730" y="520" width="260" height="84" rx="14" fill="#dcfce7" stroke="#86efac"/>
+    <text x="860" y="557" text-anchor="middle" class="node">Response Aggregator</text>
+    <text x="860" y="578" text-anchor="middle" class="hint">report payload</text>
+
+    <rect x="430" y="520" width="250" height="84" rx="14" fill="#e0f2fe" stroke="#7dd3fc"/>
+    <text x="555" y="557" text-anchor="middle" class="node">Frontend Render</text>
+    <text x="555" y="578" text-anchor="middle" class="hint">ATS report view</text>
+  </g>
+
+  <g stroke="#166534" stroke-width="2.4" fill="none" marker-end="url(#arrow)">
+    <line x1="380" y1="364" x2="430" y2="364"/>
+    <line x1="680" y1="364" x2="730" y2="364"/>
+    <polyline points="990,336 1020,336 1020,272 1050,272"/>
+    <line x1="1190" y1="304" x2="1190" y2="370"/>
+    <polyline points="1050,412 1010,412 1010,562 990,562"/>
+    <line x1="730" y1="562" x2="680" y2="562"/>
+    <line x1="860" y1="408" x2="860" y2="520"/>
+  </g>
+
+  <text x="1026" y="294" class="label">analyze</text>
+  <text x="1203" y="340" class="label">score result</text>
+  <text x="1018" y="522" class="label">persist</text>
+  <text x="694" y="550" class="label">render data</text>
+</svg>
+

@@ -9,7 +9,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // user object
-  const [token, setToken] = useState(null);// JWT token
+  const [token, setToken] = useState(null); // JWT token
   const [role, setRole] = useState(null); // user role
   const [loading, setLoading] = useState(true); // track hydration status
 
@@ -28,14 +28,32 @@ export const AuthProvider = ({ children }) => {
           logout();
         } else {
           setToken(storedToken);
-          setUser({
+          const storedUser = localStorage.getItem("user");
+          let userData = {
             id: decodedToken.id,
             email: decodedToken.email,
             picture: decodedToken.picture,
-            userName: decodedToken.userName || decodedToken.name, // accommodate different field names
-            role: decodedToken.role
-          });
-          setRole(decodedToken.role || null);
+            userName: decodedToken.userName || decodedToken.name,
+            role: decodedToken.role,
+          };
+
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              // Only use stored user if it matches the token's user ID
+              if (
+                parsedUser.id === decodedToken.id ||
+                parsedUser._id === decodedToken.id
+              ) {
+                userData = { ...userData, ...parsedUser };
+              }
+            } catch (e) {
+              console.error("Error parsing stored user data:", e);
+            }
+          }
+
+          setUser(userData);
+          setRole(decodedToken.role || userData.role || null);
         }
       } catch (error) {
         console.error("Invalid token found in storage. Clearing...", error);
@@ -53,7 +71,7 @@ export const AuthProvider = ({ children }) => {
         email: decodedToken.email,
         picture: decodedToken.picture,
         userName: decodedToken.userName || decodedToken.name,
-        role: decodedToken.role
+        role: decodedToken.role,
       };
 
       setUser(userData);
@@ -82,7 +100,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, role, loading, login, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{ user, token, role, loading, login, logout, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

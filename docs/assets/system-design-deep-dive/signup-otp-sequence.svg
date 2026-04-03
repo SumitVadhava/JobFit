@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
+  <title id="title">Signup and OTP Verification Sequence</title>
+  <desc id="desc">End-to-end signup sequence from OTP generation to account creation.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fffaf7"/>
+      <stop offset="100%" stop-color="#fff2e8"/>
+    </linearGradient>
+    <filter id="laneShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="5" stdDeviation="9" flood-color="#7c2d12" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L0,10 L10,5 z" fill="#9a3412"/>
+    </marker>
+    <style>
+      .title { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 34px; font-weight: 600; fill: #7c2d12; }
+      .subtitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 16px; font-weight: 450; fill: #9a3412; }
+      .laneHead { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 15px; font-weight: 550; fill: #7c2d12; }
+      .stepText { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 12.5px; font-weight: 500; fill: #7c2d12; }
+      .note { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 12px; font-weight: 450; fill: #a16207; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="920" rx="24" fill="url(#bg)"/>
+  <text x="800" y="64" text-anchor="middle" class="title">Signup plus OTP Verification Sequence</text>
+  <text x="800" y="96" text-anchor="middle" class="subtitle">Email-verified onboarding flow with expiry-aware OTP validation</text>
+
+  <g filter="url(#laneShadow)">
+    <rect x="62" y="130" width="136" height="730" rx="14" fill="#ffffff" fill-opacity="0.9" stroke="#fed7aa"/>
+    <rect x="292" y="130" width="136" height="730" rx="14" fill="#ffffff" fill-opacity="0.9" stroke="#fed7aa"/>
+    <rect x="552" y="130" width="136" height="730" rx="14" fill="#ffffff" fill-opacity="0.9" stroke="#fed7aa"/>
+    <rect x="802" y="130" width="136" height="730" rx="14" fill="#ffffff" fill-opacity="0.9" stroke="#fed7aa"/>
+    <rect x="1052" y="130" width="136" height="730" rx="14" fill="#ffffff" fill-opacity="0.9" stroke="#fed7aa"/>
+    <rect x="1312" y="130" width="136" height="730" rx="14" fill="#ffffff" fill-opacity="0.9" stroke="#fed7aa"/>
+  </g>
+
+  <text x="130" y="164" text-anchor="middle" class="laneHead">User</text>
+  <text x="360" y="164" text-anchor="middle" class="laneHead">Frontend</text>
+  <text x="620" y="164" text-anchor="middle" class="laneHead">Backend</text>
+  <text x="870" y="164" text-anchor="middle" class="laneHead">OTP Service</text>
+  <text x="1120" y="164" text-anchor="middle" class="laneHead">Email Bridge</text>
+  <text x="1380" y="164" text-anchor="middle" class="laneHead">Database</text>
+
+  <g stroke="#fdba74" stroke-width="1.6" stroke-dasharray="6 7">
+    <line x1="130" y1="178" x2="130" y2="840"/>
+    <line x1="360" y1="178" x2="360" y2="840"/>
+    <line x1="620" y1="178" x2="620" y2="840"/>
+    <line x1="870" y1="178" x2="870" y2="840"/>
+    <line x1="1120" y1="178" x2="1120" y2="840"/>
+    <line x1="1380" y1="178" x2="1380" y2="840"/>
+  </g>
+
+  <g stroke="#9a3412" stroke-width="2.3" marker-end="url(#arrow)">
+    <line x1="130" y1="225" x2="360" y2="225"/>
+    <line x1="360" y1="280" x2="620" y2="280"/>
+    <line x1="620" y1="335" x2="1380" y2="335"/>
+    <line x1="620" y1="390" x2="870" y2="390"/>
+    <line x1="870" y1="445" x2="1120" y2="445"/>
+    <line x1="1120" y1="500" x2="620" y2="500"/>
+    <line x1="620" y1="555" x2="360" y2="555"/>
+    <line x1="130" y1="625" x2="360" y2="625"/>
+    <line x1="360" y1="680" x2="620" y2="680"/>
+    <line x1="620" y1="735" x2="870" y2="735"/>
+    <line x1="360" y1="790" x2="620" y2="790"/>
+    <line x1="620" y1="840" x2="1380" y2="840"/>
+  </g>
+
+  <g class="stepText">
+    <text x="245" y="213" text-anchor="middle">1. enter signup details</text>
+    <text x="490" y="268" text-anchor="middle">2. request OTP</text>
+    <text x="1000" y="323" text-anchor="middle">3. ensure email is unique</text>
+    <text x="745" y="378" text-anchor="middle">4. generate OTP with expiry</text>
+    <text x="995" y="433" text-anchor="middle">5. dispatch email</text>
+    <text x="870" y="488" text-anchor="middle">6. delivery response</text>
+    <text x="490" y="543" text-anchor="middle">7. acknowledge OTP sent</text>
+    <text x="245" y="613" text-anchor="middle">8. enter received OTP</text>
+    <text x="490" y="668" text-anchor="middle">9. verify OTP</text>
+    <text x="745" y="723" text-anchor="middle">10. validate code and expiry</text>
+    <text x="490" y="778" text-anchor="middle">11. create account request</text>
+    <text x="1000" y="828" text-anchor="middle">12. persist user and profile</text>
+  </g>
+
+  <rect x="838" y="760" width="230" height="56" rx="11" fill="#fff7ed" stroke="#fdba74"/>
+  <text x="953" y="784" text-anchor="middle" class="note">OTP failures trigger retry window.</text>
+  <text x="953" y="802" text-anchor="middle" class="note">Expired codes are rejected.</text>
+</svg>
+

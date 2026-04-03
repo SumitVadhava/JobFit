@@ -37,15 +37,23 @@ const RecruiterCandidateCard = ({
               boxShadow: `0 4px 14px ${ACCENT}30`,
             }}
           >
-            {candidateAvatar ? (
-              <img
-                src={candidateAvatar}
-                alt={c.name || "Candidate"}
-                className="w-full h-full object-cover rounded-2xl"
-              />
-            ) : (
-              initials
-            )}
+            {(() => {
+              const name = c.name || "Candidate";
+              const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6B46C1&color=fff&size=100`;
+              return candidateAvatar ? (
+                <img
+                  src={candidateAvatar}
+                  alt={name}
+                  className="w-full h-full object-cover rounded-2xl"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = fallback;
+                  }}
+                />
+              ) : (
+                <img src={fallback} alt={name} className="w-full h-full object-cover rounded-2xl" />
+              );
+            })()}
           </div>
 
           {/* Info */}

@@ -3,6 +3,7 @@ const Application = require("../models/applications");
 const RecruiterProfile = require("../models/recruiterProfile");
 const User = require("../models/users");
 const mongoose = require("mongoose");
+const { uploadBase64Image } = require("../utils/cloudinaryHelper");
 
 /**
  * Get recruiter dashboard analytics (Formerly getRecruiterDashboard)
@@ -130,7 +131,14 @@ exports.getRecruiterProfileById = async (req, res) => {
       return res.status(400).json({ error: true, message: "Invalid profile ID" });
     }
 
-    const profile = await RecruiterProfile.findById(profileId);
+    // Try finding by Profile ID first, fallback to User ID lookup if necessary
+    // Populate user info so public profile views can display Name and Avatar correctly
+    let profile = await RecruiterProfile.findById(profileId).populate("user", "userName email picture");
+    
+    if (!profile) {
+      profile = await RecruiterProfile.findOne({ user: profileId }).populate("user", "userName email picture");
+    }
+
     if (!profile) {
       return res.status(404).json({ error: true, message: "Recruiter profile not found." });
     }
@@ -160,11 +168,13 @@ exports.createRecruiterProfile = async (req, res) => {
       return res.status(400).json({ error: true, message: "Recruiter profile already exists. Use PUT to update." });
     }
 
+    const imageUrl = await uploadBase64Image(img, "recruiter_profiles");
+
     const newProfile = new RecruiterProfile({
       user: userId,
       email: email || null,
       userName: userName || null,
-      img: img || null,
+      img: imageUrl || null,
       company: company || null,
       position: position || null,
       description: description || null,
@@ -175,6 +185,10 @@ exports.createRecruiterProfile = async (req, res) => {
     });
 
     await newProfile.save();
+
+    if (imageUrl) {
+      await User.findByIdAndUpdate(userId, { picture: imageUrl });
+    }
 
     res.status(201).json({
       error: false,
@@ -201,8 +215,11 @@ exports.updateRecruiterProfile = async (req, res) => {
 
     const updateData = {};
     if (userName !== undefined) updateData.userName = userName;
-    if (img !== undefined) updateData.img = img;
-    if (img !== undefined) updateData.img = img;
+    if (img !== undefined) {
+      const imageUrl = await uploadBase64Image(img, "recruiter_profiles");
+      updateData.img = imageUrl;
+      await User.findByIdAndUpdate(userId, { picture: imageUrl });
+    }
     if (company !== undefined) updateData.company = company;
     if (position !== undefined) updateData.position = position;
     if (description !== undefined) updateData.description = description;
@@ -259,6 +276,12 @@ exports.patchRecruiterProfile = async (req, res) => {
       filteredData,
       { new: true, runValidators: true }
     );
+
+    if (filteredData.img !== undefined) {
+      const imageUrl = await uploadBase64Image(filteredData.img, "recruiter_profiles");
+      filteredData.img = imageUrl;
+      await User.findByIdAndUpdate(userId, { picture: imageUrl });
+    }
 
     if (!updatedProfile) {
       return res.status(404).json({ error: true, message: "Recruiter profile not found." });

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">Job Application Lifecycle State Diagram</title>
+  <desc id="desc">Formal state machine for application progression and controlled transitions.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#eefaf2"/>
+    </linearGradient>
+    <filter id="nodeShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#166534" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L0,10 L10,5 z" fill="#166534"/>
+    </marker>
+    <style>
+      .title { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 34px; font-weight: 600; fill: #14532d; }
+      .subtitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 16px; font-weight: 450; fill: #3f6212; }
+      .stateTitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 25px; font-weight: 560; }
+      .stateHint { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 13px; font-weight: 450; fill: #4b5563; }
+      .edgeLabel { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 13px; font-weight: 500; fill: #14532d; }
+      .foot { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 18px; font-weight: 500; fill: #334155; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="820" rx="24" fill="url(#bg)"/>
+  <text x="700" y="64" text-anchor="middle" class="title">Job Application Lifecycle</text>
+  <text x="700" y="96" text-anchor="middle" class="subtitle">Backend-enforced state machine with valid and blocked transitions</text>
+
+  <g filter="url(#nodeShadow)">
+    <circle cx="180" cy="320" r="24" fill="#166534"/>
+    <text x="180" y="325" text-anchor="middle" font-family="Manrope, Segoe UI, Arial, sans-serif" font-size="13" font-weight="550" fill="#ffffff">start</text>
+
+    <rect x="280" y="265" width="230" height="110" rx="18" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+    <text x="395" y="313" text-anchor="middle" class="stateTitle" fill="#166534">Applied</text>
+    <text x="395" y="334" text-anchor="middle" class="stateHint">candidate submitted</text>
+
+    <rect x="620" y="122" width="270" height="110" rx="18" fill="#ecfccb" stroke="#84cc16" stroke-width="2"/>
+    <text x="755" y="170" text-anchor="middle" class="stateTitle" fill="#4d7c0f">Shortlisted</text>
+    <text x="755" y="191" text-anchor="middle" class="stateHint">review passed</text>
+
+    <rect x="620" y="410" width="270" height="110" rx="18" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+    <text x="755" y="458" text-anchor="middle" class="stateTitle" fill="#b91c1c">Rejected</text>
+    <text x="755" y="479" text-anchor="middle" class="stateHint">no further processing</text>
+
+    <rect x="1020" y="265" width="230" height="110" rx="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+    <text x="1135" y="313" text-anchor="middle" class="stateTitle" fill="#1d4ed8">Hired</text>
+    <text x="1135" y="334" text-anchor="middle" class="stateHint">terminal success state</text>
+
+    <circle cx="1290" cy="320" r="26" fill="#1d4ed8"/>
+    <text x="1290" y="325" text-anchor="middle" font-family="Manrope, Segoe UI, Arial, sans-serif" font-size="13" font-weight="550" fill="#ffffff">end</text>
+  </g>
+
+  <g stroke="#166534" stroke-width="2.6" marker-end="url(#arrow)">
+    <line x1="204" y1="320" x2="280" y2="320"/>
+    <path d="M510 295 C560 250, 590 220, 620 175" fill="none"/>
+    <path d="M510 340 C560 380, 590 420, 620 465" fill="none"/>
+    <line x1="510" y1="334" x2="1020" y2="334"/>
+    <path d="M890 175 C940 205, 980 250, 1020 305" fill="none"/>
+    <line x1="755" y1="232" x2="755" y2="410"/>
+    <line x1="1250" y1="320" x2="1264" y2="320"/>
+  </g>
+
+  <rect x="538" y="226" width="92" height="28" rx="8" fill="#ffffff" stroke="#bbf7d0"/>
+  <text x="584" y="244" text-anchor="middle" class="edgeLabel">shortlist</text>
+
+  <rect x="538" y="368" width="84" height="28" rx="8" fill="#ffffff" stroke="#fecaca"/>
+  <text x="580" y="386" text-anchor="middle" class="edgeLabel">reject</text>
+
+  <rect x="640" y="344" width="116" height="28" rx="8" fill="#ffffff" stroke="#bfdbfe"/>
+  <text x="698" y="362" text-anchor="middle" class="edgeLabel">direct hire</text>
+
+  <rect x="922" y="232" width="72" height="28" rx="8" fill="#ffffff" stroke="#bfdbfe"/>
+  <text x="958" y="250" text-anchor="middle" class="edgeLabel">hire</text>
+
+  <rect x="778" y="272" width="136" height="28" rx="8" fill="#ffffff" stroke="#fecaca"/>
+  <text x="846" y="290" text-anchor="middle" class="edgeLabel">reject later</text>
+
+  <path d="M892 455 C980 418, 1000 362, 1020 346" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="6 6"/>
+  <rect x="920" y="392" width="170" height="34" rx="9" fill="#fff1f2" stroke="#fda4af"/>
+  <text x="1005" y="414" text-anchor="middle" font-family="Manrope, Segoe UI, Arial, sans-serif" font-size="12" font-weight="500" fill="#b91c1c">invalid transition blocked</text>
+
+  <text x="700" y="748" text-anchor="middle" class="foot">Transition constraints are enforced server-side to maintain ATS workflow integrity.</text>
+</svg>
+
