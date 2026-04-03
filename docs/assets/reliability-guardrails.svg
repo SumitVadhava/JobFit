@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-labelledby="title desc">
+  <title id="title">Reliability Guardrails</title>
+  <desc id="desc">Operational safeguards and quality gates in the JobFit platform.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#f0fdf4"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#14532d"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="760" fill="url(#bg)"/>
+  <text x="700" y="58" text-anchor="middle" font-size="34" font-family="Segoe UI, Arial" fill="#052e16" font-weight="700">Reliability and Safety Guardrails</text>
+
+  <rect x="120" y="140" width="300" height="480" rx="18" fill="#ffffff" stroke="#86efac"/>
+  <rect x="470" y="140" width="300" height="480" rx="18" fill="#ffffff" stroke="#86efac"/>
+  <rect x="820" y="140" width="300" height="480" rx="18" fill="#ffffff" stroke="#86efac"/>
+
+  <text x="270" y="188" text-anchor="middle" font-size="24" font-family="Segoe UI, Arial" fill="#14532d" font-weight="700">Input Safety</text>
+  <text x="620" y="188" text-anchor="middle" font-size="24" font-family="Segoe UI, Arial" fill="#14532d" font-weight="700">Execution Safety</text>
+  <text x="970" y="188" text-anchor="middle" font-size="24" font-family="Segoe UI, Arial" fill="#14532d" font-weight="700">Outcome Safety</text>
+
+  <g font-family="Segoe UI, Arial" font-size="18" fill="#166534">
+    <text x="150" y="240">• Payload validation</text>
+    <text x="150" y="282">• JWT verification</text>
+    <text x="150" y="324">• Role constraints</text>
+    <text x="150" y="366">• Upload type checks</text>
+    <text x="150" y="408">• JSON parse handling</text>
+
+    <text x="500" y="240">• Controlled route pipeline</text>
+    <text x="500" y="282">• Conflict checks (status/openings)</text>
+    <text x="500" y="324">• Atomic update patterns</text>
+    <text x="500" y="366">• External API error handling</text>
+    <text x="500" y="408">• Retry-ready integration paths</text>
+
+    <text x="850" y="240">• Structured API responses</text>
+    <text x="850" y="282">• Notification integrity</text>
+    <text x="850" y="324">• User-visible feedback</text>
+    <text x="850" y="366">• Traceable operational events</text>
+    <text x="850" y="408">• Recoverable failure states</text>
+  </g>
+
+  <line x1="420" y1="380" x2="470" y2="380" stroke="#14532d" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="770" y1="380" x2="820" y2="380" stroke="#14532d" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <text x="700" y="690" text-anchor="middle" font-size="22" font-family="Segoe UI, Arial" fill="#14532d" font-weight="700">
+    Stable systems are built by combining prevention, controlled execution, and observable outcomes
+  </text>
+</svg>
