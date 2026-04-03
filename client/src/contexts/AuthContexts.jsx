@@ -28,14 +28,29 @@ export const AuthProvider = ({ children }) => {
           logout();
         } else {
           setToken(storedToken);
-          setUser({
+          const storedUser = localStorage.getItem("user");
+          let userData = {
             id: decodedToken.id,
             email: decodedToken.email,
             picture: decodedToken.picture,
-            userName: decodedToken.userName || decodedToken.name, // accommodate different field names
+            userName: decodedToken.userName || decodedToken.name,
             role: decodedToken.role
-          });
-          setRole(decodedToken.role || null);
+          };
+
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              // Only use stored user if it matches the token's user ID
+              if (parsedUser.id === decodedToken.id || parsedUser._id === decodedToken.id) {
+                userData = { ...userData, ...parsedUser };
+              }
+            } catch (e) {
+              console.error("Error parsing stored user data:", e);
+            }
+          }
+
+          setUser(userData);
+          setRole(decodedToken.role || userData.role || null);
         }
       } catch (error) {
         console.error("Invalid token found in storage. Clearing...", error);

@@ -591,37 +591,23 @@ const Navbar = ({ userData }) => {
                                             toggleDrawer();
                                         }}
                                     >
-                                        {(user?.picture || user?.img) ? (
-                                            <img
-                                                src={user.picture || user.img}
-                                                alt="User Profile"
-                                                className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                                                onError={(e) => {
-                                                    e.target.style.display = "none";
-                                                    e.target.nextSibling.style.display = "flex";
-                                                }}
-                                            />
-                                        ) : (
-                                            <div
-                                                className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700"
-                                                style={{ display: (user?.picture || user?.img) ? "none" : "flex" }}
-                                            >
-                                                <svg
-                                                    className="w-6 h-6"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth="2"
-                                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                        )}
+                                        {(() => {
+                                            const name = user?.userName || user?.name || "User";
+                                            const pic = user?.picture || user?.img;
+                                            const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6B46C1&color=fff&size=100`;
+                                            
+                                            return (
+                                                <img
+                                                    src={pic || fallback}
+                                                    alt="User Profile"
+                                                    className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = fallback;
+                                                    }}
+                                                />
+                                            );
+                                        })()}
                                         <span className="text-lg font-medium text-gray-800 truncate max-w-[150px]">
                                             {user?.userName || user?.name || "User"}
                                         </span>

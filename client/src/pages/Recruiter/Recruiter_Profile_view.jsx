@@ -38,7 +38,7 @@ const createFallbackProfile = ({ name = "", email = "", picture = "" } = {}) => 
   teamSize: 0,
   profilePicture:
     picture ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=0f172a&color=fff&size=200`,
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=6B46C1&color=fff&size=200`,
 });
 
 const normalizeId = (value) => {
@@ -70,7 +70,7 @@ const mapProfileToState = (profile, userName, userEmail, userPicture) => {
     profilePicture:
       profile?.img ||
       userPicture ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || "User")}&background=0f172a&color=fff&size=200`,
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || "User")}&background=6B46C1&color=fff&size=200`,
   };
 };
 
@@ -410,7 +410,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
   const deleteMatches = deleteConfirmText.trim() === deleteTarget;
 
   const handleImgError = (e) => {
-    const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || "User")}&background=0f172a&color=fff&size=200`;
+    const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || "User")}&background=6B46C1&color=fff&size=200`;
     if (e.target.src !== fallback) {
       e.target.src = fallback;
     }

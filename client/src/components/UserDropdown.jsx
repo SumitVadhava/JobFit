@@ -47,7 +47,10 @@ const UserDropdown = ({ userData }) => {
 
     const name = userData.userName || userData.name || 'User Name';
     const email = userData.email || 'user@email.com';
-    const pic = userData.picture || userData.img || userData.profilePicture || UserImage;
+    
+    const getFallbackAvatar = (userName) => `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=6B46C1&color=fff&size=128`;
+    
+    const pic = userData.picture || userData.img || userData.profilePicture || getFallbackAvatar(name);
 
     /* ── shared style tokens ── */
     const radius = '16px';
@@ -74,7 +77,7 @@ const UserDropdown = ({ userData }) => {
                 <img
                     key={pic}
                     src={pic}
-                    onError={e => { e.target.onerror = null; e.target.src = UserImage; }}
+                    onError={e => { e.target.onerror = null; e.target.src = getFallbackAvatar(name); }}
                     alt={name}
                     referrerPolicy="no-referrer"
                     style={{
@@ -121,7 +124,7 @@ const UserDropdown = ({ userData }) => {
                                     <img
                                         key={pic}
                                         src={pic}
-                                        onError={e => { e.target.onerror = null; e.target.src = UserImage; }}
+                                        onError={e => { e.target.onerror = null; e.target.src = getFallbackAvatar(name); }}
                                         alt={name}
                                         referrerPolicy="no-referrer"
                                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}

@@ -396,7 +396,7 @@ const Candidate_Profile_View = ({ userProp }) => {
     techSkills: (profile?.skills || []).map(s => s.skillName || s),
     softSkills: (profile?.softSkills || []).map(s => s.skillName || s),
     atsScore: profile?.atsScore || 0,
-    profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.userName || userName || "User")}&background=0f172a&color=fff&size=200`,
+    profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.userName || userName || "User")}&background=6B46C1&color=fff&size=200`,
     resumeLink: profile?.resumeLink || "",
   });
 
@@ -772,7 +772,7 @@ const Candidate_Profile_View = ({ userProp }) => {
    * Universal image error handler to provide stable fallback
    */
   const handleImgError = (e) => {
-    const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=0f172a&color=fff&size=200`;
+    const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=6B46C1&color=fff&size=200`;
     if (e.target.src !== fallback) {
       e.target.src = fallback;
     }
