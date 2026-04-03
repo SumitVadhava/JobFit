@@ -27,10 +27,10 @@ const KeyFeatures = () => {
         <section className="py-16 bg-white rounded-2xl shadow-sm border border-gray-100 mb-16">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
                 Trusted by Industry Leaders
               </h2>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-700 text-lg font-bold">
                 Join thousands of companies that trust our platform
               </p>
             </div>
@@ -43,35 +43,12 @@ const KeyFeatures = () => {
                 gradient={false}
                 speed={42}
                 pauseOnHover={true}
+                direction="left"
                 style={{ width: "100%", height: "auto" }}
               >
                 {companies.map((company) => (
                   <div
                     key={company.name}
-                    className="flex-shrink-0 mx-4 sm:mx-6 px-4 py-3 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group"
-                  >
-                    <div className="h-12 w-28 sm:w-32 flex items-center justify-center">
-                      <img
-                        src={company.logo}
-                        alt={company.name}
-                        loading="lazy"
-                        className="max-h-10 w-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-105"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </Marquee>
-
-              <Marquee
-                gradient={false}
-                speed={42}
-                pauseOnHover={true}
-                direction="right"
-                style={{ width: "100%", height: "auto" }}
-              >
-                {companies.map((company) => (
-                  <div
-                    key={`${company.name}-reverse`}
                     className="flex-shrink-0 mx-4 sm:mx-6 px-4 py-3 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group"
                   >
                     <div className="h-12 w-28 sm:w-32 flex items-center justify-center">
