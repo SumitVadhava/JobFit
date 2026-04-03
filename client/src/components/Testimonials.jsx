@@ -10,8 +10,8 @@ const TestimonialComponent = () => {
     const fetchTestimonials = async () => {
       try {
         const response = await api.get("/testimonials");
-        if (response.data && response.data.testimonials) {
-          setReviews(response.data.testimonials);
+        if (response.data) {
+          setReviews(response.data.data);
         }
       } catch (error) {
         console.error("Error fetching testimonials:", error);
