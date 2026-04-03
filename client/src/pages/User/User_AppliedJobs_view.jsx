@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
 import ButtonLogo from "../../assets/button_logo.png";
 import { Briefcase } from "lucide-react";
+import Skeleton from "../../components/Skeleton";
 
 const AppliedJobs = () => {
   const navigate = useNavigate();
@@ -31,20 +32,15 @@ const AppliedJobs = () => {
         setError(null);
 
         const [savedJobsResponse, appliedJobsResponse] = await Promise.all([
-          api.get("/user/savedJobs").catch(() => ({ data: { savedJobs: [] } })),
-          api
-            .get("/user/applied-companies")
-            .catch(() => ({ data: { applications: [], appliedJobs: [] } })),
+          api.get("/candidate/saved-jobs").catch(() => ({ data: { data: [] } })),
+          api.get("/candidate/applied-jobs").catch(() => ({ data: { data: [] } })),
         ]);
 
         const savedJobsIds = new Set(
-          (savedJobsResponse.data.savedJobs || []).map((saved) => saved.jobId)
+          (savedJobsResponse.data.data || []).map((saved) => saved.jobId?._id || saved.jobId)
         );
 
-        const apps =
-          appliedJobsResponse.data.applications ||
-          appliedJobsResponse.data.appliedJobs ||
-          [];
+        const apps = appliedJobsResponse.data.data || [];
 
         const formattedJobs = apps.map((app) => {
           const jobData =
@@ -61,10 +57,10 @@ const AppliedJobs = () => {
               jobData.workPlaceType === "onsite"
                 ? "On-site"
                 : jobData.workPlaceType === "remote"
-                ? "Remote"
-                : jobData.workPlaceType === "hybrid"
-                ? "Hybrid"
-                : jobData.workPlaceType || "",
+                  ? "Remote"
+                  : jobData.workPlaceType === "hybrid"
+                    ? "Hybrid"
+                    : jobData.workPlaceType || "",
             jobDescription:
               jobData.jobDescription || app.jobDescription || "",
             responsibilities:
@@ -207,13 +203,13 @@ const AppliedJobs = () => {
           dot: "bg-blue-500",
           label: "Shortlisted",
         };
-      case "accepted":
+      case "hired":
         return {
           bg: "bg-green-50",
           text: "text-green-700",
           border: "border-green-200",
           dot: "bg-green-500",
-          label: "Accepted",
+          label: "Hired",
         };
       case "rejected":
         return {
@@ -249,11 +245,7 @@ const AppliedJobs = () => {
     );
 
     try {
-      if (newBookmarkState) {
-        await api.post(`/jobs/${jobId}/save`);
-      } else {
-        await api.delete(`/jobs/${jobId}/unsave`);
-      }
+      await api.patch(`/candidate/saved-jobs/${jobId}`, { saved: newBookmarkState });
       toast.success(
         newBookmarkState ? "Job saved successfully!" : "Job removed from saved",
         { position: "top-center", autoClose: 2000 }
@@ -301,7 +293,7 @@ const AppliedJobs = () => {
   const activeFilterCount = Object.values(filters).flat().length;
 
   const filterOptions = {
-    Status: ["applied", "shortlisted", "rejected", "accepted"],
+    Status: ["applied", "shortlisted", "rejected", "hired"],
   };
 
   /* ─── Filtering & pagination ─── */
@@ -338,15 +330,75 @@ const AppliedJobs = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 border-4 rounded-full animate-spin"
-            style={{ borderColor: "#f3e8ff", borderTopColor: "#9c44fe" }}
-          />
-          <p className="text-base font-medium text-gray-400 animate-pulse">
-            Loading your applied jobs...
-          </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 font-['Inter',sans-serif]">
+        <ToastContainer />
+
+        {/* Header Skeleton */}
+        <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-30 py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="w-full sm:w-auto">
+                <Skeleton variant="title" className="h-7 w-48 mb-2" />
+                <Skeleton variant="text" className="h-4 w-32" />
+              </div>
+              <Skeleton className="w-full sm:w-96 h-11 rounded-xl" />
+            </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
+          {/* Sidebar Skeleton */}
+          <aside className="w-full lg:w-72 shrink-0">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-6">
+              <Skeleton variant="title" className="h-6 w-24" />
+              <div className="space-y-4">
+                <Skeleton variant="text" className="h-4 w-32" />
+                <div className="space-y-2">
+                  {[1, 2, 3, 4].map((j) => (
+                    <div key={j} className="flex gap-3 items-center">
+                      <Skeleton variant="circle" className="h-5 w-5" />
+                      <Skeleton variant="text" className="h-4 w-24" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content Skeleton */}
+          <main className="flex-1 space-y-6">
+            <div className="flex gap-2 mb-5">
+              <Skeleton className="h-8 w-24 rounded-full" />
+            </div>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-3xl border border-gray-200 p-5">
+                <div className="flex gap-5">
+                  <Skeleton variant="image" className="h-20 w-20 rounded-2xl shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton variant="title" className="h-6 w-3/4" />
+                    <Skeleton variant="text" className="h-4 w-1/2" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-24 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 space-y-2">
+                  <Skeleton variant="text" className="h-4 w-full" />
+                  <Skeleton variant="text" className="h-4 w-5/6" />
+                </div>
+                <div className="mt-6 flex justify-between items-center pt-5 border-t border-gray-100">
+                  <Skeleton variant="text" className="h-4 w-24" />
+                  <div className="flex gap-3">
+                    <Skeleton variant="button" className="h-10 w-24" />
+                    <Skeleton variant="button" className="h-10 w-32" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </main>
         </div>
       </div>
     );
@@ -649,11 +701,10 @@ const AppliedJobs = () => {
                         {/* Company Logo */}
                         <div className="shrink-0">
                           <div
-                            className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all duration-500 ${
-                              isHovered
+                            className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all duration-500 ${isHovered
                                 ? "border-gray-200 shadow-xl scale-105 rotate-1"
                                 : "border-gray-100 shadow-md"
-                            }`}
+                              }`}
                           >
                             <img
                               src={job.img}
@@ -684,9 +735,8 @@ const AppliedJobs = () => {
 
                               {/* Job Title */}
                               <h3
-                                className={`text-lg sm:text-xl font-bold text-gray-900 truncate transition-colors duration-300 ${
-                                  isHovered ? "text-blue-700" : ""
-                                }`}
+                                className={`text-lg sm:text-xl font-bold text-gray-900 truncate transition-colors duration-300 ${isHovered ? "text-blue-700" : ""
+                                  }`}
                               >
                                 {job.jobTitle}
                               </h3>
@@ -755,11 +805,10 @@ const AppliedJobs = () => {
 
                       {/* ── Expandable Details ── */}
                       <div
-                        className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                          isExpanded
+                        className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded
                             ? "max-h-[700px] opacity-100 mt-6"
                             : "max-h-0 opacity-0 mt-0"
-                        }`}
+                          }`}
                       >
                         <div className="border-t border-dashed border-gray-200 pt-6 space-y-5">
 
@@ -857,11 +906,10 @@ const AppliedJobs = () => {
                             onClick={() =>
                               setExpandedJob(isExpanded ? null : job._id)
                             }
-                            className={`inline-flex items-center gap-2 text-sm font-medium px-5 py-3 rounded-2xl border transition-all duration-300 ${
-                              isExpanded
+                            className={`inline-flex items-center gap-2 text-sm font-medium px-5 py-3 rounded-2xl border transition-all duration-300 ${isExpanded
                                 ? "text-blue-700 bg-blue-50 border-blue-200 shadow-sm shadow-blue-100"
                                 : "text-gray-600 bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                            }`}
+                              }`}
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -869,9 +917,8 @@ const AppliedJobs = () => {
                               height="16"
                               fill="currentColor"
                               viewBox="0 0 256 256"
-                              className={`transition-transform duration-500 ${
-                                isExpanded ? "rotate-180" : ""
-                              }`}
+                              className={`transition-transform duration-500 ${isExpanded ? "rotate-180" : ""
+                                }`}
                             >
                               <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z" />
                             </svg>
@@ -911,11 +958,10 @@ const AppliedJobs = () => {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                      currentPage === page
+                    className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all duration-300 ${currentPage === page
                         ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20"
                         : "text-gray-500 hover:bg-white hover:shadow-sm"
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>

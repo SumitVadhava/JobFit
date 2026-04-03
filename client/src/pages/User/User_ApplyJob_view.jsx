@@ -4,7 +4,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
 import { useAuth } from "../../contexts/AuthContexts";
-import ButtonLogo from "../../assets/button_logo.png"
+import ButtonLogo from "../../assets/button_logo.png";
+import Skeleton from "../../components/Skeleton";
 
 const ApplyJob = () => {
   const { jobId } = useParams();
@@ -83,11 +84,8 @@ const ApplyJob = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append("coverLetter", coverLetter);
-      if (resumeFile) formData.append("resume", resumeFile);
-      await api.post(`/jobs/${jobId}/apply`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      await api.post(`/candidate/job/apply`, { jobId }, {
+        headers: { "Content-Type": "application/json" },
       });
       setHasApplied(true);
       toast.success("Application submitted successfully!", { position: "top-center", autoClose: 2000 });
@@ -135,10 +133,53 @@ const ApplyJob = () => {
   // ─── Loading ───
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[85vh] bg-gradient-to-br from-slate-50 via-white to-purple-50">
-        <div className="flex flex-col items-center gap-5">
-          <div className="w-14 h-14 border-4 border-purple-200 rounded-full animate-spin border-t-purple-600" />
-          <p className="text-base font-medium text-gray-500 animate-pulse">Loading job details...</p>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white font-['Inter',sans-serif]">
+        <ToastContainer />
+        
+        {/* Top Bar Skeleton */}
+        <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-30 py-4">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-5 w-24 rounded-lg" />
+              <div className="h-5 w-px bg-gray-200" />
+              <Skeleton variant="circle" className="h-8 w-8" />
+              <div className="min-w-0 flex-1 space-y-1">
+                <Skeleton variant="title" className="h-5 w-40" />
+                <Skeleton variant="text" className="h-3 w-32 hidden sm:block" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+          {/* Header Section */}
+          <div className="space-y-6">
+            <Skeleton variant="image" className="h-64 w-full rounded-2xl" />
+            <div className="space-y-4">
+              <Skeleton variant="title" className="h-8 w-2/3" />
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-24 rounded-full" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+                <Skeleton className="h-6 w-32 rounded-full" />
+              </div>
+              <Skeleton variant="text" className="h-4 w-full" />
+              <Skeleton variant="text" className="h-4 w-4/5" />
+            </div>
+          </div>
+
+          {/* Form Section */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
+            <Skeleton variant="title" className="h-6 w-1/3" />
+            <div className="space-y-4">
+              <Skeleton className="h-32 w-full rounded-xl" />
+              <Skeleton className="h-40 w-full rounded-xl" />
+            </div>
+            <div className="flex gap-3">
+              <Skeleton variant="button" className="h-10 w-24" />
+              <Skeleton variant="button" className="h-10 flex-1" />
+            </div>
+          </div>
         </div>
       </div>
     );

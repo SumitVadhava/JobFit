@@ -1,3 +1,6 @@
+import React, { useState } from "react";
+import Skeleton from "../../components/Skeleton";
+
 const resumes = [
   {
     viewSrc:
@@ -76,6 +79,27 @@ function ResumeCard({ viewSrc, editLink }) {
 }
 
 function User_Best_Resume_view() {
+  const [loading] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="bg-white p-5 min-h-screen">
+        <div className="mb-8">
+          <Skeleton variant="title" className="h-8 w-48 mx-auto" />
+        </div>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5 max-w-[1300px] mx-auto">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="space-y-4">
+              <Skeleton variant="image" className="h-48 w-full rounded-lg" />
+              <Skeleton variant="text" className="h-4 w-full" />
+              <Skeleton variant="button" className="h-8 w-24" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-5">
       <h1 className="text-center text-3xl font-bold mb-8 md:text-4xl text-purple-800">

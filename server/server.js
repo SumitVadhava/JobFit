@@ -1,27 +1,19 @@
 const express = require("express");
-const { specs, swaggerUi } = require("./swagger");
 const cors = require("cors");
-const bodyParser = require("body-parser");
 const helmet = require("helmet");
-const loginRouter = require("./routes/loginRouter");
-const authRouter = require("./routes/auth");
-const jobRouter = require("./routes/jobRouter");
-const adminDashboardRouter = require("./routes/adminDashboardRouter");
-const adminCandidateRouter = require("./routes/adminCandidateRouter");
-const adminRecruiterRouter = require("./routes/adminRecruiterRouter");
-const userDashboardRouter = require("./routes/userDashboard");
-const profileRouter = require("./routes/profileRouter");
-const testimonialRouter = require("./routes/testimonialRouter");
-const auth = require("./middlewares/auth");
-const authorizeRole = require("./middlewares/authorizeRole");
-const { ROLES, USER_FACING_ROLES } = require("./utils/roles");
-const resumeRoute = require("./ATS/resume");
-const atsHistoryRouter = require("./routes/atsHistoryRouter");
+const morgan = require("morgan");
 const path = require("path");
-const multer = require("multer");
-const fs = require("fs");
 require("dotenv").config();
-require("./config/connection")();
+
+const connectDB = require("./config/connection");
+const { specs, swaggerUi } = require("./swagger");
+
+const authRoutes = require("./routes/authRoutes");
+const recruiterRoutes = require("./routes/recruiterRoutes");
+const candidateRoutes = require("./routes/candidateRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const testimonialRoutes = require("./routes/testimonialRoutes");
+const supportRoutes = require("./routes/supportRoutes");
 
 const app = express();
 
@@ -33,10 +25,10 @@ const allowedOrigins = [
   "https://jobfit-s5v7.onrender.com",
 ];
 
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
@@ -48,6 +40,16 @@ app.use(
     credentials: true,
   }),
 );
+
+connectDB();
+
+
+app.use(helmet());
+app.use(morgan("dev"));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 app.use(
   "/api-docs",
@@ -68,82 +70,34 @@ app.use(
       displayRequestDuration: true,
       filter: true,
     },
-  }),
+  })
 );
 
-app.use(helmet());
+app.get("/", (req, res) => res.json({ message: "Welcome to JobFit API (v1) 😊" }));
+app.get("/ping", (req, res) => res.json({ message: "JobFit (v1) Ping!" }));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/api/auth", authRoutes);
+app.use("/api/recruiter", recruiterRoutes);
+app.use("/api/candidate", candidateRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/support", supportRoutes);
+
+app.use((req, res, next) => {
+  res.status(404).json({ error: true, message: "Route not found" });
+});
 
 app.use((err, req, res, next) => {
-  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
-    console.error(
-      "Bad JSON structure:",
-      err.message,
-      "at position",
-      err.position,
-    );
-    return res
-      .status(400)
-      .send({ status: 400, message: "Invalid JSON format" });
-  }
-  next();
-});
-
-app.get("/", (req, res) => {
-  res.send("Welcome to the Jobfit made by Code Conquerors😊");
-});
-
-app.get("/ping", (req, res) => {
-  res.send("Welcome to the Jobfit made by Code Conquerors😊");
-});
-
-app.use("/public", express.static(path.join(__dirname, "public")));
-
-app.use("/api", loginRouter);
-app.use("/api/auth", authRouter);
-app.use("/api/jobs", auth, jobRouter);
-app.use("/api/admin", auth, authorizeRole(ROLES.ADMIN), adminDashboardRouter);
-app.use(
-  "/api/admin/candidates",
-  auth,
-  authorizeRole(ROLES.ADMIN),
-  adminCandidateRouter,
-);
-app.use(
-  "/api/admin/recruiters",
-  auth,
-  authorizeRole(ROLES.ADMIN),
-  adminRecruiterRouter,
-);
-app.use(
-  "/api/user",
-  auth,
-  authorizeRole(...USER_FACING_ROLES),
-  userDashboardRouter,
-);
-app.use(
-  "/api/profile",
-  profileRouter,
-);
-app.use("/api/resume", auth, authorizeRole(...USER_FACING_ROLES), resumeRoute);
-app.use(
-  "/api/atshistory",
-  auth,
-  authorizeRole(...USER_FACING_ROLES),
-  atsHistoryRouter,
-);
-app.use("/api/testimonials", testimonialRouter);
-
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res
-    .status(500)
-    .json({ error: true, data: null, message: "Internal Server Error" });
+  console.error("Unhandeled Error:", err.stack);
+  res.status(err.status || 500).json({
+    error: true,
+    message: err.message || "Internal Server Error",
+    details: process.env.NODE_ENV === "development" ? err.stack : null,
+  });
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`JobFit Server running at http://localhost:${PORT}`);
+  console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
 });

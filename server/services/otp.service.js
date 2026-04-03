@@ -4,12 +4,10 @@ require("dotenv").config();
 
 const otpStore = new Map();
 
-// Using Google Apps Script as an HTTP bridge to send emails
-// because Render blocks outbound SMTP on free tier.
 const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL;
 
 function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  return Math.floor(100000 + Math.random() * 900000).toString(); 
 }
 
 async function sendOtp(email) {
@@ -89,7 +87,7 @@ async function sendOtp(email) {
     if (response.data === "Success") {
       otpStore.set(email, {
         otp,
-        expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
+        expiresAt: Date.now() + 5 * 60 * 1000,
       });
       console.log(`OTP sent to ${email} via Google Script`);
       return otp;

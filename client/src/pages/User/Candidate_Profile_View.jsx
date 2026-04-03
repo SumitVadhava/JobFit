@@ -5,6 +5,18 @@ import { useAuth } from "../../contexts/AuthContexts";
 import api from "../../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Skeleton from "../../components/Skeleton";
+import { 
+  Camera, 
+  Check, 
+  Edit, 
+  Save, 
+  Share2, 
+  Trash2, 
+  X, 
+  Pencil, 
+  TriangleAlert 
+} from "lucide-react";
 
 /* ── ATS Circular Gauge ─────────────────────────────────────── */
 const AtsGauge = ({ score }) => {
@@ -48,6 +60,7 @@ const Ic = ({ d, size = 16 }) => (
 );
 
 const ICONS = {
+  trash: "M216,48h-40V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z",
   edit: "M227.32,73.37,182.63,28.69a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.32,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.69,147.32,64l12.68-12.69L204.69,96Z",
   save: "M227.32,28.68a16,16,0,0,0-15.66-4.08l-192,64a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,256q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l64-192A16,16,0,0,0,227.32,28.68ZM158.46,233.15l-37-78.23L153.37,123A8,8,0,0,0,142.05,111.7l-31.91,31.92L31.91,106.6Z",
   camera: "M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z",
@@ -298,10 +311,23 @@ const Candidate_Profile_View = ({ userProp }) => {
 
   const { id: paramId } = useParams();
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
+  
+  const normalizeId = (value) => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "object") {
+      if (value.$oid) return String(value.$oid);
+      if (value._id) return String(value._id);
+    }
+    return String(value);
+  };
+
+  const currentUserId = normalizeId(user?._id || user?.id || "");
+  const [profileOwnerId, setProfileOwnerId] = useState("");
 
   // Determine if viewing own profile or someone else's
-  const isOwnProfile = !paramId || (user && (paramId === user._id || paramId === user.id));
+  const isOwnProfile = !paramId || (!!currentUserId && currentUserId === profileOwnerId);
 
   const [data, setData] = useState({
     name: "",
@@ -315,6 +341,7 @@ const Candidate_Profile_View = ({ userProp }) => {
     atsScore: 0,
     profilePicture: "",
     resumeLink: "",
+    profileId: "",
   });
 
   const [editing, setEditing] = useState(false);
@@ -328,6 +355,10 @@ const Candidate_Profile_View = ({ userProp }) => {
   const [activeSkillTab, setActiveSkillTab] = useState("tech");
   const [dragActive, setDragActive] = useState(false);
   const [profilePhotoFile, setProfilePhotoFile] = useState(null);
+  const [profileExists, setProfileExists] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingProfile, setDeletingProfile] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
 
   const galleryImages = [
     `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=0f172a&color=fff&size=200`,
@@ -338,10 +369,12 @@ const Candidate_Profile_View = ({ userProp }) => {
 
   /* ── Helper to map API response into component state ────── */
   const mapProfileToState = (profile, userName, userEmail, userPicture) => ({
-    name: profile?.name || userName || "",
+    // DB schema stores 'userName', not 'name' — use it as the primary display name source
+    name: profile?.userName || userName || "",
     userName: profile?.userName || userName || "",
     email: profile?.email || userEmail || "",
     resumeSummary: profile?.description || "",
+    profileId: profile?._id || "",
     totalExperience: (() => {
       const raw = profile?.experience;
       // If it's already a valid range string, use it directly
@@ -363,17 +396,15 @@ const Candidate_Profile_View = ({ userProp }) => {
     techSkills: (profile?.skills || []).map(s => s.skillName || s),
     softSkills: (profile?.softSkills || []).map(s => s.skillName || s),
     atsScore: profile?.atsScore || 0,
-    profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "User")}&background=0f172a&color=fff&size=200`,
+    profilePicture: profile?.img || userPicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.userName || userName || "User")}&background=6B46C1&color=fff&size=200`,
     resumeLink: profile?.resumeLink || "",
   });
 
   /* ── Helper to map state back to API shape ────────────── */
   const mapStateToApi = () => {
     const payload = {};
-    if (data.name?.trim()) payload.name = data.name.trim();
+    // DB schema only has 'userName' (not 'name') — sync data.name into userName
     if (data.userName?.trim()) payload.userName = data.userName.trim();
-    // Email is usually not sent if it shouldn't be updated, but backend handles it if sent.
-    // We display it but don't allow changing it in UI, so we can skip sending it to avoid accidental changes if server allows it.
 
     if (data.resumeSummary?.trim()) payload.description = data.resumeSummary.trim();
     if (data.profilePicture?.trim()) payload.img = data.profilePicture.trim();
@@ -418,46 +449,58 @@ const Candidate_Profile_View = ({ userProp }) => {
         try {
           const userIdToFetch = paramId || (user?._id || user?.id);
           if (isOwnProfile) {
-            response = await api.get("/profile");
+            response = await api.get("/candidate/profile");
           } else {
-            response = await api.get(`/profile/${userIdToFetch}`);
+            response = await api.get(`/candidate/profile/${userIdToFetch}`);
           }
-          if (response) profile = response.data.profile;
+          if (response) {
+            profile = response.data.data || response.data.profile;
+            if (profile) {
+              setProfileOwnerId(normalizeId(profile.user?._id || profile.user || currentUserId || ""));
+            }
+          }
 
           // Compute best ATS dynamically from ATS history and Resumes
           // Compute best ATS dynamically from ATS history and Resumes
-          if (userIdToFetch) {
+          if (userIdToFetch && isOwnProfile) {
             const [resumeRes, atsHistoryRes] = await Promise.all([
-              api.get(`/resume/${userIdToFetch}`).catch(() => null),
-              isOwnProfile ? api.get("/atshistory").catch(() => null) : Promise.resolve(null),
+              api.get("/candidate/ats-analyzer").catch(() => null),
+              api.get("/candidate/ats-analyzer").catch(() => null), // If there's a separate history endpoint, use it here
             ]);
             const resumesList = resumeRes?.data?.resumes || resumeRes?.data || [];
             const normalised = Array.isArray(resumesList) ? resumesList : [];
-            const atsData = atsHistoryRes?.data?.history || [];
+            const atsData = atsHistoryRes?.data?.data?.atsScores || atsHistoryRes?.data?.history || [];
             const rScores = normalised.map(r => r.atsScore || 0);
             const hScores = atsData.map(h => h.score || 0);
             const allScores = [...rScores, ...hScores];
-            if (allScores.length > 0) bestAts = Math.max(...allScores);
+            if (allScores.length > 0) {
+              bestAts = Math.max(...allScores);
+            }
           }
         } catch (e) {
           // Ignore API error and fallback to dummy data
+          if (e.response?.status === 404 && isOwnProfile) {
+            setProfileExists(false);
+          }
         }
 
         // Get user info — for own profile use userProp/auth, for others use populated data
+        // Get user info — check both the flat profile fields and the populated user object
         const userName = isOwnProfile
           ? (userProp?.userName || user?.userName || user?.name || "")
-          : (profile?.user?.userName || profile?.user?.name || "User");
+          : (profile?.userName || profile?.name || profile?.user?.userName || profile?.user?.name || "User");
         const userEmail = isOwnProfile
           ? (userProp?.email || user?.email || "")
-          : (profile?.user?.email || "");
+          : (profile?.email || profile?.user?.email || "");
         const userPicture = isOwnProfile
           ? (userProp?.picture || user?.picture || "")
-          : (profile?.user?.picture || "");
+          : (profile?.img || profile?.user?.picture || "");
 
         if (profile) {
           const mappedProfile = mapProfileToState(profile, userName, userEmail, userPicture);
           if (bestAts > -1) mappedProfile.atsScore = bestAts;
           setData(mappedProfile);
+          setProfileExists(true);
         } else if (isOwnProfile) {
           // No profile? Start with auth info and zero'd stats
           setData({
@@ -480,7 +523,7 @@ const Candidate_Profile_View = ({ userProp }) => {
         console.error("Error fetching profile:", err);
         // If profile not found (404), show dummy data or empty state
         if (err.response?.status === 404 && isOwnProfile) {
-          setData(initial);
+          setProfileExists(false);
         } else if (!isOwnProfile) {
           setError("Profile not found.");
         }
@@ -509,27 +552,29 @@ const Candidate_Profile_View = ({ userProp }) => {
     setUploading(true);
     setSaving(true);
     const payload = mapStateToApi();
-
-    let formData = null;
-    if (profilePhotoFile) {
-      formData = new FormData();
-      formData.append('profilePhoto', profilePhotoFile);
-      // Add other fields to formData
-      Object.keys(payload).forEach(key => {
-        if (key !== 'img') { // Don't send img if we're uploading a file
-          formData.append(key, JSON.stringify(payload[key]));
-        }
-      });
-    }
+    // Ensure userName is synced with name field
+    if (data.name?.trim()) payload.userName = data.name.trim();
 
     try {
-      const config = formData ? {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      } : {};
-      const response = await api.put("/profile", formData || payload, config);
-      
-      const updatedProfile = response.data?.profile;
-      
+      let response;
+      if (profileExists) {
+        response = await api.put("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
+      } else {
+        response = await api.post("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
+        setProfileExists(true);
+      }
+
+      const updatedProfile = response.data?.data || response.data?.profile;
+
+      // Update local state from the API response so the view refreshes correctly
+      // Use data.name as the fallback since auth context userName hasn't updated yet at this point
+      if (updatedProfile) {
+        const freshName = data.name?.trim() || user?.userName || user?.name || "";
+        const userEmail = user?.email || data.email;
+        const userPicture = updatedProfile.img || data.profilePicture;
+        setData(mapProfileToState(updatedProfile, freshName, userEmail, userPicture));
+      }
+
       // Update global auth state to reflect changes in Navbar/Avatar
       const picToSync = updatedProfile?.img || data.profilePicture;
       updateUser({
@@ -540,23 +585,52 @@ const Candidate_Profile_View = ({ userProp }) => {
 
       setEditing(false);
       setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
       setProfilePhotoFile(null); // Clear the file after save
-      toast.success("Profile saved successfully!");
-      setTimeout(() => setSaved(false), 2500);
+      toast.success("Profile saved successfully!", { position: "top-center", autoClose: 3000 });
     } catch (err) {
       console.error("Error saving profile:", err);
       const serverMsg = err.response?.data?.message || err.response?.data?.error || err.message;
-      toast.error(`Error saving profile: ${serverMsg}`);
+      toast.error(`Error saving profile: ${serverMsg}`, { position: "top-center", autoClose: 4000 });
     } finally {
       setUploading(false);
       setSaving(false);
     }
   }
 
+
+  /* Delete Profile ─────────────────────────────────────────── */
+  const handleDeleteProfile = async () => {
+    if (deleteConfirmationText !== "delete profile") return;
+    try {
+      setDeletingProfile(true);
+
+      // Perform the API deletion first while the token is still active
+      await api.delete("/candidate/profile");
+
+      // Completely wipe local storage after the API responds successfully
+      localStorage.clear();
+
+      toast.success("Profile deleted successfully", { position: "top-center", autoClose: 2000 });
+      setTimeout(() => {
+        logout();
+        navigate("/");
+      }, 1000);
+    } catch (err) {
+      toast.error("Failed to delete profile", { position: "top-center", autoClose: 2000 });
+      setDeletingProfile(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   /* Native Share API ─────────────────────────────────────────── */
   const handleShare = async () => {
-    const userId = paramId || user?._id || user?.id || "";
-    const profileUrl = `${window.location.origin}/candidate/profile/${userId}`;
+    // Explicitly use the fetched Profile ID, ignoring any old URL parameters to avoid 404s
+    const idToShare = data.profileId;
+    if (!idToShare) {
+      return toast.error("Profile ID not found. Ensure profile is saved.");
+    }
+    const profileUrl = `${window.location.origin}/candidate/profile/${idToShare}`;
     const shareData = {
       title: `${data.name} — Candidate Profile`,
       text: `Check out ${data.name}'s profile: ${data.totalExperience !== 0 ? data.totalExperience + " years" : "Fresher"} · ATS Score ${data.atsScore}%`,
@@ -592,18 +666,27 @@ const Candidate_Profile_View = ({ userProp }) => {
       return toast.error("File exceeds 5MB limit. Please upload a smaller PDF.", { position: "top-center" });
     }
     setUploading(true);
-    const formData = new FormData();
-    formData.append("pdf", file);
+
     try {
-      const res = await api.post("/profile/upload-resume", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      set("resumeLink", res.data.profile.resumeLink);
+      const cloudinaryUrl = await uploadToCloudinary(file);
+
+      const payload = { resumeLink: cloudinaryUrl };
+      let res;
+      if (profileExists) {
+        res = await api.put("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
+      } else {
+        res = await api.post("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
+        setProfileExists(true);
+      }
+
+      const updatedResumeLink = res.data?.data?.resumeLink || cloudinaryUrl;
+      set("resumeLink", updatedResumeLink);
       setSaved(true);
       toast.success("Resume uploaded successfully!", { position: "top-center" });
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       toast.error("Resume upload failed.", { position: "top-center" });
+      console.error(err);
     } finally {
       setUploading(false);
     }
@@ -627,10 +710,48 @@ const Candidate_Profile_View = ({ userProp }) => {
   /* ── Loading State ────────────────────────────────────────── */
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
-          <p className="text-lg font-medium text-gray-600 animate-pulse">Loading profile...</p>
+      <div className="min-h-screen bg-slate-50 font-poppins">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 pb-16 space-y-6">
+          {/* Header Skeleton */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-lg px-6 py-5">
+            <div className="flex flex-wrap items-center gap-5">
+              <Skeleton variant="circle" className="h-24 w-24 shrink-0" />
+              <div className="flex-1 min-w-0 space-y-3">
+                <Skeleton variant="title" className="h-7 w-1/2" />
+                <Skeleton variant="text" className="h-4 w-1/3" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Skeleton variant="button" className="h-9 w-20" />
+                <Skeleton variant="button" className="h-9 w-32" />
+              </div>
+            </div>
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_288px] gap-5">
+            <div className="flex flex-col gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+                  <Skeleton variant="title" className="h-5 w-1/3" />
+                  <Skeleton variant="text" className="h-4 w-full" />
+                  <Skeleton variant="text" className="h-4 w-4/5" />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+                  <Skeleton variant="title" className="h-5 w-3/4 mb-4" />
+                  <Skeleton variant="text" className="h-4 w-full" />
+                  <Skeleton variant="text" className="h-4 w-full mt-2" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -647,6 +768,15 @@ const Candidate_Profile_View = ({ userProp }) => {
       </div>
     );
   }
+  /**
+   * Universal image error handler to provide stable fallback
+   */
+  const handleImgError = (e) => {
+    const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=6B46C1&color=fff&size=200`;
+    if (e.target.src !== fallback) {
+      e.target.src = fallback;
+    }
+  };
 
   return (
     <>
@@ -670,6 +800,8 @@ const Candidate_Profile_View = ({ userProp }) => {
 
       <div className="min-h-screen bg-slate-50 font-poppins">
 
+
+
         {/* ── Main Container ─────────────────────────────────── */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 pb-16">
 
@@ -681,10 +813,15 @@ const Candidate_Profile_View = ({ userProp }) => {
               className={`relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md ring-1 ring-slate-200 shrink-0 ${editing ? "cursor-pointer" : ""}`}
               onClick={() => editing && setGallery(true)}
             >
-              <img src={data.profilePicture} alt="Profile" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <img 
+                src={data.profilePicture} 
+                alt="Profile" 
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                onError={handleImgError}
+              />
               {editing && (
                 <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity backdrop-blur-sm">
-                  <Ic d={ICONS.camera} size={22} />
+                  <Camera size={22} className="shrink-0 text-white" />
                 </div>
               )}
             </div>
@@ -706,9 +843,9 @@ const Candidate_Profile_View = ({ userProp }) => {
               ) : (
                 <>
                   <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{data.name}</h1>
-                  {isOwnProfile && <p className="text-sm font-medium text-slate-500 mt-0.5">
+                  <p className="text-sm font-medium text-slate-500 mt-0.5">
                     {data.email}
-                  </p>}
+                  </p>
                 </>
               )}
               <div className="flex flex-wrap items-center gap-2 mt-2.5">
@@ -750,7 +887,7 @@ const Candidate_Profile_View = ({ userProp }) => {
                       </>
                     ) : (
                       <>
-                        <Ic d={ICONS.save} size={14} /> <span>Save Changes</span>
+                        <Save size={14} /> <span>Save Changes</span>
                       </>
                     )}
                   </button>
@@ -761,15 +898,26 @@ const Candidate_Profile_View = ({ userProp }) => {
                     onClick={handleShare}
                     className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all hover:-translate-y-px"
                   >
-                    <Ic d={ICONS.share} size={14} /> Share
+                    <Share2 size={14} /> Share
                   </button>
                   {isOwnProfile && (
-                    <button
-                      onClick={() => setEditing(true)}
-                      className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl transition-all hover:-translate-y-px shadow-md"
-                    >
-                      <Ic d={ICONS.edit} size={14} /> Edit Profile
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setEditing(true)}
+                        className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl transition-all hover:-translate-y-px shadow-md"
+                      >
+                        <Pencil size={14} /> Edit Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDeleteConfirmationText("");
+                          setShowDeleteModal(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                      >
+                        <Trash2 size={14} /> Delete Profile
+                      </button>
+                    </>
                   )}
                 </>
               )}
@@ -825,7 +973,7 @@ const Candidate_Profile_View = ({ userProp }) => {
                           />
                         ) : (
                           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-indigo-100 shadow-sm">
-                            <span className="text-lg font-black text-indigo-600">{data.totalExperience + " Years"|| "0-2" + " Years"}</span>
+                            <span className="text-lg font-black text-indigo-600">{data.totalExperience + " Years" || "0-2" + " Years"}</span>
                           </div>
                         )}
                       </div>
@@ -1078,7 +1226,12 @@ const Candidate_Profile_View = ({ userProp }) => {
                     className={`relative aspect-square rounded-full overflow-hidden border-2 transition-all hover:scale-105 ${data.profilePicture === img ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200 hover:border-blue-300"
                       }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img 
+                      src={img} 
+                      alt="" 
+                      className="w-full h-full object-cover" 
+                      onError={handleImgError}
+                    />
                     {data.profilePicture === img && (
                       <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
                         <Ic d={ICONS.check} size={16} />
@@ -1105,7 +1258,92 @@ const Candidate_Profile_View = ({ userProp }) => {
           </div>
         )}
       </div>
-      <ToastContainer position="top-center" autoClose={3000} />
+
+      {/* ── Delete Profile Modal ────────────────────────────── */}
+      {showDeleteModal && (
+        <div
+          onClick={() => !deletingProfile && setShowDeleteModal(false)}
+          className="animate-[fadeIn_0.2s_ease_both] fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4"
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="animate-[slideUp_0.25s_ease_both] w-full max-w-lg overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-2xl"
+          >
+            {/* Header with Gradient */}
+            <div className="border-b border-rose-100 bg-gradient-to-r from-rose-50 to-white px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-100 bg-white text-rose-600 shadow-sm transition-transform hover:scale-105">
+                  <TriangleAlert size={20} className="shrink-0" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Delete candidate profile?</h3>
+                  <p className="text-sm text-slate-500">This is permanent and will remove your candidate profile data.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-5 px-6 py-5">
+              {/* Target Hint */}
+              <div className="rounded-2xl border border-rose-100 bg-rose-50/70 px-4 py-3 text-sm text-rose-900">
+                Type <span className="font-bold select-none whitespace-nowrap">delete profile</span> to confirm deletion.
+              </div>
+
+              {/* Confirmation Input */}
+              <label className="block">
+                <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-500">Confirmation</span>
+                <input
+                  autoFocus
+                  value={deleteConfirmationText}
+                  onChange={e => setDeleteConfirmationText(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && deleteConfirmationText === "delete profile" && !deletingProfile) {
+                      handleDeleteProfile();
+                    }
+                  }}
+                  autoComplete="off"
+                  placeholder="delete profile"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 outline-none transition focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100 shadow-inner"
+                />
+              </label>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!deletingProfile) {
+                      setShowDeleteModal(false);
+                      setDeleteConfirmationText("");
+                    }
+                  }}
+                  disabled={deletingProfile}
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:hidden"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteProfile}
+                  disabled={deleteConfirmationText !== "delete profile" || deletingProfile}
+                  className="inline-flex h-10 min-w-36 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white shadow-lg shadow-rose-500/20 transition-all hover:bg-rose-700 hover:shadow-rose-500/30 active:scale-95 disabled:cursor-not-allowed disabled:bg-rose-300"
+                >
+                  {deletingProfile ? (
+                    <>
+                      <span className="h-2 w-2 rounded-full bg-white/90 animate-pulse" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={14} className="shrink-0" /> Delete Profile
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   );
 };

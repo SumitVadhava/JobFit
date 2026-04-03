@@ -7,14 +7,9 @@ const candidateProfileSchema = new mongoose.Schema({
   },
   userModel: {
     type: String,
-    enum: ["logins", "google_logins"],
-    default: "logins",
+    enum: ["users"],
+    default: "users",
     required: true,
-  },
-  name: {
-    type: String,
-    required: false,
-    default: null,
   },
   email: {
     type: String,

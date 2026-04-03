@@ -4,7 +4,7 @@ const resumeSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "logins",
+      ref: "users",
       required: true,
     },
     resumeName: {
@@ -49,9 +49,6 @@ const resumeSchema = new mongoose.Schema(
       type: Date,
       default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
     },
-  },
-  {
-    timestamps: false,
   },
 );
 module.exports = mongoose.model("resume", resumeSchema);

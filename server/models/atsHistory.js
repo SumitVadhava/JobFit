@@ -4,7 +4,7 @@ const atsHistorySchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "logins",
+      ref: "users",
       required: true,
     },
     atsScores: [
@@ -19,9 +19,9 @@ const atsHistorySchema = new mongoose.Schema(
           type: Date,
           default: () => {
             const now = new Date();
-            const istOffset = 5.5 * 60; // minutes
+            const istOffset = 5.5 * 60 * 60 * 1000;
             const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-            return new Date(utc + istOffset * 60000);
+            return new Date(utc + istOffset);
           },
         },
       },
@@ -34,9 +34,6 @@ const atsHistorySchema = new mongoose.Schema(
       type: Date,
       default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
     },
-  },
-  {
-    timestamps: false,
   },
 );
 

@@ -8,7 +8,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
-import { FiEye, FiX } from 'react-icons/fi';
+import { FiEye, FiX, FiBriefcase, FiClock, FiMonitor, FiMapPin } from 'react-icons/fi';
 
 /* ─── Google Fonts ─── */
 const fontLink = document.createElement('link');
@@ -18,28 +18,33 @@ document.head.appendChild(fontLink);
 
 /* ─── Design tokens (Light Theme) ─── */
 const t = {
-  bg: '#F4F6F8',
+  bg: '#F8FAFC',
   surface: '#FFFFFF',
   card: '#FFFFFF',
-  border: '#D1D5DB',
-  borderHov: '#9CA3AF',
-  text: '#111827',
-  muted: '#4B5563',
-  accent: '#1D4ED8',
-  accentDim: '#DBEAFE',
-  green: '#047857',
-  greenDim: '#D1FAE5',
-  red: '#B91C1C',
-  redDim: '#FEE2E2',
-  amber: '#B45309',
-  amberDim: '#FEF3C7',
+  border: '#E2E8F0',
+  borderHov: '#CBD5E1',
+  text: '#0F172A',
+  muted: '#64748B',
+  accent: '#4F46E5', // Indigo 600
+  accentDim: '#EEF2FF',
+  green: '#059669',
+  greenDim: '#ECFDF5',
+  red: '#DC2626',
+  redDim: '#FEF2F2',
+  amber: '#D97706',
+  amberDim: '#FFFBEB',
+  cyan: '#0891B2',
+  cyanDim: '#ECFEFF',
+  purple: '#9333EA',
+  purpleDim: '#FAF5FF',
 };
 
 const STATUS = {
   pending: { label: 'Pending', bg: t.amberDim, color: t.amber, dot: '#F59E0B' },
-  reviewed: { label: 'Reviewed', bg: t.greenDim, color: t.green, dot: '#22C55E' },
+  verified: { label: 'Verified', bg: t.greenDim, color: t.green, dot: '#22C55E' },
   risky: { label: 'Risky', bg: t.redDim, color: t.red, dot: '#EF4444' },
 };
+
 
 /* ─── Inline global styles ─── */
 const GlobalStyle = () => (
@@ -262,7 +267,7 @@ const TabBar = ({ active, onChange, counts }) => {
   const tabs = [
     { key: 'All', label: 'All', count: counts.all },
     { key: 'pending', label: 'Pending', count: counts.pending },
-    { key: 'reviewed', label: 'Reviewed', count: counts.reviewed },
+    { key: 'verified', label: 'Verified', count: counts.verified },
     { key: 'risky', label: 'Risky', count: counts.risky },
   ];
   return (
@@ -495,7 +500,7 @@ const JobTable = ({ jobs, onStatusChange, loading, sortKey, sortDir, onSort, ope
                       <td style={{ padding: '16px 20px' }}>
                         <StatusPill
                           pillId={`table-${job._id}`}
-                          value={job.adminReview}
+                          value={job.status}
                           onChange={(val) => onStatusChange(job._id, val)}
                           openPillId={openPillId}
                           setOpenPillId={setOpenPillId}
@@ -504,24 +509,7 @@ const JobTable = ({ jobs, onStatusChange, loading, sortKey, sortDir, onSort, ope
                       <td style={{ padding: '16px 20px' }}>
                         <button
                           onClick={() => onViewJob(job)}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 6,
-                            padding: '8px 16px', background: t.accent, color: '#FFFFFF',
-                            border: 'none', borderRadius: 8, cursor: 'pointer',
-                            fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: 600,
-                            transition: 'all .2s',
-                            boxShadow: `0 2px 6px ${t.accent}40`,
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.background = '#5A3BA6';
-                            e.currentTarget.style.boxShadow = `0 4px 12px ${t.accent}60`;
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.background = t.accent;
-                            e.currentTarget.style.boxShadow = `0 2px 6px ${t.accent}40`;
-                            e.currentTarget.style.transform = 'translateY(0)';
-                          }}
+                          className="inline-flex items-center gap-[7px] py-[10px] px-[18px] bg-indigo-600 text-indigo-50 rounded-[10px] cursor-pointer text-[13px] font-bold transition-all duration-300 ease-in-out shadow-[0_4px_12px_rgba(15,23,42,0.15)] hover:bg-indigo-700 hover:shadow-[0_8px_20px_rgba(15,23,42,0.25)] hover:-translate-y-[2px] transform"
                         >
                           <FiEye size={16} />
                           View
@@ -546,19 +534,19 @@ const MobileCard = ({ job, onStatusChange, index, openPillId, setOpenPillId, onV
     transition={{ duration: .3, delay: index * 0.06 }}
     style={{
       background: t.card, border: `1px solid ${t.border}`,
-      borderRadius: 14, padding: '16px 18px',
-      display: 'flex', flexDirection: 'column', gap: 10,
-      boxShadow: '0 4px 12px rgba(107, 70, 193, 0.05)',
+      borderRadius: 20, padding: '20px',
+      display: 'flex', flexDirection: 'column', gap: 12,
+      boxShadow: '0 4px 12px rgba(15, 23, 42, 0.03)',
     }}
   >
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: t.text, fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
+      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: t.text, fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
         {job.jobTitle}
       </span>
-      <StatusPill pillId={`mobile-${job._id}`} value={job.adminReview} onChange={val => onStatusChange(job._id, val)} compact openPillId={openPillId} setOpenPillId={setOpenPillId} />
+      <StatusPill pillId={`mobile-${job._id}`} value={job.status} onChange={val => onStatusChange(job._id, val)} compact openPillId={openPillId} setOpenPillId={setOpenPillId} />
     </div>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: t.muted, fontWeight: 500 }}>
+      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: t.muted, fontWeight: 500 }}>
         {job.companyName}
       </span>
       <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: t.muted, fontWeight: 500 }}>
@@ -567,30 +555,15 @@ const MobileCard = ({ job, onStatusChange, index, openPillId, setOpenPillId, onV
     </div>
     <button
       onClick={() => onViewJob(job)}
-      style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        padding: '8px 16px', background: t.accent, color: '#FFFFFF',
-        border: 'none', borderRadius: 8, cursor: 'pointer',
-        fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: 600,
-        transition: 'all .2s', width: '100%',
-        boxShadow: `0 2px 6px ${t.accent}40`,
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.background = '#5A3BA6';
-        e.currentTarget.style.boxShadow = `0 4px 12px ${t.accent}60`;
-        e.currentTarget.style.transform = 'translateY(-1px)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.background = t.accent;
-        e.currentTarget.style.boxShadow = `0 2px 6px ${t.accent}40`;
-        e.currentTarget.style.transform = 'translateY(0)';
-      }}
+      className="inline-flex items-center justify-center gap-[10px] py-[12px] px-[16px] bg-slate-900 text-slate-50 rounded-[14px] cursor-pointer text-[13px] font-extrabold transition-all duration-300 ease-in-out shadow-[0_8px_16px_rgba(15,23,42,0.15)] hover:bg-slate-800 hover:-translate-y-[1px] transform w-full"
     >
-      <FiEye size={16} />
+      <FiEye size={18} />
       View Details
     </button>
   </motion.div>
 );
+
+
 
 /* ─── Main Component ─── */
 const JOBS_PER_PAGE = 8;
@@ -615,6 +588,7 @@ const JobDescriptions = () => {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
+
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 640);
@@ -649,10 +623,13 @@ const JobDescriptions = () => {
 
   const handleStatusChange = async (jobId, newStatus) => {
     try {
-      await api.patch(`/jobs/${jobId}/admin-review`, { adminReview: newStatus });
-      setJobsData(prev => prev.map(j => j._id === jobId ? { ...j, adminReview: newStatus } : j));
+      await api.patch(`/admin/jobs/status/${jobId}`, { status: newStatus });
+      setJobsData(prev => prev.map(j => j._id === jobId ? { ...j, status: newStatus } : j));
       toast.success('Status updated');
-    } catch { toast.error('Failed to update status'); }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      toast.error('Failed to update status');
+    }
   };
 
   const handleSort = (key) => {
@@ -677,14 +654,14 @@ const JobDescriptions = () => {
 
   const counts = {
     all: jobsData.length,
-    pending: jobsData.filter(j => j.adminReview === 'pending').length,
-    reviewed: jobsData.filter(j => j.adminReview === 'reviewed').length,
-    risky: jobsData.filter(j => j.adminReview === 'risky').length,
+    pending: jobsData.filter(j => j.status === 'pending').length,
+    verified: jobsData.filter(j => j.status === 'verified').length,
+    risky: jobsData.filter(j => j.status === 'risky').length,
   };
 
   // Filter
   const filteredJobs = jobsData.filter(job => {
-    const matchTab = activeTab === 'All' || job.adminReview === activeTab;
+    const matchTab = activeTab === 'All' || job.status === activeTab;
     const q = searchQuery.toLowerCase();
     const matchSearch = !q || `${job.jobTitle} ${job.companyName}`.toLowerCase().includes(q);
     return matchTab && matchSearch;
@@ -773,7 +750,7 @@ const JobDescriptions = () => {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <StatCard label="Total" value={counts.all} color={t.accent} icon={AssignmentIcon} delay={.1} />
             <StatCard label="Pending" value={counts.pending} color={t.amber} icon={PendingActionsIcon} delay={.15} />
-            <StatCard label="Reviewed" value={counts.reviewed} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
+            <StatCard label="Verified" value={counts.verified} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
             <StatCard label="Risky" value={counts.risky} color={t.red} icon={ReportProblemIcon} delay={.25} />
           </div>
 
@@ -794,26 +771,33 @@ const JobDescriptions = () => {
           {/* ── Table / Cards ── */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35, duration: .4 }}>
             {isMobile ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {loading
-                  ? [1, 2, 3].map(i => (
-                    <div key={i} className="shimmer-row" style={{ height: 100, borderRadius: 14 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {loading ? (
+                  [1, 2, 3].map(i => (
+                    <div key={i} className="shimmer-row" style={{ height: 100, borderRadius: 20 }} />
                   ))
-                  : paginatedJobs.length === 0
-                    ? (
-                      <div style={{
-                        background: t.card, border: `1px solid ${t.border}`,
-                        borderRadius: 14, padding: '48px 20px',
-                        textAlign: 'center', color: t.muted, fontSize: 14,
-                        fontFamily: "'Inter', sans-serif"
-                      }}>
-                        No jobs match the current filters.
-                      </div>
-                    )
-                    : paginatedJobs.map((job, i) => (
-                      <MobileCard key={job._id} job={job} onStatusChange={handleStatusChange} index={i} openPillId={openPillId} setOpenPillId={setOpenPillId} onViewJob={handleViewJob} />
-                    ))
-                }
+                ) : paginatedJobs.length === 0 ? (
+                  <div style={{
+                    background: t.card, border: `1px solid ${t.border}`,
+                    borderRadius: 20, padding: '60px 20px',
+                    textAlign: 'center', color: t.muted, fontSize: 14,
+                    fontFamily: "'Inter', sans-serif"
+                  }}>
+                    No jobs match the current filters.
+                  </div>
+                ) : (
+                  paginatedJobs.map((job, i) => (
+                    <MobileCard
+                      key={job._id}
+                      job={job}
+                      onStatusChange={handleStatusChange}
+                      index={i}
+                      openPillId={openPillId}
+                      setOpenPillId={setOpenPillId}
+                      onViewJob={handleViewJob}
+                    />
+                  ))
+                )}
               </div>
             ) : (
               <JobTable
@@ -828,6 +812,9 @@ const JobDescriptions = () => {
                 onViewJob={handleViewJob}
               />
             )}
+          </motion.div>
+
+
 
             {/* ── Pagination ── */}
             {!loading && (
@@ -839,8 +826,7 @@ const JobDescriptions = () => {
                 itemsPerPage={JOBS_PER_PAGE}
               />
             )}
-          </motion.div>
-
+  
           {/* ── Job Details Modal ── */}
           <style>{`
             @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
@@ -860,205 +846,172 @@ const JobDescriptions = () => {
           <AnimatePresence>
             {isModalOpen && selectedJob && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 onClick={handleCloseModal}
                 style={{
                   position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                  background: 'rgba(15, 23, 42, 0.35)',
-                  backdropFilter: 'blur(10px)',
+                  background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(12px)',
                   display: 'flex', justifyContent: 'center', alignItems: 'center',
-                  zIndex: 1000, padding: '20px',
+                  zIndex: 2000, padding: '20px',
                 }}
               >
                 <motion.div
-                  initial={{ opacity: 0, y: 40, scale: 0.94 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 40, scale: 0.94 }}
-                  transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                   onClick={e => e.stopPropagation()}
-                  className="jd-modal-scroll"
                   style={{
-                    width: '100%', maxWidth: 720,
-                    maxHeight: '90vh', overflowY: 'auto',
-                    borderRadius: 20,
-                    background: '#FFFFFF',
-                    border: '1px solid rgba(124,58,237,0.12)',
-                    boxShadow: '0 24px 56px rgba(15,23,42,0.14), 0 0 0 1px rgba(124,58,237,0.08)',
+                    width: '100%', maxWidth: 800, maxHeight: '85vh',
+                    background: '#FFFFFF', borderRadius: 28, overflow: 'hidden',
                     display: 'flex', flexDirection: 'column',
-                    fontFamily: "'Sora', 'Inter', sans-serif",
+                    boxShadow: '0 30px 60px rgba(0,0,0,0.2)',
                   }}
                 >
-                  {/* ════ HERO BANNER ════ */}
+                  {/* Modal Header */}
                   <div style={{
-                    position: 'relative',
-                    padding: '36px 32px 28px',
-                    background: 'linear-gradient(135deg, rgba(124,58,237,0.09) 0%, rgba(6,182,212,0.05) 60%, rgba(248,250,252,0) 100%)',
-                    borderBottom: '1px solid rgba(124,58,237,0.1)',
-                    overflow: 'hidden',
+                    padding: '32px 40px',
+                    background: `linear-gradient(135deg, ${t.accent}08 0%, ${t.cyan}05 100%)`,
+                    borderBottom: `1px solid ${t.border}`,
+                    position: 'relative'
                   }}>
-                    {/* Glow orbs */}
-                    <div style={{ position: 'absolute', top: -60, left: -40, width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
-                    <div style={{ position: 'absolute', bottom: -40, right: 60, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(6,182,212,0.09) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-                    {/* Close */}
                     <button
                       onClick={handleCloseModal}
                       style={{
-                        position: 'absolute', top: 18, right: 18,
-                        width: 32, height: 32, borderRadius: '50%',
-                        border: '1px solid #E2E8F0',
-                        background: '#FFFFFF',
-                        color: '#64748B', cursor: 'pointer',
+                        position: 'absolute', top: 24, right: 24,
+                        width: 36, height: 36, borderRadius: '50%',
+                        background: '#FFF', border: `1px solid ${t.border}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        transition: 'all .18s',
+                        cursor: 'pointer', transition: 'all 0.2s',
+                        color: t.muted,
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#FEE2E2'; e.currentTarget.style.borderColor = '#FECACA'; e.currentTarget.style.color = '#DC2626'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; }}
+                      onMouseEnter={e => { e.currentTarget.style.background = t.redDim; e.currentTarget.style.color = t.red; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = '#FFF'; e.currentTarget.style.color = t.muted; }}
                     >
-                      <FiX size={14} />
+                      <FiX size={18} />
                     </button>
 
-                    {/* Title block */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                      <div style={{
-                        width: 52, height: 52, borderRadius: 14, flexShrink: 0,
-                        background: 'rgba(124,58,237,0.08)',
-                        border: '1.5px solid rgba(124,58,237,0.2)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
-                        boxShadow: '0 2px 12px rgba(124,58,237,0.12)',
-                      }}>🏢</div>
-                      <div style={{ flex: 1 }}>
-                        <h2 style={{
-                          margin: 0, fontSize: 26, fontWeight: 800,
-                          color: '#0F172A', letterSpacing: '-0.025em', lineHeight: 1.2,
-                        }}>
-                          {selectedJob.jobTitle}
-                        </h2>
-                        <p style={{ margin: '6px 0 0', fontSize: 14, color: '#64748B', fontWeight: 500 }}>
-                          {selectedJob.companyName}
-                        </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                      <JobLogo src={selectedJob.img} name={selectedJob.companyName} />
+                      <div>
+                        <h2 style={{ fontSize: 24, fontWeight: 800, color: t.text, margin: 0 }}>{selectedJob.jobTitle}</h2>
+                        <p style={{ fontSize: 16, color: t.accent, fontWeight: 600, margin: '4px 0 0' }}>{selectedJob.companyName}</p>
                       </div>
-                    </div>
-
-                    {/* ── Pill Chips Row ── */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 22 }}>
-                      {[
-                        { icon: '💼', label: selectedJob.department },
-                        { icon: '⏱️', label: selectedJob.experience },
-                        { icon: '📍', label: selectedJob.location },
-                        { icon: '🖥️', label: selectedJob.workPlaceType },
-                        selectedJob.openings ? { icon: '👥', label: `${selectedJob.openings} Opening${selectedJob.openings !== 1 ? 's' : ''}` } : null,
-                      ].filter(Boolean).map((chip, i) => (
-                        <span key={i} className="jd-chip" style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 6,
-                          padding: '6px 14px', borderRadius: 999,
-                          background: 'rgba(124,58,237,0.06)',
-                          border: '1px solid rgba(124,58,237,0.15)',
-                          fontSize: 12.5, fontWeight: 600, color: '#3B0764',
-                          cursor: 'default',
-                        }}>
-                          <span style={{ fontSize: 13 }}>{chip.icon}</span>
-                          {chip.label || '—'}
-                        </span>
-                      ))}
                     </div>
                   </div>
 
-                  {/* ════ CONTENT SECTIONS ════ */}
-                  <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {[
-                      { title: 'Job Description', content: selectedJob.jobDescription, glowColor: '#7c3aed', bgHead: '#F5F3FF', borderHead: '#DDD6FE' },
-                      { title: 'Responsibilities', content: selectedJob.responsibilities, glowColor: '#0891B2', bgHead: '#ECFEFF', borderHead: '#A5F3FC' },
-                      { title: 'Qualifications', content: selectedJob.qualifications, glowColor: '#9333EA', bgHead: '#FAF5FF', borderHead: '#E9D5FF' },
-                    ].filter(s => s.content).map((sec, i) => (
-                      <div key={i} className="jd-glass-card" style={{
-                        borderRadius: 16,
-                        background: '#FFFFFF',
-                        border: `1px solid ${sec.borderHead}`,
-                        borderLeft: `3px solid ${sec.glowColor}`,
-                        boxShadow: `0 2px 12px rgba(15,23,42,0.06)`,
-                        overflow: 'hidden',
-                      }}>
-                        {/* Card heading */}
-                        <div style={{
-                          padding: '12px 20px 10px',
-                          display: 'flex', alignItems: 'center', gap: 10,
-                          borderBottom: `1px solid ${sec.borderHead}`,
-                          background: sec.bgHead,
-                        }}>
-                          <div style={{ width: 3, height: 14, borderRadius: 2, background: sec.glowColor, flexShrink: 0 }} />
-                          <span style={{
-                            fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                            textTransform: 'uppercase', color: sec.glowColor,
-                          }}>
-                            {sec.title}
-                          </span>
-                        </div>
-                        {/* Card body */}
-                        <div style={{
-                          padding: '16px 20px',
-                          fontSize: 14, lineHeight: 1.85,
-                          color: '#374151',
-                          fontWeight: 400,
-                        }}>
-                          {sec.content}
-                        </div>
-                      </div>
-                    ))}
-
-                    {!selectedJob.jobDescription && !selectedJob.responsibilities && !selectedJob.qualifications && (
-                      <div style={{ textAlign: 'center', color: '#94A3B8', fontSize: 14, padding: '32px 0' }}>
-                        No details available for this job.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ════ BOTTOM BAR ════ */}
-                  <div style={{
-                    display: 'flex', alignItems: 'center',
-                    flexWrap: 'wrap', gap: 16,
-                    padding: '14px 28px 18px',
-                    borderTop: '1px solid #F1F5F9',
-                    background: '#F8FAFC',
+                  {/* Modal Body (Scrollable) */}
+                  <div className="jd-modal-scroll" style={{
+                    padding: '32px 40px', overflowY: 'auto', flex: 1,
+                    display: 'flex', flexDirection: 'column', gap: 32
                   }}>
-                    {/* Status */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Status</span>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 7,
-                        padding: '5px 13px', borderRadius: 999,
-                        background: STATUS[selectedJob.adminReview]?.bg || '#F3F4F6',
-                        color: STATUS[selectedJob.adminReview]?.color || '#94a3b8',
-                        border: `1px solid ${STATUS[selectedJob.adminReview]?.color || '#475569'}40`,
-                        fontSize: 12, fontWeight: 700,
-                      }}>
-                        <span style={{
-                          width: 7, height: 7, borderRadius: '50%',
-                          background: STATUS[selectedJob.adminReview]?.dot || '#64748b',
-                          animation: selectedJob.adminReview === 'pending' ? 'pulse-dot 1.5s infinite' : 'none',
-                          flexShrink: 0,
-                        }} />
-                        {STATUS[selectedJob.adminReview]?.label || 'Unknown'}
-                      </span>
+                    {/* Quick Info Grid */}
+                    <div style={{
+                      display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                      gap: 20, padding: 20, background: '#F8FAFC', borderRadius: 20, border: `1px solid ${t.border}`
+                    }}>
+                      <ModalStat icon={<FiBriefcase size={18} />} label="Department" value={selectedJob.department} />
+                      <ModalStat icon={<FiClock size={18} />} label="Experience" value={selectedJob.experience} />
+                      <ModalStat icon={<FiMonitor size={18} />} label="Type" value={selectedJob.workPlaceType} />
+                      <ModalStat icon={<FiMapPin size={18} />} label="Location" value={selectedJob.location} />
                     </div>
-                    {/* Date */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Posted</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>{selectedJob.date}</span>
-                    </div>
+
+                    {/* Sectioned Content */}
+                    <DetailSection title="Job Description" content={selectedJob.jobDescription} color={t.accent} />
+                    <DetailSection title="Key Responsibilities" content={selectedJob.responsibilities} color={t.cyan} />
+                    <DetailSection title="Qualifications" content={selectedJob.qualifications} color={t.purple} />
                   </div>
 
+                  {/* Modal Footer */}
+                  <div style={{
+                    padding: '24px 40px', background: '#F9FAFB', borderTop: `1px solid ${t.border}`,
+                    display: 'flex', justifyContent: 'center', alignItems: 'center'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: t.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verification Status:</span>
+                      <div style={{
+                        padding: '8px 18px', borderRadius: 12,
+                        background: STATUS[selectedJob.adminReview]?.bg,
+                        color: STATUS[selectedJob.adminReview]?.color,
+                        fontSize: 13, fontWeight: 800, border: `1px solid ${STATUS[selectedJob.adminReview]?.color}30`,
+                        boxShadow: `0 4px 12px ${STATUS[selectedJob.adminReview]?.color}15`
+                      }}>
+                        {STATUS[selectedJob.adminReview]?.label}
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
-
         </div>
       </div>
     </>
+  );
+};
+
+/* ─── Modal Helper Components ─── */
+const ModalStat = ({ icon, label, value }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{
+      width: 32, height: 32, borderRadius: 10,
+      background: '#FFF', border: `1px solid ${t.border}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: t.accent, flexShrink: 0
+    }}>{icon}</div>
+    <div>
+      <p style={{ fontSize: 10, fontWeight: 700, color: t.muted, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{label}</p>
+      <p style={{ fontSize: 13, fontWeight: 600, color: t.text, margin: 0 }}>{value || '—'}</p>
+    </div>
+  </div>
+);
+
+const DetailSection = ({ title, content, color }) => (
+  <div style={{
+    borderLeft: `4px solid ${color}`,
+    paddingLeft: 20,
+    position: 'relative'
+  }}>
+    <h4 style={{
+      fontSize: 12, fontWeight: 800, color,
+      textTransform: 'uppercase', letterSpacing: '0.1em',
+      marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8
+    }}>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
+      {title}
+    </h4>
+    <div style={{
+      fontSize: 15, lineHeight: 1.8, color: '#475569',
+      whiteSpace: 'pre-wrap', fontFamily: "'Inter', sans-serif"
+    }}>
+      {content}
+    </div>
+  </div>
+);
+
+
+const JobLogo = ({ src, name }) => {
+  const [error, setError] = useState(false);
+  return (
+    <div style={{
+      width: 64, height: 64, borderRadius: 18,
+      background: '#FFF', border: `1px solid ${t.border}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 28, boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+      overflow: 'hidden'
+    }}>
+      {src && !error ? (
+        <img
+          src={src}
+          alt={name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={() => setError(true)}
+        />
+      ) : (
+        name?.charAt(0).toUpperCase() || "?"
+      )}
+    </div>
   );
 };
 

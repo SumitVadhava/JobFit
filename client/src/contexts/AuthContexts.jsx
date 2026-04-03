@@ -15,10 +15,9 @@ export const AuthProvider = ({ children }) => {
 
   // Load user/token from localStorage on app load
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
     const storedToken = localStorage.getItem("token");
-    
-    if (storedUser && storedToken) {
+
+    if (storedToken) {
       try {
         const decodedToken = jwtDecode(storedToken);
         const currentTime = Date.now() / 1000;
@@ -28,9 +27,30 @@ export const AuthProvider = ({ children }) => {
           console.warn("Token expired. Logging out...");
           logout();
         } else {
-          setUser(storedUser);
           setToken(storedToken);
-          setRole(storedUser.role || null);
+          const storedUser = localStorage.getItem("user");
+          let userData = {
+            id: decodedToken.id,
+            email: decodedToken.email,
+            picture: decodedToken.picture,
+            userName: decodedToken.userName || decodedToken.name,
+            role: decodedToken.role
+          };
+
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              // Only use stored user if it matches the token's user ID
+              if (parsedUser.id === decodedToken.id || parsedUser._id === decodedToken.id) {
+                userData = { ...userData, ...parsedUser };
+              }
+            } catch (e) {
+              console.error("Error parsing stored user data:", e);
+            }
+          }
+
+          setUser(userData);
+          setRole(decodedToken.role || userData.role || null);
         }
       } catch (error) {
         console.error("Invalid token found in storage. Clearing...", error);
@@ -40,14 +60,26 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (userData, jwtToken, userRole) => {
-    setUser(userData);
-    setToken(jwtToken);
-    setRole(userRole || userData.role);
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", jwtToken);
-    
-    console.log("User logged in:", userData);
+  const login = (jwtToken) => {
+    try {
+      const decodedToken = jwtDecode(jwtToken);
+      const userData = {
+        id: decodedToken.id,
+        email: decodedToken.email,
+        picture: decodedToken.picture,
+        userName: decodedToken.userName || decodedToken.name,
+        role: decodedToken.role
+      };
+
+      setUser(userData);
+      setToken(jwtToken);
+      setRole(decodedToken.role);
+
+      localStorage.setItem("token", jwtToken);
+      localStorage.setItem("user", JSON.stringify(userData)); // Keeping user in storage for convenience
+    } catch (error) {
+      console.error("Error during login (token decode):", error);
+    }
   };
 
   const logout = () => {
@@ -62,7 +94,6 @@ export const AuthProvider = ({ children }) => {
     const newUser = { ...user, ...updatedUserData };
     setUser(newUser);
     localStorage.setItem("user", JSON.stringify(newUser));
-    console.log("User state updated:", newUser);
   };
 
   return (

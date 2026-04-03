@@ -1,71 +1,67 @@
 const mongoose = require("mongoose");
 
-const jobSchema = new mongoose.Schema(
+const jobsSchema = new mongoose.Schema(
   {
     recruiterId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
       required: true,
-    },
-    recruiterModel: {
-      type: String,
-      enum: ["logins", "google_logins"],
-      default: "logins",
-      required: true,
-    },
-    openings: {
-      type: Number,
-      min: 0,
-      required: true,
+      index: true,
     },
     jobTitle: {
       type: String,
       required: true,
-    },
-    department: {
-      type: String,
-      required: true,
-    },
-    experience: {
-      type: String,
-      required: true,
-    },
-    responsibilities: {
-      type: String,
-      required: true,
-    },
-    qualifications: {
-      type: String,
-      required: true,
+      trim: true,
     },
     companyName: {
       type: String,
       required: true,
+      trim: true,
     },
     location: {
       type: String,
       required: true,
+      trim: true,
     },
-    workPlaceType: {
+    department: {
       type: String,
-      enum: ["remote", "onsite", "hybrid"],
+      required: false,
+      trim: true,
+    },
+    openings: {
+      type: Number,
       required: true,
+      min: 0,
+    },
+    experience: {
+      type: String,
+      required: false,
     },
     jobDescription: {
       type: String,
       required: true,
+    },
+    responsibilities: {
+      type: [String],
+      default: [],
+    },
+    qualifications: {
+      type: [String],
+      default: [],
+    },
+    workPlaceType: {
+      type: String,
+      enum: ["Remote", "On-site", "Hybrid"],
+      default: "On-site",
     },
     img: {
       type: String,
       required: false,
       default: null,
     },
-    bookmarked: {
-      type: Boolean,
-      default: false,
-    },
-    adminReview: {
+    status: {
       type: String,
-      enum: ["pending", "reviewed", "risky"],
+      enum: ["pending", "verified", "risky"],
       default: "pending",
     },
     createdAt: {
@@ -77,9 +73,7 @@ const jobSchema = new mongoose.Schema(
       default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
     },
   },
-  {
-    timestamps: false,
-  },
+  { timestamps: false }
 );
 
-module.exports = mongoose.model("jobs", jobSchema);
+module.exports = mongoose.model("jobs", jobsSchema);

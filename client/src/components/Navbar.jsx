@@ -125,18 +125,25 @@ const NavShortcutItem = ({
                         <NavLink
                             key={idx}
                             to={item.href}
-                            className={({ isActive }) => `block px-5 py-2.5 text-base font-medium transition-colors ${isActive ? "text-[#9b44fe] bg-purple-50" : "text-gray-600 hover:text-[#9b44fe] hover:bg-purple-50/50"}`}
+                            className={({ isActive }) => `block relative group px-5 py-2.5 text-base font-medium transition-colors ${isActive ? "text-[#9b44fe] bg-purple-50" : "text-gray-600 hover:text-[#9b44fe] hover:bg-purple-50/50"}`}
                             onClick={(e) => {
                                 if (onClick) onClick(e);
                                 setIsOpen(false);
                             }}
                         >
-                            {item.label}
+                            <div className="flex items-center justify-between gap-4">
+                                <span className="whitespace-nowrap">{item.label}</span>
+                                {item.shortcut && (
+                                    <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 group-hover:border-purple-200 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors whitespace-nowrap">
+                                        {item.shortcut}
+                                    </span>
+                                )}
+                            </div>
                         </NavLink>
                     ))}
                 </div>
             )}
-            {shortcut && hovered && (
+            {shortcut && hovered && !isOpen && (
                 <span
                     style={{
                         position: "absolute",
@@ -196,6 +203,7 @@ const Navbar = ({ userData }) => {
             { label: "Users", href: "/admin/users", shortcut: "Ctrl + U" },
             { label: "Jobs", href: "/admin/jobs", shortcut: "Ctrl + J" },
             { label: "Companies", href: "/admin/companies", shortcut: "Ctrl + C" },
+            { label: "Testimonials", href: "/admin/testimonials", shortcut: "Alt + T" },
         ],
         candidate: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
@@ -210,9 +218,9 @@ const Navbar = ({ userData }) => {
                 href: "/candidate/job-search",
                 shortcut: "Ctrl + J",
                 dropdown: [
-                    { label: "Jobs", href: "/candidate/job-search" },
-                    { label: "Saved Jobs", href: "/candidate/saved-jobs" },
-                    { label: "Applied Jobs", href: "/candidate/applied-jobs" }
+                    { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
+                    { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+                    { label: "Applied Jobs", href: "/candidate/applied-jobs", shortcut: "Ctrl + AJ" }
                 ]
             },
         ],
@@ -229,9 +237,9 @@ const Navbar = ({ userData }) => {
                 href: "/candidate/job-search",
                 shortcut: "Ctrl + J",
                 dropdown: [
-                    { label: "Jobs", href: "/candidate/job-search" },
-                    { label: "Saved Jobs", href: "/candidate/saved-jobs" },
-                    { label: "Applied Jobs", href: "/candidate/dashboard" }
+                    { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
+                    { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+                    { label: "Applied Jobs", href: "/candidate/applied-jobs", shortcut: "Ctrl + AJ" }
                 ]
             },
         ],
@@ -300,6 +308,16 @@ const Navbar = ({ userData }) => {
                 return;
             }
 
+            // Handle Alt + T for Admin Testimonials
+            if (e.altKey && key === "t") {
+                e.preventDefault();
+                if (userRole === "admin") {
+                    navigate("/admin/testimonials");
+                }
+                pendingKey.current = null;
+                return;
+            }
+
             // From here on, enforce Ctrl modifier
             if (!e.ctrlKey) return;
 
@@ -312,17 +330,12 @@ const Navbar = ({ userData }) => {
                 pendingKey.current = null;
                 return;
             }
-            if (key === "r" && pendingKey.current !== "b") {
-                e.preventDefault();
-                if (userRole === "candidate" || userRole === "user")
-                    navigate("/candidate/resume");
-                pendingKey.current = null;
-                return;
-            }
+
             if (
                 key === "j" &&
                 pendingKey.current !== "s" &&
-                pendingKey.current !== "p"
+                pendingKey.current !== "p" &&
+                pendingKey.current !== "a"
             ) {
                 e.preventDefault();
                 if (userRole === "admin") navigate("/admin/jobs");
@@ -345,11 +358,17 @@ const Navbar = ({ userData }) => {
                 pendingKey.current = null;
                 return;
             }
-            if (key === "a") {
+            if (key === "a" && pendingKey.current !== "s") {
                 e.preventDefault();
-                if (userRole === "recruiter") navigate("/recruiter/profile");
-                else navigate("/candidate/profile");
-                pendingKey.current = null;
+                pendingKey.current = "a";
+                clearTimeout(seqTimer.current);
+                seqTimer.current = setTimeout(() => {
+                    if (pendingKey.current === "a") {
+                        if (userRole === "recruiter") navigate("/recruiter/profile");
+                        else navigate("/candidate/profile");
+                        pendingKey.current = null;
+                    }
+                }, 400);
                 return;
             }
             if (key === "h" && userRole === "recruiter") {
@@ -410,6 +429,14 @@ const Navbar = ({ userData }) => {
                 e.preventDefault();
                 if (userRole === "candidate" || userRole === "user")
                     navigate("/candidate/saved-jobs");
+                pendingKey.current = null;
+                clearTimeout(seqTimer.current);
+                return;
+            }
+            if (key === "j" && pendingKey.current === "a") {
+                e.preventDefault();
+                if (userRole === "candidate" || userRole === "user")
+                    navigate("/candidate/applied-jobs");
                 pendingKey.current = null;
                 clearTimeout(seqTimer.current);
                 return;
@@ -564,37 +591,23 @@ const Navbar = ({ userData }) => {
                                             toggleDrawer();
                                         }}
                                     >
-                                        {(user?.picture || user?.img) ? (
-                                            <img
-                                                src={user.picture || user.img}
-                                                alt="User Profile"
-                                                className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                                                onError={(e) => {
-                                                    e.target.style.display = "none";
-                                                    e.target.nextSibling.style.display = "flex";
-                                                }}
-                                            />
-                                        ) : (
-                                            <div
-                                                className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700"
-                                                style={{ display: (user?.picture || user?.img) ? "none" : "flex" }}
-                                            >
-                                                <svg
-                                                    className="w-6 h-6"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth="2"
-                                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                        )}
+                                        {(() => {
+                                            const name = user?.userName || user?.name || "User";
+                                            const pic = user?.picture || user?.img;
+                                            const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6B46C1&color=fff&size=100`;
+                                            
+                                            return (
+                                                <img
+                                                    src={pic || fallback}
+                                                    alt="User Profile"
+                                                    className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = fallback;
+                                                    }}
+                                                />
+                                            );
+                                        })()}
                                         <span className="text-lg font-medium text-gray-800 truncate max-w-[150px]">
                                             {user?.userName || user?.name || "User"}
                                         </span>
