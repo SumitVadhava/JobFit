@@ -52,6 +52,36 @@ const AtsGauge = ({ score }) => {
   );
 };
 
+/* ── Cloudinary Browser Helper ────────────────────────────── */
+const uploadToCloudinary = async (file) => {
+  const CLOUD_NAME = "ds5ohpmvm";
+  // To use this, an 'Unsigned Upload Preset' named ml_default should be added in Cloudinary dashboard
+  const UPLOAD_PRESET = "resume";
+
+  const formData = new FormData();
+  formData.set("file", file);
+  formData.set("upload_preset", UPLOAD_PRESET);
+  formData.set("folder", "candidate_resumes");
+
+  try {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error?.message || "Cloudinary upload failed");
+    }
+
+    const data = await res.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Cloudinary error:", error);
+    throw error;
+  }
+};
+
 /* ── Inline Icon helper ─────────────────────────────────────── */
 const Ic = ({ d, size = 16 }) => (
   <svg width={size} height={size} fill="currentColor" viewBox="0 0 256 256" className="shrink-0">
