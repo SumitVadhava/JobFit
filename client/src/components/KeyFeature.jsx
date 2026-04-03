@@ -4,107 +4,55 @@ import { Link } from "react-router-dom";
 import Profile from "../assets/profile.gif";
 import JobOffer from "../assets/jobOffer.gif";
 import Data_Extraction from "../assets/Data_extraction.gif";
-const KeyFeatures = () => {
-  /*
-  WARNING: This marketing block can be flagged by Safe Browsing heuristics.
-  Reasons: "Trusted by Industry Leaders" claim + third-party brand logos loaded from external hosts.
-  Keep only if you have explicit permission to use these logos/claims.
-  const companies = [
-    {
-      name: "Google",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
-    },
-    {
-      name: "Microsoft",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
-    },
-    {
-      name: "Apple",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
-    },
-    {
-      name: "Meta",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png",
-    },
-    {
-      name: "Amazon",
-      logo: "https://1000logos.net/wp-content/uploads/2016/10/Amazon-Logo.png",
-    },
-    {
-      name: "IBM",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg",
-    },
-    {
-      name: "Tesla",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png",
-    },
-    {
-      name: "Adobe",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKNPRQuLPpKrjO5bdFPgVGRoAbysq635o6ZQ&s",
-    },
-    {
-      name: "Netflix",
-      logo: "https://images.ctfassets.net/y2ske730sjqp/5QQ9SVIdc1tmkqrtFnG9U1/de758bba0f65dcc1c6bc1f31f161003d/BrandAssets_Logos_02-NSymbol.jpg?w=940",
-    },
-    {
-      name: "Nvidia",
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjPSt8IAZHIwQXUj8owif7VyiELZvOi0w1pA&s",
-    },
-    {
-      name: "Intel",
-      logo: "https://cdn.mos.cms.futurecdn.net/MKBZhC5Dz7u76BeTtkgW3a-1200-80.jpg",
-    },
-    {
-      name: "Oracle",
-      logo: "https://1000logos.net/wp-content/uploads/2017/04/Oracle-Logo-1.png",
-    },
-  ];
-  */
 
+const companies = [
+  { name: "Google", logo: "/assets/company-logos/google.svg" },
+  { name: "Microsoft", logo: "/assets/company-logos/microsoft.svg" },
+  { name: "Apple", logo: "/assets/company-logos/apple.svg" },
+  { name: "Meta", logo: "/assets/company-logos/meta.png" },
+  { name: "Amazon", logo: "/assets/company-logos/amazon.png" },
+  { name: "IBM", logo: "/assets/company-logos/ibm.svg" },
+  { name: "Tesla", logo: "/assets/company-logos/tesla.png" },
+  { name: "Adobe", logo: "/assets/company-logos/adobe.png" },
+  { name: "Netflix", logo: "/assets/company-logos/netflix.jpg" },
+  { name: "Nvidia", logo: "/assets/company-logos/nvidia.png" },
+  { name: "Intel", logo: "/assets/company-logos/intel.jpg" },
+  { name: "Oracle", logo: "/assets/company-logos/oracle.png" },
+];
+
+const KeyFeatures = () => {
   return (
     <div className="min-h-screen bg-white max-w-7xl mx-auto py-16">
       <div className="container mx-auto px-4">
-        {/*
-        WARNING: Disabled to reduce deceptive-page risk in Safe Browsing.
-        <section className="py-16 bg-white rounded-2xl shadow-sm border border-gray-100 mb-16">
+        <section className="py-12 bg-white rounded-2xl shadow-sm border border-gray-100 mb-16">
           <div className="container mx-auto px-6">
-            <div className="text-center mb-12">
+            <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                Trusted by Industry Leaders
+                Popular Hiring Ecosystem
               </h2>
               <p className="text-gray-600 text-lg">
-                Join thousands of companies that trust our platform
+                Logos are served from local assets for safer and more reliable
+                loading.
               </p>
             </div>
 
-            <div className="relative overflow-hidden" id="key-features">
-              <div className="absolute left-0 top-0 z-10 h-full w-32 bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
-              <div className="absolute right-0 top-0 z-10 h-full w-32 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
-              <Marquee
-                gradient={true}
-                gradientColor={[244, 63, 94]}
-                gradientWidth={100}
-                speed={50}
-                pauseOnHover={true}
-                style={{ width: "100%", height: "auto" }}
-              >
-                {companies.map((company) => (
-                  <div
-                    key={company.name}
-                    className="flex-shrink-0 mx-8 px-6 py-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group"
-                  >
-                    <img
-                      src={company.logo}
-                      alt={company.name}
-                      className="h-12 w-auto grayscale hover:grayscale-0 transition-all duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                ))}
-              </Marquee>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {companies.map((company) => (
+                <div
+                  key={company.name}
+                  className="px-4 py-3 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
+                >
+                  <img
+                    src={company.logo}
+                    alt={company.name}
+                    loading="lazy"
+                    className="h-10 w-full object-contain"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </section>
-        */}
 
         {/* Key Features Section */}
         <section id="key-features">
