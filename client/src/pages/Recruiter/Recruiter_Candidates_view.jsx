@@ -402,7 +402,7 @@ const CandidatesView = () => {
 
   const totalJobs = activeJobs.length;
   const pendingJobs = activeJobs.filter((j) => (j.status || "").toLowerCase() === "pending").length;
-  const verifiedJobs = activeJobs.filter((j) => (j.status || "").toLowerCase() === "reviewed").length;
+  const verifiedJobs = activeJobs.filter((j) => (j.status || "").toLowerCase() === "verified").length;
   const totalOpenings = activeJobs.reduce(
     (sum, j) => sum + (Number(j.openings) || 0),
     0,
