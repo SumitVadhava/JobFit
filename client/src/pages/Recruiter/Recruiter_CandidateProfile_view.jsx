@@ -6,23 +6,33 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContexts";
 import api from "../../api/api";
 import { toast, ToastContainer } from "react-toastify";
+import {
+  BriefcaseBusiness,
+  Camera,
+  Check,
+  ExternalLink,
+  Info,
+  Linkedin,
+  Mail,
+  MapPin,
+  Pencil,
+  Send,
+  Share2,
+} from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
-const Ic = ({ d, size = 16 }) => (
-  <svg width={size} height={size} fill="currentColor" viewBox="0 0 256 256" className="shrink-0">
-    <path d={d} />
-  </svg>
-);
-
 const ICONS = {
-  edit: "M227.32,73.37,182.63,28.69a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.32,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.69,147.32,64l12.68-12.69L204.69,96Z",
-  save: "M227.32,28.68a16,16,0,0,0-15.66-4.08l-192,64a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,256q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l64-192A16,16,0,0,0,227.32,28.68ZM158.46,233.15l-37-78.23L153.37,123A8,8,0,0,0,142.05,111.7l-31.91,31.92L31.91,106.6Z",
-  camera: "M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z",
-  check: "M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z",
-  about: "M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z",
-  share: "M229.66,109.66l-48,48a8,8,0,0,1-11.32-11.32L204.69,112H165a88,88,0,0,0-85.23,65.89,8,8,0,0,1-15.49-4A104,104,0,0,1,165,96H204.69L170.34,61.66a8,8,0,0,1,11.32-11.32l48,48A8,8,0,0,1,229.66,109.66Z",
-  brief: "M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z",
-  pin: "M128,16a88.1,88.1,0,0,0-88,88c0,75.3,80,132.17,83.41,134.55a8,8,0,0,0,9.18,0C136,236.17,216,179.3,216,104A88.1,88.1,0,0,0,128,16Zm0,56a32,32,0,1,1-32,32A32,32,0,0,1,128,72Z"
+  edit: Pencil,
+  save: Send,
+  camera: Camera,
+  check: Check,
+  about: Info,
+  share: Share2,
+  brief: BriefcaseBusiness,
+  pin: MapPin,
+  mail: Mail,
+  external: ExternalLink,
+  linkedin: Linkedin,
 };
 
 const ACCENT = {
@@ -32,11 +42,12 @@ const ACCENT = {
 
 const Section = ({ icon, label, accent = "blue", children }) => {
   const a = ACCENT[accent] || ACCENT.blue;
+  const Icon = ICONS[icon] || Info;
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className={`flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-gradient-to-r ${a.headerBg}`}>
         <span className={`flex items-center justify-center w-8 h-8 rounded-xl border ${a.iconBg} shadow-sm`}>
-          <Ic d={ICONS[icon]} size={16} />
+          <Icon size={16} strokeWidth={2.2} className="shrink-0" />
         </span>
         <h2 className="text-base font-semibold text-slate-800 tracking-tight">{label}</h2>
       </div>
@@ -241,7 +252,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
                 <img src={data.img || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=0f172a&color=fff&size=200`} alt="Profile" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 {editing && (
                   <label className="absolute inset-0 bg-slate-900/50 flex flex-col items-center justify-center opacity-0 hover:opacity-100 transition-opacity backdrop-blur-sm cursor-pointer text-white">
-                    <Ic d={ICONS.camera} size={28} />
+                    <Camera size={28} strokeWidth={2.2} className="shrink-0" />
                     <span className="text-xs mt-1.5 font-semibold">Change</span>
                     <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
                   </label>
@@ -273,9 +284,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
                       {data.company && <span className="text-slate-500"> at {data.company}</span>}
                     </p>
                     <p className="text-sm font-medium text-slate-500 mt-1 flex items-center justify-center sm:justify-start gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                      </svg>
+                      <Mail size={16} strokeWidth={2.2} className="shrink-0" />
                       {data.email}
                     </p>
                   </>
@@ -316,7 +325,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
               <div className="flex items-center gap-2 flex-wrap shrink-0 absolute top-6 right-6 sm:relative sm:top-auto sm:right-auto">
                 {saved && (
                   <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
-                    <Ic d={ICONS.check} size={12} /> Saved
+                    <Check size={12} strokeWidth={2.4} className="shrink-0" /> Saved
                   </span>
                 )}
 
@@ -340,7 +349,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
                         </>
                       ) : (
                         <>
-                          <Ic d={ICONS.save} size={14} /> <span>Save</span>
+                          <Send size={14} strokeWidth={2.4} className="shrink-0" /> <span>Save</span>
                         </>
                       )}
                     </button>
@@ -351,13 +360,13 @@ const Recruiter_Profile_view = ({ userProp }) => {
                       onClick={handleShare}
                       className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all hover:-translate-y-px"
                     >
-                      <Ic d={ICONS.share} size={14} /> {shared ? "Copied!" : "Share"}
+                      <Share2 size={14} strokeWidth={2.4} className="shrink-0" /> {shared ? "Copied!" : "Share"}
                     </button>
                     <button
                       onClick={() => setEditing(true)}
                       className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl transition-all hover:-translate-y-px shadow-md"
                     >
-                      <Ic d={ICONS.edit} size={14} /> Edit
+                      <Pencil size={14} strokeWidth={2.4} className="shrink-0" /> Edit
                     </button>
                   </>
                 )}
@@ -425,7 +434,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
                         {data.website ? (
                           <a href={data.website.startsWith('http') ? data.website : `https://${data.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1 w-max">
                             {data.website}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                            <ExternalLink size={12} strokeWidth={2.2} className="shrink-0" />
                           </a>
                         ) : "—"}
                       </p>
@@ -444,9 +453,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
                       <p className="text-sm font-medium">
                         {data.linkedIn ? (
                           <a href={data.linkedIn.startsWith('http') ? data.linkedIn : `https://${data.linkedIn}`} target="_blank" rel="noopener noreferrer" className="text-[#0a66c2] hover:underline flex items-center gap-1 w-max">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256">
-                              <path d="M216,24H40A16,16,0,0,0,24,40V216a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V40A16,16,0,0,0,216,24Zm-16,176H163.63V141.2c0-14.77-5.18-24.84-18.15-24.84-9.88,0-15.77,6.8-18.42,13.38a24,24,0,0,0-1.18,8.8v61.46H91.1S91.56,92,91.1,80h34.78v14.49S133,83.9,150.1,80c20.31-4.66,49.9,8,49.9,56.12ZM59.34,200H24.56V80H59.34ZM41.95,66.19c-11.83,0-21.56-9.5-21.56-21.19A21.46,21.46,0,0,1,41.95,23.31C53.79,23.31,63.26,32.81,63.26,45A21.46,21.46,0,0,1,41.95,66.19Z" />
-                            </svg>
+                            <Linkedin size={14} strokeWidth={2.2} className="shrink-0" />
                             {data.linkedIn}
                           </a>
                         ) : "—"}
