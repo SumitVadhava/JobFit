@@ -129,6 +129,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
   const [shared, setShared] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [profilePhotoFile, setProfilePhotoFile] = useState(null);
 
   const galleryImages = [
     `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name || "User")}&background=0f172a&color=fff&size=200`,
@@ -262,17 +263,17 @@ const Recruiter_Profile_view = ({ userProp }) => {
   const handleSave = async () => {
     if (!data.name.trim()) return alert("Name is required");
 
+    const payload = mapStateToApi(!profileExists);
+
     setSaving(true);
     try {
       let response;
       let updatedProfile;
 
       if (profileExists) {
-        const payload = mapStateToApi(false);
         response = await api.patch("/recruiter/profile", payload);
         updatedProfile = response.data?.data || response.data?.profile;
       } else {
-        const payload = mapStateToApi(true);
         response = await api.post("/recruiter/profile", payload);
         updatedProfile = response.data?.data || response.data?.profile;
         setProfileExists(true);
@@ -386,6 +387,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
     const file = e.target.files[0];
 
     if (file?.type.startsWith("image/")) {
+      setProfilePhotoFile(file);
       const reader = new FileReader();
       reader.onload = (ev) => {
         set("profilePicture", ev.target.result);

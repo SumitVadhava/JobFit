@@ -540,37 +540,6 @@ const Candidate_Profile_View = ({ userProp }) => {
   }, [userProp]);
 
 
-  const uploadToCloudinary = async (file) => {
-    const cloudName = "ds5ohpmvm";
-    const apiKey = "956245423473788";
-    const apiSecret = "kgi5CQkQywbDrxvDeruKELohKXY";
-
-    // Generate signature using Web Crypto API
-    const timestamp = Math.floor(Date.now() / 1000).toString();
-    const strToSign = `timestamp=${timestamp}${apiSecret}`;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(strToSign);
-    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("api_key", apiKey);
-    formData.append("timestamp", timestamp);
-    formData.append("signature", signature);
-
-    // Use auto for generic files, or image for images explicitly
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-      method: "POST",
-      body: formData
-    });
-
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error?.message || "Upload failed");
-    return result.secure_url;
-  };
-
   const set = (f, v) => setData(p => ({ ...p, [f]: v }));
   const setExp = (i, f, v) => { const a = [...data.experience]; a[i] = { ...a[i], [f]: v }; set("experience", a); };
   const setEdu = (i, f, v) => { const a = [...data.education]; a[i] = { ...a[i], [f]: v }; set("education", a); };
@@ -587,15 +556,6 @@ const Candidate_Profile_View = ({ userProp }) => {
     if (data.name?.trim()) payload.userName = data.name.trim();
 
     try {
-      if (profilePhotoFile) {
-        try {
-          const imgUrl = await uploadToCloudinary(profilePhotoFile);
-          payload.img = imgUrl; // override base64 with real URL
-        } catch (uploadErr) {
-          toast.error("Failed to upload profile picture.");
-        }
-      }
-
       let response;
       if (profileExists) {
         response = await api.put("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });

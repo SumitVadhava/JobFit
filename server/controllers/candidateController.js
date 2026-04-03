@@ -4,6 +4,7 @@ const SavedJob = require("../models/savedJobs");
 const AtsHistory = require("../models/atsHistory");
 const CandidateProfile = require("../models/candidateProfile");
 const User = require("../models/users");
+const { uploadBase64Image } = require("../utils/cloudinaryHelper");
 
 /**
  * Get candidate dashboard stats
@@ -136,11 +137,13 @@ const createCandidateProfile = async (req, res) => {
       return res.status(400).json({ error: true, message: "Candidate profile already exists. Use PUT to update." });
     }
 
+    const imageUrl = await uploadBase64Image(img, "candidate_profiles");
+
     const newProfile = new CandidateProfile({
       user: userId,
       email: email || null,
       userName: userName || null,
-      img: img || null,
+      img: imageUrl || null,
       resumeLink: resumeLink || null,
       description: description || null,
       experience: experience || "0-2 years",
@@ -150,6 +153,10 @@ const createCandidateProfile = async (req, res) => {
     });
 
     await newProfile.save();
+
+    if (imageUrl) {
+      await User.findByIdAndUpdate(userId, { picture: imageUrl });
+    }
 
     res.status(201).json({
       error: false,
@@ -176,7 +183,11 @@ const updateCandidateProfile = async (req, res) => {
 
     const updateData = {};
     if (userName !== undefined) updateData.userName = userName;
-    if (img !== undefined) updateData.img = img;
+    if (img !== undefined) {
+      const imageUrl = await uploadBase64Image(img, "candidate_profiles");
+      updateData.img = imageUrl;
+      await User.findByIdAndUpdate(userId, { picture: imageUrl });
+    }
     if (resumeLink !== undefined) updateData.resumeLink = resumeLink;
     if (description !== undefined) updateData.description = description;
     if (experience !== undefined) updateData.experience = experience;
