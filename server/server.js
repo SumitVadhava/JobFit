@@ -25,6 +25,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5000",
   "https://jobfit-s5v7.onrender.com",
+  "https://jobfit-server-4vz7.onrender.com",
 ];
 
 
