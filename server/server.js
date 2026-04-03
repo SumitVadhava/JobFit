@@ -19,6 +19,7 @@ const app = express();
 
 const allowedOrigins = [
   "https://jobfit-delta.vercel.app",
+  "https://jobfit-portal.vercel.app",
   "http://localhost:5173",
   "http://localhost:3000",
   "http://localhost:5000",
@@ -41,19 +42,7 @@ app.use(
   }),
 );
 
-// connectDB();
-
-let isConnected = false;
-
-const connectDatabase = async () => {
-  if (!isConnected) {
-    await connectDB();
-    isConnected = true;
-    console.log("MongoDB Connected ✅");
-  }
-};
-
-connectDatabase();
+connectDB();
 
 
 app.use(helmet());
@@ -108,10 +97,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => {
-//   console.log(`JobFit Server running at http://localhost:${PORT}`);
-//   console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
-// });
-
-module.exports = app;
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`JobFit Server running at http://localhost:${PORT}`);
+  console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
+});
