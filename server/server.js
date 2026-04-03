@@ -96,8 +96,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`JobFit Server running at http://localhost:${PORT}`);
-  console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
-});
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => {
+//   console.log(`JobFit Server running at http://localhost:${PORT}`);
+//   console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
+// });
+
+module.exports = app;
