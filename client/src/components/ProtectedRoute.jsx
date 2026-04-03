@@ -27,7 +27,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   if (normalizedAllowedRoles.length > 0 && !normalizedAllowedRoles.includes(currentUserRole)) {
     console.warn(`User role '${currentUserRole}' not allowed for this route. Allowed roles: ${normalizedAllowedRoles.join(", ")}`);
     // Redirect to unauthorized page (we'll ensure this route exists)
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/error/403" replace />;
   }
 
   return children;

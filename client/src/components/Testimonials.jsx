@@ -10,7 +10,6 @@ const TestimonialComponent = () => {
     const fetchTestimonials = async () => {
       try {
         const response = await api.get("/testimonials");
-        console.log(response.data);
         if (response.data && response.data.testimonials) {
           setReviews(response.data.testimonials);
         }
@@ -35,7 +34,7 @@ const TestimonialComponent = () => {
           <div className="absolute right-0 top-0 z-10 h-full w-32 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
           <Marquee
             gradient={true}
-            gradientColor={[244, 63, 94]} 
+            gradientColor={[244, 63, 94]}
             gradientWidth={100}
             speed={50}
             pauseOnHover={true}

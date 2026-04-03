@@ -3,6 +3,7 @@ import api from "../api/api";
 import { toast } from 'react-toastify';
 import { useAuth } from "../contexts/AuthContexts";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 const OTPDemo = ({
     isOpen = false,
@@ -23,7 +24,6 @@ const OTPDemo = ({
     setUserData,
     setIsRegister
 }) => {
-    console.log("OTPDemo Component Mounted! isOpen is:", isOpen);
     const [otp, setOtp] = useState(Array(length).fill(""));
     const [errors, setErrors] = useState({});
     const [isResending, setIsResending] = useState(false);
@@ -156,42 +156,41 @@ const OTPDemo = ({
         setIsVerifying(true); // Start loading
 
         try {
-            const res = await api.post("/auth/verify-otp", {
+            const res = await api.post("/auth/signup/verify-otp", {
                 email,
                 otp: enteredOtp,
             });
 
-            if (res.data.message === "OTP verified successfully") {
-                toast.success("Signup successful!", {
-                    autoClose: 1000, // time in milliseconds (1 second)
+            if (res.data.error === false || res.data.message === "OTP verified successfully.") {
+                toast.success("OTP Verified!", {
+                    autoClose: 1000,
                     closeOnClick: true,
                     pauseOnHover: false,
                     draggable: false,
                 });
 
-                const status = "active"
-                const response = await api.post("/signup", {
-                    userName, email, password, role, status, recruiterKey
+                const response = await api.post("/auth/signup", {
+                    userName, email, password, role
                 });
 
-                const generatedToken = response.data.token;
-                const postUser = response.data.user;
-                const responserole = response.data.user.role;
+                if (response.data.error) {
+                    toast.error(response.data.message || "Signup failed");
+                    return;
+                }
 
-                login(postUser, generatedToken, responserole);
-                setUserData({
-                    userName: postUser.userName,
-                    email: postUser.email,
-                    sub: "",
-                    picture: postUser.picture,
-                    role: postUser.role,
-                });
+                const generatedToken = response.data.data.token;
+                login(generatedToken);
 
                 setIsRegister(true);
 
-                if (responserole === "admin") {
+                const decodedToken = jwtDecode(generatedToken);
+                const userRole = decodedToken.role;
+
+                toast.success("Signup successful!");
+
+                if (userRole === "admin") {
                     navigate("/admin/dashboard");
-                } else if (responserole === "recruiter") {
+                } else if (userRole === "recruiter") {
                     navigate("/recruiter/dashboard");
                 } else {
                     navigate("/candidate/dashboard");
@@ -200,15 +199,15 @@ const OTPDemo = ({
             onClose();
             setIsRegister(false);
         } catch (err) {
-            toast.error("OTP verification failed.", {
-                autoClose: 1000, // time in milliseconds (1 second)
+            toast.error(err.response?.data?.message || "Verification failed.", {
+                autoClose: 1000,
                 closeOnClick: true,
                 pauseOnHover: false,
                 draggable: false,
             });
-            console.error("OTP verification failed:", err.response?.data || err.message);
+            console.error("Verification failed:", err.response?.data || err.message);
         } finally {
-            setIsVerifying(false); // Stop loading regardless of outcome
+            setIsVerifying(false);
         }
     }
 

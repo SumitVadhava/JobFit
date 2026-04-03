@@ -8,13 +8,19 @@ const savedJobSchema = new mongoose.Schema(
     },
     userModel: {
       type: String,
-      enum: ["logins", "google_logins"],
-      default: "logins",
-      required: true,
+      enum: ["users"],
+      default: "users",
+      required: true, 
     },
     jobId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "jobs",
+      required: true,
+    },
+    saved: {
+      type: Boolean,
+      enum: [true, false],
+      default: true,
       required: true,
     },
     savedAt: {
@@ -29,9 +35,6 @@ const savedJobSchema = new mongoose.Schema(
       type: Date,
       default: () => new Date(Date.now() + 5.5 * 60 * 60 * 1000),
     },
-  },
-  {
-    timestamps: false,
   },
 );
 

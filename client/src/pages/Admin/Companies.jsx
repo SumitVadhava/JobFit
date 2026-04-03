@@ -8,6 +8,9 @@ import BusinessIcon from '@mui/icons-material/Business';
 import WorkIcon from '@mui/icons-material/Work';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import GridViewIcon from '@mui/icons-material/GridView';
+import TableRowsIcon from '@mui/icons-material/TableRows';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 /* ─── Google Fonts ─── */
 const fontLink = document.createElement('link');
@@ -67,39 +70,41 @@ const StatCard = ({ icon: Icon, label, value, color, delay }) => (
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.45, delay }}
-    style={{ flex: 1, minWidth: 140 }}
+    className="flex-1 min-w-[140px]"
   >
-    <Paper
-      elevation={0}
-      sx={{
-        p: { xs: 2, sm: 2.5 },
-        borderRadius: 3,
-        border: '1px solid #F1F5F9',
-        bgcolor: '#FFFFFF',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        transition: 'all 0.25s ease',
-        '&:hover': { borderColor: color, boxShadow: `0 4px 16px ${color}18` },
+    <div
+      className="p-5 rounded-2xl border bg-white flex items-center gap-4 transition-all duration-300 h-full"
+      style={{
+        borderColor: "#F1F5F9",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = color;
+        e.currentTarget.style.boxShadow = `0 4px 16px ${color}18`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "#F1F5F9";
+        e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
       }}
     >
-      <Box sx={{
-        width: 44, height: 44, borderRadius: 2.5,
-        bgcolor: `${color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+        style={{ backgroundColor: `${color}12` }}
+      >
         <Icon sx={{ fontSize: 22, color }} />
-      </Box>
-      <Box>
-        <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      </div>
+      <div>
+        <p className="text-[11px] uppercase tracking-wider font-semibold text-gray-400">
           {label}
-        </Typography>
-        <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
+        </p>
+        <p className="text-2xl font-black text-black mt-0.5 leading-none">
           {value}
-        </Typography>
-      </Box>
-    </Paper>
+        </p>
+      </div>
+    </div>
   </motion.div>
 );
+
 
 /* ─── Search Bar ─── */
 const SearchBar = ({ value, onChange }) => (
@@ -347,7 +352,7 @@ const CompanyTable = ({ companies, loading, sortKey, sortDir, onSort }) => (
                     {/* Status Breakdown */}
                     <td style={{ padding: '16px 20px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                        <StatusBadge count={co.reviewed} label="Reviewed" bg={t.greenDim} color={t.green} />
+                        <StatusBadge count={co.verified} label="Verified" bg={t.greenDim} color={t.green} />
                         <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />
                         <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />
                       </div>
@@ -370,52 +375,69 @@ const CompanyTable = ({ companies, loading, sortKey, sortDir, onSort }) => (
   </div>
 );
 
-/* ─── Mobile Company Card ─── */
-const MobileCard = ({ co, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: .3, delay: index * 0.05 }}
-    style={{
-      background: t.card, border: `1px solid ${t.border}`,
-      borderRadius: 14, padding: '16px 18px',
-      display: 'flex', flexDirection: 'column', gap: 10,
-      boxShadow: '0 4px 12px rgba(107, 70, 193, 0.05)',
-    }}
-  >
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{
-        width: 40, height: 40, borderRadius: 10,
-        background: `${t.accent}14`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-      }}>
-        <span style={{ fontSize: 17, fontWeight: 700, color: t.accent, fontFamily: "'Inter', sans-serif" }}>
-          {co.companyName.charAt(0).toUpperCase()}
-        </span>
+/* ─── Company Card (Grid View) ─── */
+
+
+
+const CompanyCard = ({ co, index }) => {
+  const [imgError, setImgError] = React.useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+      className="group bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-xl hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 relative"
+    >
+      {/* Jobs Badge */}
+      <div className="absolute top-4 right-4 bg-purple-50 text-purple-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border border-purple-100/50 shadow-sm">
+        {co.totalJobs} Jobs
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: t.text, fontWeight: 700, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {co.companyName}
-        </span>
-        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: t.muted }}>
-          {co.lastPostedLabel}
-        </span>
+
+      <div className="p-6">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0 group-hover:bg-purple-100 transition-colors overflow-hidden">
+            {co.logo && !imgError ? (
+              <img
+                src={co.logo}
+                alt={co.companyName}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <span className="text-2xl font-black text-purple-600">
+                {co.companyName.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0 pr-12">
+            <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-700 transition-colors truncate">
+              {co.companyName}
+            </h3>
+            <p className="text-xs text-gray-400 font-medium mt-1">
+              Active since: {co.lastPostedLabel}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 pt-5 border-t border-gray-100">
+          <div className="flex flex-wrap gap-2">
+            {co.verified > 0 && <StatusBadge count={co.verified} label="Verified" bg={t.greenDim} color={t.green} />}
+            {co.pending > 0 && <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />}
+            {co.risky > 0 && <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />}
+            {co.verified === 0 && co.pending === 0 && co.risky === 0 && (
+              <span style={{
+                fontSize: 11, color: t.muted,
+                fontFamily: "'Inter', sans-serif", fontWeight: 500,
+              }}>No status data</span>
+            )}
+          </div>
+        </div>
       </div>
-      <span style={{
-        background: `${t.accent}10`, color: t.accent,
-        border: `1px solid ${t.accent}25`,
-        borderRadius: 99, padding: '3px 10px',
-        fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: 700, flexShrink: 0,
-      }}>
-        {co.totalJobs} job{co.totalJobs !== 1 ? 's' : ''}
-      </span>
-    </div>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-      <StatusBadge count={co.reviewed} label="Reviewed" bg={t.greenDim} color={t.green} />
-      <StatusBadge count={co.pending} label="Pending" bg={t.amberDim} color={t.amber} />
-      <StatusBadge count={co.risky} label="Risky" bg={t.redDim} color={t.red} />
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
+
 
 /* ─── Main Component ─── */
 const COMPANIES_PER_PAGE = 8;
@@ -428,6 +450,8 @@ const Companies = () => {
   const [sortDir, setSortDir] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const [viewMode, setViewMode] = useState('grid'); // 'table' or 'grid'
+
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 640);
@@ -459,12 +483,26 @@ const Companies = () => {
   jobsData.forEach(job => {
     const name = job.companyName || 'Unknown';
     if (!companiesMap[name]) {
-      companiesMap[name] = { companyName: name, totalJobs: 0, pending: 0, reviewed: 0, risky: 0, lastPosted: 0 };
+      companiesMap[name] = {
+        companyName: name,
+        totalJobs: 0,
+        pending: 0,
+        verified: 0,
+        risky: 0,
+        lastPosted: 0,
+        logo: job.img || job.logo || null // Capture logo from job record
+      };
     }
     const c = companiesMap[name];
+
+    // Update logo if current is null but job has one
+    if (!c.logo && (job.img || job.logo)) {
+      c.logo = job.img || job.logo;
+    }
+
     c.totalJobs += 1;
-    const status = job.adminReview || 'pending';
-    if (status === 'reviewed') c.reviewed += 1;
+    const status = job.status || 'pending';
+    if (status === 'verified') c.verified += 1;
     else if (status === 'risky') c.risky += 1;
     else c.pending += 1;
 
@@ -483,8 +521,8 @@ const Companies = () => {
 
   /* ─── Stats ─── */
   const totalJobs = jobsData.length;
-  const totalReviewed = jobsData.filter(j => j.adminReview === 'reviewed').length;
-  const totalRisky = jobsData.filter(j => j.adminReview === 'risky').length;
+  const totalVerified = jobsData.filter(j => j.status === 'verified').length;
+  const totalRisky = jobsData.filter(j => j.status === 'risky').length;
 
   /* ─── Filter ─── */
   const filtered = allCompanies.filter(co =>
@@ -577,40 +615,58 @@ const Companies = () => {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <StatCard label="Companies" value={allCompanies.length} color={t.accent} icon={BusinessIcon} delay={.1} />
             <StatCard label="Total Jobs" value={totalJobs} color="#0284C7" icon={WorkIcon} delay={.15} />
-            <StatCard label="Reviewed" value={totalReviewed} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
+            <StatCard label="Verified" value={totalVerified} color={t.green} icon={CheckCircleOutlineIcon} delay={.2} />
             <StatCard label="Risky" value={totalRisky} color={t.red} icon={ReportProblemIcon} delay={.25} />
           </div>
 
-          {/* ── Search ── */}
+          {/* ── Search & View Toggle ── */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .3, duration: .4 }}
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
           >
             <SearchBar value={searchQuery} onChange={handleSearch} />
+
+            <div className="flex bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'grid' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                <GridViewIcon sx={{ fontSize: 18 }} />
+                Grid
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'table' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                <TableRowsIcon sx={{ fontSize: 18 }} />
+                Table
+              </button>
+            </div>
           </motion.div>
+
 
           {/* ── Table / Cards ── */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35, duration: .4 }}>
-            {isMobile ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {loading
-                  ? [1, 2, 3].map(i => (
-                    <div key={i} className="shimmer-row" style={{ height: 100, borderRadius: 14 }} />
-                  ))
-                  : paginated.length === 0
-                    ? (
-                      <div style={{
-                        background: t.card, border: `1px solid ${t.border}`,
-                        borderRadius: 14, padding: '48px 20px',
-                        textAlign: 'center', color: t.muted, fontSize: 14,
-                        fontFamily: "'Inter', sans-serif",
-                      }}>
-                        No companies match your search.
-                      </div>
-                    )
-                    : paginated.map((co, i) => (
-                      <MobileCard key={co.companyName} co={co} index={i} />
-                    ))
-                }
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="shimmer-row" style={{ height: 220, borderRadius: 24 }} />
+                ))}
+              </div>
+            ) : paginated.length === 0 ? (
+              <div style={{
+                background: t.card, border: `1px solid ${t.border}`,
+                borderRadius: 14, padding: '48px 20px',
+                textAlign: 'center', color: t.muted, fontSize: 14,
+                fontFamily: "'Inter', sans-serif",
+              }}>
+                No companies match your search.
+              </div>
+            ) : viewMode === 'grid' || isMobile ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginated.map((co, i) => (
+                  <CompanyCard key={co.companyName} co={co} index={i} />
+                ))}
               </div>
             ) : (
               <CompanyTable
@@ -621,6 +677,7 @@ const Companies = () => {
                 onSort={handleSort}
               />
             )}
+
 
             {/* ── Pagination ── */}
             {!loading && (

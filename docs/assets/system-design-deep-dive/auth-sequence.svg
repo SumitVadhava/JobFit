@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Authentication and Authorization Sequence</title>
+  <desc id="desc">Detailed sequence for login, JWT issuance, and protected resource authorization.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#f1f5fb"/>
+    </linearGradient>
+    <filter id="laneShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#1e293b" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L0,10 L10,5 z" fill="#475569"/>
+    </marker>
+    <style>
+      .title { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 34px; font-weight: 600; fill: #0f172a; }
+      .subtitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 16px; font-weight: 450; fill: #475569; }
+      .laneHead { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 16px; font-weight: 550; fill: #0f172a; }
+      .stepText { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 13px; font-weight: 500; fill: #334155; }
+      .smallNote { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 12px; font-weight: 450; fill: #64748b; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" rx="24" fill="url(#bg)"/>
+  <text x="800" y="64" text-anchor="middle" class="title">Authentication and Authorization Sequence</text>
+  <text x="800" y="96" text-anchor="middle" class="subtitle">Credential validation, token issuance, and guarded endpoint access</text>
+
+  <g filter="url(#laneShadow)">
+    <rect x="100" y="130" width="180" height="700" rx="14" fill="#ffffff" fill-opacity="0.88" stroke="#dbe3f1"/>
+    <rect x="410" y="130" width="180" height="700" rx="14" fill="#ffffff" fill-opacity="0.88" stroke="#dbe3f1"/>
+    <rect x="750" y="130" width="180" height="700" rx="14" fill="#ffffff" fill-opacity="0.88" stroke="#dbe3f1"/>
+    <rect x="1090" y="130" width="180" height="700" rx="14" fill="#ffffff" fill-opacity="0.88" stroke="#dbe3f1"/>
+  </g>
+
+  <text x="190" y="165" text-anchor="middle" class="laneHead">User</text>
+  <text x="500" y="165" text-anchor="middle" class="laneHead">Frontend</text>
+  <text x="840" y="165" text-anchor="middle" class="laneHead">Backend API</text>
+  <text x="1180" y="165" text-anchor="middle" class="laneHead">MongoDB</text>
+
+  <g stroke="#cbd5e1" stroke-width="1.8" stroke-dasharray="7 8">
+    <line x1="190" y1="180" x2="190" y2="810"/>
+    <line x1="500" y1="180" x2="500" y2="810"/>
+    <line x1="840" y1="180" x2="840" y2="810"/>
+    <line x1="1180" y1="180" x2="1180" y2="810"/>
+  </g>
+
+  <g stroke="#475569" stroke-width="2.4" marker-end="url(#arrow)">
+    <line x1="190" y1="230" x2="500" y2="230"/>
+    <line x1="500" y1="285" x2="840" y2="285"/>
+    <line x1="840" y1="340" x2="1180" y2="340"/>
+    <line x1="1180" y1="395" x2="840" y2="395"/>
+    <line x1="840" y1="505" x2="500" y2="505"/>
+    <line x1="500" y1="560" x2="190" y2="560"/>
+    <line x1="190" y1="635" x2="500" y2="635"/>
+    <line x1="500" y1="690" x2="840" y2="690"/>
+    <line x1="840" y1="745" x2="500" y2="745"/>
+  </g>
+
+  <g class="stepText">
+    <text x="345" y="218" text-anchor="middle">1. submit credentials</text>
+    <text x="670" y="273" text-anchor="middle">2. POST /api/login</text>
+    <text x="1010" y="328" text-anchor="middle">3. lookup by email</text>
+    <text x="1010" y="383" text-anchor="middle">4. return user document</text>
+    <text x="670" y="493" text-anchor="middle">5. return JWT and role payload</text>
+    <text x="345" y="548" text-anchor="middle">6. login success state</text>
+    <text x="345" y="623" text-anchor="middle">7. open protected route</text>
+    <text x="670" y="678" text-anchor="middle">8. request with Authorization header</text>
+    <text x="670" y="733" text-anchor="middle">9. protected resource response</text>
+  </g>
+
+  <rect x="770" y="430" width="250" height="72" rx="12" fill="#ecfeff" stroke="#67e8f9"/>
+  <text x="895" y="458" text-anchor="middle" class="stepText" fill="#0f766e">middleware security gate</text>
+  <text x="895" y="478" text-anchor="middle" class="smallNote">auth token verify + authorizeRole check</text>
+
+  <rect x="780" y="770" width="282" height="50" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="921" y="801" text-anchor="middle" class="smallNote">Session remains valid until token expiry or logout.</text>
+</svg>
+

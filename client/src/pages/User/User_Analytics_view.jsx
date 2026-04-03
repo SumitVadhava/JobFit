@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import api from "../../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Skeleton from "../../components/Skeleton";
 
 import {
   Bookmark,
@@ -16,6 +17,7 @@ import {
   FileText,
   Building2,
   Clock,
+  CircleDot,
 } from "lucide-react";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -197,24 +199,22 @@ function UserAnalytics() {
         setLoading(true);
 
         const [profileRes, savedRes, appliedRes, resumeRes, atsHistoryRes] = await Promise.all([
-          api.get("/profile").catch(() => null),
-          api.get("/user/savedJobs").catch(() => null),
-          api.get("/user/applied-companies").catch(() => null),
-          userId
-            ? api.get(`/resume/${userId}`).catch(() => null)
-            : Promise.resolve(null),
-          api.get("/atshistory").catch(() => null),
+          api.get("/candidate/profile").catch(() => null),
+          api.get("/candidate/saved-jobs").catch(() => null),
+          api.get("/candidate/applied-jobs").catch(() => null),
+          api.get("/candidate/ats-analyzer").catch(() => null),
         ]);
 
         // Profile
-        const prof = profileRes?.data?.profile || {};
+        const prof = profileRes?.data?.data || profileRes?.data?.profile || {};
         setProfile(prof);
 
         // Saved jobs
-        setSavedJobsCount(savedRes?.data?.totalSavedJobs ?? 0);
+        setSavedJobsCount(savedRes?.data?.data?.length ?? savedRes?.data?.totalSavedJobs ?? 0);
 
         // Applied jobs
         const apps =
+          appliedRes?.data?.data ||
           appliedRes?.data?.applications ||
           appliedRes?.data?.appliedJobs ||
           [];
@@ -228,14 +228,25 @@ function UserAnalytics() {
         const normalised = Array.isArray(resumeList) ? resumeList : [];
         setResumes(normalised);
 
-        // ATS History from ATS analyzer
-        const atsData = atsHistoryRes?.data?.history || [];
-        setRawAtsHistory(atsData);
+        // ATS History from ATS analyzer endpoint
+        const atsData = atsHistoryRes?.data?.data?.atsScores || atsHistoryRes?.data?.history || [];
 
-        // Build ATS history from both resume data and ATS raw data
-        setAtsHistory(buildAtsHistory(normalised, atsData));
+        // ── Also merge localStorage ATS history (saved by client-side ATS calls) ──
+        let localAtsHistory = [];
+        try {
+          localAtsHistory = JSON.parse(localStorage.getItem('atsHistory') || '[]');
+        } catch (e) { /* ignore parse errors */ }
+
+        // Combine server history + localStorage history, de-dupe by timestamp
+        const serverTimestamps = new Set(atsData.map(e => e.analyzedAt));
+        const uniqueLocal = localAtsHistory.filter(e => !serverTimestamps.has(e.analyzedAt));
+        const mergedAtsData = [...atsData, ...uniqueLocal];
+
+        setRawAtsHistory(mergedAtsData);
+
+        // Build ATS history from both resume data and merged ATS data
+        setAtsHistory(buildAtsHistory(normalised, mergedAtsData));
       } catch (err) {
-        console.error("Analytics fetch error:", err);
         toast.error("Failed to load analytics data.");
       } finally {
         setLoading(false);
@@ -277,11 +288,13 @@ function UserAnalytics() {
 
   const totalAtsCount = resumes.length + rawAtsHistory.length;
   const skillsCount = profile?.skills?.length ?? 0;
+  const softSkillsCount = profile?.softSkills?.length ?? 0;
+  const totalSkillsCount = skillsCount + softSkillsCount;
   const appliedCount = applications.length;
 
   // Application status breakdown
   const statusBreakdown = React.useMemo(() => {
-    const counts = { applied: 0, shortlisted: 0, rejected: 0, accepted: 0 };
+    const counts = { applied: 0, shortlisted: 0, rejected: 0, hired: 0 };
     applications.forEach((a) => {
       if (counts[a.status] !== undefined) counts[a.status]++;
     });
@@ -300,16 +313,90 @@ function UserAnalytics() {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 border-4 rounded-full animate-spin"
-            style={{ borderColor: "#f3e8ff", borderTopColor: ACCENT }}
-          />
-          <p className="text-base font-medium text-gray-400 animate-pulse">
-            Loading your analytics...
-          </p>
-        </div>
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#faf5ff_0%,_#ffffff_48%)]">
+        <main className="min-w-0">
+          <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-8">
+            {/* Header Skeleton */}
+            <div className="flex items-start sm:items-center justify-between gap-4">
+              <div>
+                <Skeleton variant="title" className="h-8 w-48 mb-2" />
+                <Skeleton variant="text" className="h-4 w-64" />
+              </div>
+              <Skeleton className="h-6 w-24 rounded-full hidden sm:block" />
+            </div>
+
+            {/* Profile Progress Skeleton */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+              <div className="flex justify-between mb-3">
+                <Skeleton variant="title" className="h-5 w-32" />
+                <Skeleton variant="text" className="h-5 w-12" />
+              </div>
+              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <Skeleton className="w-1/2 h-full" />
+              </div>
+              <Skeleton variant="text" className="h-3 w-64 mt-3" />
+            </div>
+
+            {/* Stat Cards Skeleton */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4">
+                  <Skeleton variant="circle" className="h-11 w-11 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton variant="text" className="h-3 w-16" />
+                    <Skeleton variant="text" className="h-6 w-10" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ATS History Skeleton */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm">
+              <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 mb-5">
+                <div>
+                  <Skeleton variant="title" className="h-6 w-32 mb-2" />
+                  <Skeleton variant="text" className="h-3 w-64" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-32 rounded-xl" />
+                  <Skeleton className="h-6 w-24 rounded-xl" />
+                </div>
+              </div>
+              <div className="space-y-4 py-8">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-gray-100">
+                    <Skeleton variant="circle" className="h-11 w-11 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton variant="text" className="h-4 w-40" />
+                      <Skeleton variant="text" className="h-3 w-32" />
+                    </div>
+                    <Skeleton className="h-5 w-16 rounded-full hidden sm:block" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Applications Skeleton */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <Skeleton variant="title" className="h-6 w-40" />
+                <Skeleton variant="text" className="h-4 w-16 hidden sm:block" />
+              </div>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100">
+                    <Skeleton variant="circle" className="h-10 w-10 shrink-0" />
+                    <div className="flex-1">
+                      <Skeleton variant="text" className="h-4 w-32 mb-1.5" />
+                      <Skeleton variant="text" className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-5 w-16 rounded-full hidden sm:block" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -317,15 +404,7 @@ function UserAnalytics() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#faf5ff_0%,_#ffffff_48%)]">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        theme="light"
-      />
+
 
       <main className="min-w-0">
         <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-8">
@@ -349,12 +428,9 @@ function UserAnalytics() {
                 — here's your real-time performance overview.
               </p>
             </div>
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white"
-              style={{ borderColor: "#E2E8F0" }}
-            >
-              <Activity size={12} className="text-emerald-500" />
-              Live
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600">
+              <CircleDot size={12} className="text-emerald-500" />
+              Live updates
             </span>
           </motion.div>
 
@@ -365,7 +441,7 @@ function UserAnalytics() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard icon={Bookmark} label="Saved Jobs" value={savedJobsCount} delay={0} />
             <StatCard icon={Briefcase} label="Applied" value={appliedCount} delay={0.08} />
-            <StatCard icon={Code2} label="Skills" value={skillsCount} delay={0.16} />
+            <StatCard icon={Code2} label="Skills" value={totalSkillsCount} delay={0.16} />
             <StatCard icon={Star} label="Best ATS" value={`${bestAtsScore}%`} delay={0.24} />
           </div>
 
@@ -503,7 +579,7 @@ function UserAnalytics() {
                     applied: { bg: "#f0fdf4", text: "#16a34a", border: "#bbf7d0" },
                     shortlisted: { bg: "#eff6ff", text: "#2563eb", border: "#bfdbfe" },
                     rejected: { bg: "#fff1f2", text: "#dc2626", border: "#fecdd3" },
-                    accepted: { bg: "#faf5ff", text: ACCENT, border: ACCENT_BORDER },
+                    hired: { bg: "#faf5ff", text: ACCENT, border: ACCENT_BORDER },
                   }[app.status] || { bg: "#f8fafc", text: "#64748b", border: "#e2e8f0" };
 
                   return (
@@ -515,10 +591,10 @@ function UserAnalytics() {
                       className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
                     >
                       {/* Company logo / fallback */}
-                      {app.img ? (
+                      {app.jobId?.img || app.img ? (
                         <img
-                          src={app.img}
-                          alt={app.companyName}
+                          src={app.jobId?.img || app.img}
+                          alt={app.jobId?.companyName || app.companyName}
                           className="w-10 h-10 rounded-xl object-cover border border-gray-100 shrink-0"
                           onError={(e) => { e.target.style.display = "none"; }}
                         />
@@ -527,19 +603,19 @@ function UserAnalytics() {
                           className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
                           style={{ background: ACCENT }}
                         >
-                          {(app.companyName || "?").charAt(0).toUpperCase()}
+                          {((app.jobId?.companyName || app.companyName) || "?").charAt(0).toUpperCase()}
                         </div>
                       )}
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-black truncate">
-                          {app.jobTitle || "Unknown Role"}
+                          {app.jobId?.jobTitle || app.jobTitle || "Unknown Role"}
                         </p>
                         <p className="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1">
                           <Building2 size={11} />
-                          {app.companyName || "—"}
-                          {app.location && ` · ${app.location}`}
+                          {app.jobId?.companyName || app.companyName || "—"}
+                          {(app.jobId?.location || app.location) && ` · ${app.jobId?.location || app.location}`}
                         </p>
                       </div>
 
@@ -572,7 +648,7 @@ function UserAnalytics() {
                   { label: "Applied", key: "applied", color: "#16a34a" },
                   { label: "Shortlisted", key: "shortlisted", color: "#2563eb" },
                   { label: "Rejected", key: "rejected", color: "#dc2626" },
-                  { label: "Accepted", key: "accepted", color: ACCENT },
+                  { label: "Hired", key: "hired", color: ACCENT },
                 ].map(({ label, key, color }) => (
                   <div key={key} className="text-center">
                     <p className="text-lg font-black" style={{ color }}>

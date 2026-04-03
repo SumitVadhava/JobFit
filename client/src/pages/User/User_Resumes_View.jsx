@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import api from '../../api/api';
+import Skeleton from '../../components/Skeleton';
 
 const ErrorBoundary = ({ children }) => {
   const [hasError, setHasError] = useState(false);
@@ -277,6 +278,16 @@ const ResumeTable = ({ resumes, onViewFeedback, onDelete, onSort }) => {
                   <div className="">
 
                     <button
+                      onClick={() => onViewFeedback(resume)}
+                      className="text-[#60758a] hover:text-[#0c7ff2] transition-colors"
+                      aria-label={`View feedback for ${resume.name}`}
+                      title="View Feedback"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+                        <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-16-56a16,16,0,1,1,16-16A16,16,0,0,1,112,160Z" />
+                      </svg>
+                    </button>
+                    <button
                       onClick={() => onDelete(resume)}
                       className="text-[#60758a] hover:text-red-500 transition-colors"
                       aria-label={`Delete ${resume.name}`}
@@ -396,30 +407,26 @@ const Resumes = ({ atsData, setAtsData }) => {
     setFile(selectedFile);
   };
 
-  const handleViewFeedback = async () => {
-    if (!file) {
-      alert('Please select a file');
-      return;
-    }
+  const handleViewFeedback = async (resume) => {
     try {
-      const formData = new FormData();
-      formData.append('pdf', file);
-      formData.append('jobDesc', description);
+      // 1. Try to find the full analysis in localStorage first
+      const localHistory = JSON.parse(localStorage.getItem('atsHistory') || '[]');
+      const savedReport = localHistory.find(h => 
+        h.resumeName === resume.name && 
+        (new Date(h.analyzedAt).toDateString() === new Date().toDateString() || h.score === resume.atsScore)
+      );
 
-      const response = await api.post('/resume/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      // Make sure response.data exists and has the expected structure
-      if (response.data && response.data.analysis) {
-        setAtsData(response.data);
-        navigate('/user/ats');
-      } else {
-        showToast('Invalid response from server', 'error');
+      if (savedReport && savedReport.fullAnalysis) {
+        setAtsData({ success: true, analysis: savedReport.fullAnalysis });
+        navigate('/candidate/ats-analyzer');
+        return;
       }
+
+      // 2. If not found in localStorage, we can't show full feedback (only score is in history)
+      showToast('Detailed report not found. Please re-analyze the resume.', 'error');
     } catch (error) {
-      console.error('Error uploading resume:', error);
-      showToast('Failed to analyze resume', 'error');
+      console.error('Error viewing feedback:', error);
+      showToast('Failed to load feedback', 'error');
     }
   };
 
@@ -458,43 +465,87 @@ const Resumes = ({ atsData, setAtsData }) => {
   };
 
   const handleUpload = async () => {
-    setLoading(true);
-
     if (!file) {
-      alert('Please select a file');
+      showToast('Please select a file', 'error');
       return;
     }
+    if (!description.trim()) {
+      showToast('Please enter a job description for better analysis.', 'error');
+      return;
+    }
+
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append('pdf', file);
-      formData.append('jobDesc', description);
+      formData.append('jobDesc', description.trim());
 
-      console.log("Sending request with:", { file, description }); // Debug log
-
-      const response = await api.post('/resume/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // Call the external ATS API directly
+      const response = await fetch('https://jobfit-ats-api-1.onrender.com/analyze', {
+        method: 'POST',
+        body: formData,
       });
 
-      console.log("Received response:", response.data); // Debug log
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `ATS API error: ${response.status}`);
+      }
 
-      if (response.data) {
-        setAtsData(response.data);
-        setResumes([...resumes, {
-          name: file.name,
-          uploadDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-          atsScore: response.data.analysis?.result?.ATSScore || 0
-        }]);
-        setFile(null);
-        showToast(`Resume "${file.name}" uploaded successfully!`, 'success');
-        navigate('/candidate/ats-analyzer');
+      const data = await response.json();
+
+      if (data && data.result) {
+        const atsResult = { success: true, analysis: data };
+        setAtsData(atsResult);
+
+        const atsScore = data.result['ATS Score'] || 0;
+
+        // ── Persist FULL analysis to localStorage ──
+        try {
+          const existing = JSON.parse(localStorage.getItem('atsHistory') || '[]');
+          const newEntry = {
+            score: atsScore,
+            analyzedAt: new Date().toISOString(),
+            resumeName: file.name,
+            fullAnalysis: data // Store the whole result
+          };
+          // Keep most recent 50 entries
+          const updated = [newEntry, ...existing].slice(0, 50);
+          localStorage.setItem('atsHistory', JSON.stringify(updated));
+        } catch (storageErr) {
+          console.warn('Could not save ATS history to localStorage:', storageErr);
+        }
+
+        // Persist the ATS score to candidate profile via existing endpoint
+        try {
+          await api.put('/candidate/profile', { atsScore });
+        } catch (profileErr) {
+          console.warn('Could not save ATS score to profile:', profileErr.message);
+        }
+
+        setResumes(prev => {
+          const exists = prev.some(r => r.name === file.name);
+          if (exists) {
+            return prev.map(r => r.name === file.name ? { ...r, atsScore, uploadDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) } : r);
+          }
+          return [{
+            name: file.name,
+            uploadDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            atsScore,
+          }, ...prev];
+        });
+
+        // setFile(null); // Keep the file so user can re-analyze or see it
+        showToast(`Resume "${file.name}" analyzed successfully!`, 'success');
+        
+        // Wait a bit before navigate so toast is visible
+        setTimeout(() => navigate('/candidate/ats-analyzer'), 1000);
       } else {
-        showToast('Invalid response from server', 'error');
+        showToast('Invalid response from ATS server', 'error');
       }
     } catch (error) {
-      console.error('Error uploading resume:', error);
-      showToast('Failed to analyze resume', 'error');
-    }
-    finally {
+      console.error('Error analyzing resume:', error);
+      showToast(error.message || 'Failed to analyze resume. Please try again.', 'error');
+    } finally {
       setLoading(false);
     }
   }

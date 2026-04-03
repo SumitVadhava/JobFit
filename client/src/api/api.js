@@ -1,7 +1,14 @@
 import axios from "axios";
 
+const rawApiUrl = (import.meta.env.VITE_API_URL || "").trim();
+const normalizedApiUrl =
+  window.location.protocol === "https:" && rawApiUrl.startsWith("http://")
+    ? rawApiUrl.replace("http://", "https://")
+    : rawApiUrl;
+
 const api = axios.create({
-  baseURL: "https://jobfit-s5v7.onrender.com/api",
+  baseURL: normalizedApiUrl,
+  // baseURL: "http://localhost:5000/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -18,7 +25,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor to handle global errors
@@ -28,10 +35,12 @@ api.interceptors.response.use(
     // You can handle global errors here, like logging out on 401
     if (error.response && error.response.status === 401) {
       console.error("Unauthorized! Redirecting to login...");
-      // Optional: localStorage.clear(); window.location.href = "/login";
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

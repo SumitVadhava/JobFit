@@ -7,49 +7,51 @@ export const ACCENT_BORDER = "rgba(156, 68, 254, 0.15)";
 import { motion } from 'framer-motion';
 import { Box, Paper, Typography } from '@mui/material';
 
-export const StatCard = ({ icon: Icon, label, value, color, delay }) => (
+export const StatCard = ({ icon: Icon, label, value, color, delay = 0 }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.45, delay }}
-    style={{ flex: 1, minWidth: 140 }}
+    className="flex-1 min-w-[140px]"
   >
-    <Paper
-      elevation={0}
-      sx={{
-        p: { xs: 2, sm: 2.5 },
-        borderRadius: 3,
-        border: '1px solid #F1F5F9',
-        bgcolor: '#FFFFFF',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        transition: 'all 0.25s ease',
-        '&:hover': { borderColor: color, boxShadow: `0 4px 16px ${color}18` },
+    <div
+      className="p-5 rounded-2xl border bg-white flex items-center gap-4 transition-all duration-300 h-full"
+      style={{
+        borderColor: "#F1F5F9",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = color;
+        e.currentTarget.style.boxShadow = `0 4px 16px ${color}18`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "#F1F5F9";
+        e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
       }}
     >
-      <Box sx={{
-        width: 44, height: 44, borderRadius: 2.5,
-        bgcolor: `${color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <Icon sx={{ fontSize: 22, color }} />
-      </Box>
-      <Box>
-        <Typography sx={{ fontSize: '0.75rem', fontWeight: 500, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+        style={{ backgroundColor: `${color}12` }}
+      >
+        {Icon.render ? <Icon sx={{ fontSize: 22, color }} /> : <Icon size={22} style={{ color }} />}
+      </div>
+      <div>
+        <p className="text-[11px] uppercase tracking-wider font-semibold text-gray-400">
           {label}
-        </Typography>
-        <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.2 }}>
+        </p>
+        <p className="text-2xl font-black text-black mt-0.5 leading-none">
           {value}
-        </Typography>
-      </Box>
-    </Paper>
+        </p>
+      </div>
+    </div>
   </motion.div>
 );
 
-export const EmptyState = ({ icon, title, subtitle }) => (
+
+export const EmptyState = ({ icon: Icon, title, subtitle }) => (
   <div className="bg-white rounded-3xl border border-gray-100 p-16 text-center">
     <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-gray-50">
-      {icon}
+      {Icon && <Icon size={32} className="text-gray-300 mx-auto" />}
     </div>
     <h3 className="text-xl font-bold text-black mb-2">{title}</h3>
     <p className="text-sm text-gray-500 max-w-sm mx-auto">{subtitle}</p>

@@ -1,270 +1,56 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  Eye,
-  Briefcase,
-  MapPin,
-  Building2,
-  Clock,
-  Users,
-  BookmarkIcon,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
-  Monitor,
-} from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../../api/api";
+import WorkIcon from "@mui/icons-material/Work";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import PeopleIcon from "@mui/icons-material/People";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-/* ─────────────────── Constants ─────────────────── */
-const ACCENT = "#9c44fe";
-
-/* ─────────────── ATS Score Circle ──────────────── */
-const AtsScoreCircle = ({ score = 0, size = 64 }) => {
-  const sw = 5;
-  const r = (size - sw * 2) / 2;
-  const circ = 2 * Math.PI * r;
-  const off = circ - (score / 100) * circ;
-
-  const color =
-    score >= 80
-      ? "#22c55e"
-      : score >= 60
-        ? "#eab308"
-        : score >= 40
-          ? "#f97316"
-          : "#ef4444";
-
-  return (
-    <div
-      className="relative flex items-center justify-center"
-      style={{ width: size, height: size }}
-    >
-      <svg width={size} height={size} className="-rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="#f3f4f6"
-          strokeWidth={sw}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth={sw}
-          strokeDasharray={circ}
-          strokeDashoffset={off}
-          strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 1.2s ease-out" }}
-        />
-      </svg>
-      <span className="absolute text-sm font-extrabold" style={{ color }}>
-        {score}
-      </span>
-    </div>
-  );
-};
-
-/* ──────────────── Stat Card ────────────────────── */
-const StatCard = ({ icon, label, value, sub, iconBorder = false }) => (
-  <div
-    className={`rounded-2xl border p-5 transition-all duration-300 hover:shadow-lg bg-white border-[#9c44fe]/10 hover:border-[#9c44fe]/30
-      `}
-  >
-    <div className="flex items-center gap-3 mb-3">
-      <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center bg-[#9c44fe]/10 ${iconBorder ? "border border-[#9c44fe]/35" : "border border-transparent"}
-          `}
-      >
-        {icon}
-      </div>
-      <span
-        className={`text-xs font-bold uppercase tracking-wider text-gray-400
-          `}
-      >
-        {label}
-      </span>
-    </div>
-    <p
-      className={`text-3xl font-extrabold text-gray-900
-        `}
-    >
-      {value}
-    </p>
-    {sub && <p className={`text-xs mt-1 text-gray-900`}>{sub}</p>}
-  </div>
-);
-
-/* ───────────── Recruiter History Style Job Cards ───────────── */
-const StatusBadge = ({ status }) => {
-  const config = {
-    pending: {
-      bg: "bg-amber-50",
-      text: "text-amber-700",
-      border: "border-amber-200",
-      icon: <AlertCircle className="w-3.5 h-3.5" />,
-      label: "Pending Review",
-    },
-    reviewed: {
-      bg: "bg-green-50",
-      text: "text-green-700",
-      border: "border-green-200",
-      icon: <CheckCircle className="w-3.5 h-3.5" />,
-      label: "Reviewed",
-    },
-    rejected: {
-      bg: "bg-red-50",
-      text: "text-red-700",
-      border: "border-red-200",
-      icon: <XCircle className="w-3.5 h-3.5" />,
-      label: "Rejected",
-    },
-  };
-
-  const style = config[status] || config.pending;
-
-  return (
-    <span
-      className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}
-    >
-      {style.icon}
-      <span>{style.label}</span>
-    </span>
-  );
-};
-
-const WorkplaceBadge = ({ type }) => {
-  const config = {
-    remote: {
-      bg: "bg-purple-50",
-      text: "text-purple-700",
-      border: "border-purple-200",
-      label: "Remote",
-    },
-    hybrid: {
-      bg: "bg-blue-50",
-      text: "text-blue-700",
-      border: "border-blue-200",
-      label: "Hybrid",
-    },
-    onsite: {
-      bg: "bg-gray-50",
-      text: "text-gray-700",
-      border: "border-gray-200",
-      label: "On-site",
-    },
-  };
-
-  const style = config[type] || config.onsite;
-
-  return (
-    <span
-      className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-medium border ${style.bg} ${style.text} ${style.border}`}
-    >
-      <Monitor className="w-3 h-3" />
-      <span>{style.label}</span>
-    </span>
-  );
-};
-
-const RecruiterJobCard = ({ job, onViewApplicants }) => {
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-purple-200 transition-all duration-300 group">
-      <div className="p-5 pb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-100 border border-purple-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-              {job.img && !job.img.includes("example.com") ? (
-                <img
-                  src={job.img}
-                  alt={job.companyName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Building2 className="w-6 h-6 text-purple-600" />
-              )}
-            </div>
-
-            <div className="min-w-0">
-              <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-700 transition-colors truncate">
-                {job.jobTitle}
-              </h3>
-              <p className="text-sm text-gray-500 font-medium mt-0.5">
-                {job.companyName}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center flex-wrap gap-2 mt-4">
-          <StatusBadge status={job.adminReview} />
-          <WorkplaceBadge type={job.workPlaceType} />
-          {job.bookmarked && (
-            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
-              <BookmarkIcon className="w-3 h-3 fill-current" />
-              <span>Bookmarked</span>
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="border-t border-gray-100 mx-5" />
-
-      <div className="p-5 pt-4 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <MapPin className="w-4 h-4 text-purple-500 flex-shrink-0" />
-            <span className="truncate">{job.location}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Briefcase className="w-4 h-4 text-purple-500 flex-shrink-0" />
-            <span className="truncate">{job.department}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Clock className="w-4 h-4 text-purple-500 flex-shrink-0" />
-            <span>{job.experience}</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
-            <span>{job.openings ?? "N/A"} Openings</span>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mt-2">
-          {job.jobDescription}
-        </p>
-      </div>
-
-      <div className="px-5 pb-5">
-        <button
-          type="button"
-          onClick={() => onViewApplicants?.(job)}
-          className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 transition-all duration-200 font-medium text-sm"
-        >
-          <Eye className="w-4 h-4" />
-          <span>View Applicants</span>
-        </button>
-      </div>
-    </div>
-  );
-};
+/* ── Recruiter Components ── */
+import {
+  ACCENT,
+  HISTORY_CARD_COLORS,
+  byPrefixAndName,
+  STATUS_OPTIONS,
+  STATUS_STYLES,
+} from "../../components/recruiter/RecruiterConstants";
+import { RecruiterStatCard, RecruiterHistoryStatCard } from "../../components/recruiter/RecruiterStatCard";
+import RecruiterJobCard from "../../components/recruiter/RecruiterJobCard";
+import RecruiterEditJobModal from "../../components/recruiter/RecruiterEditJobModal";
+import RecruiterDeleteConfirmModal from "../../components/recruiter/RecruiterDeleteConfirmModal";
+import RecruiterConfirmActionModal from "../../components/recruiter/RecruiterConfirmActionModal";
+import RecruiterCandidateCard from "../../components/recruiter/RecruiterCandidateCard";
+import RecruiterPagination from "../../components/recruiter/RecruiterPagination";
+import {
+  RecruiterSkeletonCandidatesPage,
+  RecruiterSkeletonCandidateCard,
+} from "../../components/recruiter/RecruiterSkeletons";
 
 /* ─────────────────── Main Component ─────────────────── */
 const CandidatesView = () => {
   const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [editingJob, setEditingJob] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [candidatesLoading, setCandidatesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [jobSearch, setJobSearch] = useState("");
-  const [sortBy, setSortBy] = useState("score-desc");
+  const [statusFilters, setStatusFilters] = useState(new Set());
   const [expandedCandidate, setExpandedCandidate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [actionLoadingKey, setActionLoadingKey] = useState("");
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    action: null,
+    candidate: null,
+  });
   const candidatesPerPage = 6;
 
   /* ── Fetch Jobs ── */
@@ -289,8 +75,38 @@ const CandidatesView = () => {
           return;
         }
 
-        const res = await api.get(`/jobs/recruiter/${userId}`);
-        setJobs(res.data.jobs || []);
+        const res = await api.get("/recruiter/jobs");
+        const recruiterJobs = res.data?.data || [];
+
+        // Fetch total candidate count per job using the applicants endpoint
+        const jobsWithCandidateStats = await Promise.all(
+          recruiterJobs.map(async (job) => {
+            try {
+              const candidatesResponse = await api.get("/recruiter/applicants", {
+                params: { jobId: job._id },
+              });
+              const totalCandidates =
+                Number(candidatesResponse?.data?.data?.length) || 0;
+
+              return {
+                ...job,
+                totalCandidates,
+              };
+            } catch (candidateError) {
+              console.error(
+                `Error fetching candidates for job ${job._id}:`,
+                candidateError,
+              );
+
+              return {
+                ...job,
+                totalCandidates: 0,
+              };
+            }
+          }),
+        );
+
+        setJobs(jobsWithCandidateStats);
       } catch (err) {
         console.error("Error fetching jobs:", err);
         toast.error("Failed to load jobs. Please try again.");
@@ -301,22 +117,27 @@ const CandidatesView = () => {
     fetchJobs();
   }, []);
 
+
   /* ── Fetch Candidates ── */
   const fetchCandidates = useCallback(async (jobId) => {
     try {
       setCandidatesLoading(true);
-      const res = await api.get(`/jobs/${jobId}/candidates`);
-      const apiCandidates = res.data.candidates || [];
+      const res = await api.get("/recruiter/applicants", {
+        params: { jobId },
+      });
+      const apiCandidates = res.data?.data || [];
 
       const normalized = apiCandidates.map((candidate, index) => ({
         _id:
+          candidate._id ||
           candidate.applicationId ||
-          candidate.candidateId ||
+          candidate.candidateId?._id ||
           `${jobId}-candidate-${index}`,
-        applicationId: candidate.applicationId,
-        candidateId: candidate.candidateId,
-        name: candidate.userName,
-        email: candidate.email,
+        applicationId: candidate._id || candidate.applicationId,
+        candidateId: candidate.candidateId?._id || candidate.candidateId,
+        name: candidate.candidateId?.userName || candidate.userName,
+        email: candidate.candidateId?.email || candidate.email,
+        picture: candidate.candidateId?.picture || candidate.picture,
         status: candidate.status,
         appliedAt: candidate.appliedAt,
         atsScore: candidate.profile?.atsScore,
@@ -324,8 +145,8 @@ const CandidatesView = () => {
         experience: candidate.profile?.experience,
         skills: Array.isArray(candidate.profile?.skills)
           ? candidate.profile.skills.map((item) =>
-              typeof item === "string" ? item : item?.skillName,
-            )
+            typeof item === "string" ? item : item?.skillName,
+          )
           : candidate.profile?.skills,
         resumeLink: candidate.profile?.resumeLink,
       }));
@@ -340,15 +161,87 @@ const CandidatesView = () => {
     }
   }, []);
 
-  const handleJobClick = useCallback(
-    (job) => {
+
+  const handleEdit = useCallback((job) => {
+    if ((job.totalCandidates ?? 0) >= 1) {
+      toast.info(
+        "This job cannot be edited after at least 1 candidate applies",
+      );
+      return;
+    }
+
+    setEditingJob(job);
+    setEditModalOpen(true);
+  }, []);
+
+  const openDeleteModal = useCallback((jobId) => {
+    setJobToDelete(jobId);
+    setDeleteModalOpen(true);
+  }, []);
+
+  const closeDeleteModal = useCallback(() => {
+    if (isDeleting) return;
+    setDeleteModalOpen(false);
+    setJobToDelete(null);
+  }, [isDeleting]);
+
+  const handleDelete = useCallback(async (jobId) => {
+    setIsDeleting(true);
+    try {
+      await api.delete(`/recruiter/jobs/${jobId}`);
+      setJobs((prev) => prev.filter((j) => j._id !== jobId));
+      setSelectedJob((prev) => (prev?._id === jobId ? null : prev));
+      setDeleteModalOpen(false);
+      setJobToDelete(null);
+      toast.success("Job deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete job:", error);
+      toast.error("Failed to delete job");
+    } finally {
+      setIsDeleting(false);
+    }
+  }, []);
+
+  const handleUpdateJob = useCallback((updatedJob) => {
+    const normalizedUpdatedJob = {
+      ...updatedJob,
+      openings: Number(updatedJob.openings) || 0,
+    };
+
+    setJobs((prev) =>
+      prev.map((j) =>
+        j._id === normalizedUpdatedJob._id
+          ? { ...j, ...normalizedUpdatedJob }
+          : j,
+      ),
+    );
+
+    setSelectedJob((prev) =>
+      prev?._id === normalizedUpdatedJob._id
+        ? { ...prev, ...normalizedUpdatedJob }
+        : prev,
+    );
+  }, []);
+
+  const handleJobAction = useCallback(
+    (job, action = "view") => {
+      if (action === "edit") {
+        handleEdit(job);
+        return;
+      }
+
+      if (action === "delete") {
+        openDeleteModal(job._id);
+        return;
+      }
+
       setSelectedJob(job);
       setSearchQuery("");
       setCurrentPage(1);
       setExpandedCandidate(null);
       fetchCandidates(job._id);
     },
-    [fetchCandidates],
+    [fetchCandidates, handleEdit, openDeleteModal],
   );
 
   const handleBack = useCallback(() => {
@@ -367,23 +260,108 @@ const CandidatesView = () => {
     window.open(candidate.resumeLink, "_blank", "noopener,noreferrer");
   }, []);
 
+  const openConfirmModal = useCallback(
+    (candidate, action) => {
+      const jobId = selectedJob?._id;
+      const candidateStatus = (candidate?.status || "").toLowerCase();
+
+      if (!jobId || !candidate?.applicationId) {
+        toast.error("Unable to process candidate action");
+        return;
+      }
+
+      if (action === "hire" && candidateStatus !== "shortlisted") {
+        toast.info("You must shortlist the candidate before hiring");
+        return;
+      }
+
+      setConfirmModal({ open: true, action, candidate });
+    },
+    [selectedJob?._id],
+  );
+
+  const closeConfirmModal = useCallback(() => {
+    setConfirmModal({ open: false, action: null, candidate: null });
+  }, []);
+
+  const handleCandidateAction = useCallback(
+    async (candidate, action) => {
+      const jobId = selectedJob?._id;
+      const applicationId = candidate?.applicationId;
+
+      if (!jobId || !applicationId) {
+        toast.error("Unable to process candidate action");
+        return;
+      }
+
+      const endpointMap = {
+        shortlist: `/recruiter/applicants/${applicationId}/status`,
+        reject: `/recruiter/applicants/${applicationId}/status`,
+        hire: `/recruiter/applicants/${applicationId}/status`,
+      };
+
+      const statusMap = {
+        shortlist: "shortlisted",
+        reject: "rejected",
+        hire: "hired",
+      };
+
+      const successMessageMap = {
+        shortlist: "Candidate shortlisted successfully",
+        reject: "Candidate rejected successfully",
+        hire: "Candidate hired successfully",
+      };
+
+      const endpoint = endpointMap[action];
+      if (!endpoint) return;
+
+      const loadingKey = `${applicationId}:${action}`;
+      setActionLoadingKey(loadingKey);
+      closeConfirmModal();
+
+      try {
+        const res = await api.patch(endpoint, { status: statusMap[action] });
+        toast.success(res?.data?.message || successMessageMap[action]);
+
+        if (action === "hire") {
+          const openingsLeft = res?.data?.data?.openingsRemaining;
+          if (Number.isFinite(openingsLeft)) {
+            setSelectedJob((prev) =>
+              prev ? { ...prev, openings: openingsLeft } : prev,
+            );
+            setJobs((prev) =>
+              prev.map((j) =>
+                j._id === jobId ? { ...j, openings: openingsLeft } : j,
+              ),
+            );
+          }
+        }
+
+        await fetchCandidates(jobId);
+      } catch (error) {
+        console.error(`Failed to ${action} candidate:`, error);
+        toast.error(
+          error?.response?.data?.message || `Failed to ${action} candidate`,
+        );
+      } finally {
+        setActionLoadingKey("");
+      }
+    },
+    [fetchCandidates, selectedJob?._id, closeConfirmModal],
+  );
+
   /* ── Filter & Sort Candidates ── */
-  const filtered = candidates
-    .filter(
-      (c) =>
-        searchQuery === "" ||
+  const filtered = candidates.filter(
+    (c) =>
+      (searchQuery === "" ||
         (c.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (c.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (c.qualifications || "")
           .toLowerCase()
-          .includes(searchQuery.toLowerCase()),
-    )
-    .sort((a, b) => {
-      if (sortBy === "score-desc") return (b.atsScore || 0) - (a.atsScore || 0);
-      if (sortBy === "score-asc") return (a.atsScore || 0) - (b.atsScore || 0);
-      if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
-      return 0;
-    });
+          .includes(searchQuery.toLowerCase())) &&
+      (statusFilters.size === 0 ||
+        statusFilters.has((c.status || "").toLowerCase())),
+  );
 
   const totalPages = Math.ceil(filtered.length / candidatesPerPage);
   const paginated = filtered.slice(
@@ -399,18 +377,22 @@ const CandidatesView = () => {
   const avgScore =
     candidatesWithScore.length > 0
       ? Math.round(
-          candidatesWithScore.reduce((sum, c) => sum + c.atsScore, 0) /
-            candidatesWithScore.length,
-        )
+        candidatesWithScore.reduce((sum, c) => sum + c.atsScore, 0) /
+        candidatesWithScore.length,
+      )
       : 0;
   const topScore =
     candidatesWithScore.length > 0
       ? Math.max(...candidatesWithScore.map((c) => c.atsScore))
       : 0;
-  const highScoreCount = candidatesWithScore.filter((c) => c.atsScore >= 80).length;
+  const highScoreCount = candidatesWithScore.filter(
+    (c) => c.atsScore >= 80,
+  ).length;
 
-  /* ── Filter Jobs ── */
-  const filteredJobs = jobs.filter(
+  /* ── Filter Jobs (exclude fully filled — those belong in History) ── */
+  const activeJobs = jobs.filter((j) => Number(j.openings) !== 0);
+
+  const filteredJobs = activeJobs.filter(
     (j) =>
       jobSearch === "" ||
       j.jobTitle?.toLowerCase().includes(jobSearch.toLowerCase()) ||
@@ -418,28 +400,36 @@ const CandidatesView = () => {
       j.department?.toLowerCase().includes(jobSearch.toLowerCase()),
   );
 
+  const totalJobs = activeJobs.length;
+  const pendingJobs = activeJobs.filter((j) => (j.status || "").toLowerCase() === "pending").length;
+  const verifiedJobs = activeJobs.filter((j) => (j.status || "").toLowerCase() === "verified").length;
+  const totalOpenings = activeJobs.reduce(
+    (sum, j) => sum + (Number(j.openings) || 0),
+    0,
+  );
+
   /* ═══════════════ LOADING ═══════════════ */
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 border-4 rounded-full animate-spin"
-            style={{ borderColor: "#f3e8ff", borderTopColor: ACCENT }}
-          />
-          <p className="text-base font-medium text-gray-400 animate-pulse">
-            Loading your job posts…
-          </p>
-        </div>
-      </div>
-    );
+    return <RecruiterSkeletonCandidatesPage />;
   }
 
   /* ═══════════════ CANDIDATES VIEW ═══════════════ */
   if (selectedJob) {
     return (
-      <div className="min-h-screen bg-[#faf8ff]">
+      <div className="min-h-screen bg-white">
         <ToastContainer />
+
+        {/* ── Confirm Action Modal ── */}
+        <RecruiterConfirmActionModal
+          isOpen={confirmModal.open}
+          action={confirmModal.action}
+          candidateName={confirmModal.candidate?.name}
+          onCancel={closeConfirmModal}
+          onConfirm={() =>
+            handleCandidateAction(confirmModal.candidate, confirmModal.action)
+          }
+          isLoading={actionLoadingKey !== ""}
+        />
 
         {/* ── Sticky Header ── */}
         <div className="bg-white/90 backdrop-blur-md border-b border-[#9c44fe]/10 sticky top-0 z-30">
@@ -509,11 +499,12 @@ const CandidatesView = () => {
               </div>
             </div>
 
-            {/* Search + Sort */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <div className="relative flex-1">
+            {/* Search + Filter */}
+            <div className="flex flex-col gap-3 mt-4">
+              {/* Search bar */}
+              <div className="relative">
                 <svg
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
                   height="16"
@@ -530,24 +521,67 @@ const CandidatesView = () => {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all placeholder:text-slate-400"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#9c44fe]/25 focus:border-[#9c44fe]/40 transition-all placeholder:text-slate-400"
                 />
               </div>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2.5 bg-white border border-[#9c44fe]/15 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#9c44fe]/25 cursor-pointer appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239c44fe' viewBox='0 0 256 256'%3E%3Cpath d='M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 12px center",
-                  paddingRight: "36px",
-                }}
-              >
-                <option value="score-desc">Highest Score</option>
-                <option value="score-asc">Lowest Score</option>
-                <option value="name">Name (A–Z)</option>
-              </select>
+
+              {/* Checkbox filter pills */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="flex items-center gap-2 text-sm font-semibold text-gray-500 uppercase tracking-wider mr-1">
+                  <FontAwesomeIcon icon={byPrefixAndName.far["filter"]} className="text-[#9c44fe] text-sm" />
+                  Filter {"    "}
+                </span>
+
+                {STATUS_OPTIONS.map(({ value, label, color }) => {
+                  const isChecked = statusFilters.has(value);
+                  const s = STATUS_STYLES[color];
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        setStatusFilters((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(value)) next.delete(value);
+                          else next.add(value);
+                          return next;
+                        });
+                        setCurrentPage(1);
+                      }}
+                      className={`inline-flex items-center justify-between gap-3 px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 select-none min-w-[132px] ${isChecked
+                        ? `${s.pill} shadow-md scale-[1.04]`
+                        : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:shadow-sm"
+                        }`}
+                    >
+                      <span className="truncate">{label}</span>
+                      <span
+                        className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${isChecked ? s.checked : "border-gray-300 bg-white"
+                          }`}
+                      >
+                        {isChecked && (
+                          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                            <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+
+                {/* Clear button — only visible when filters active */}
+                {statusFilters.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setStatusFilters(new Set()); setCurrentPage(1); }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-dashed border-gray-300 text-sm font-medium text-gray-400 hover:border-red-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 10 10" fill="none">
+                      <path d="M1 1L9 9M9 1L1 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    </svg>
+                    Clear filters
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -556,7 +590,7 @@ const CandidatesView = () => {
           {/* ── Stats Row ── */}
           {!candidatesLoading && candidates.length > 0 && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard
+              <RecruiterStatCard
                 accent
                 iconBorder
                 label="Total"
@@ -574,7 +608,7 @@ const CandidatesView = () => {
                   </svg>
                 }
               />
-              <StatCard
+              <RecruiterStatCard
                 label="Avg Score"
                 value={avgScore}
                 sub="out of 100"
@@ -590,7 +624,7 @@ const CandidatesView = () => {
                   </svg>
                 }
               />
-              <StatCard
+              <RecruiterStatCard
                 label="Top Score"
                 value={topScore}
                 sub="highest match"
@@ -606,7 +640,7 @@ const CandidatesView = () => {
                   </svg>
                 }
               />
-              <StatCard
+              <RecruiterStatCard
                 label="Strong Fit"
                 value={highScoreCount}
                 sub="score ≥ 80"
@@ -627,12 +661,10 @@ const CandidatesView = () => {
 
           {/* ── Candidates ── */}
           {candidatesLoading ? (
-            <div className="flex flex-col items-center justify-center py-24">
-              <div
-                className="w-12 h-12 border-4 rounded-full animate-spin mb-4"
-                style={{ borderColor: "#f3e8ff", borderTopColor: ACCENT }}
-              />
-              <p className="text-gray-400 text-sm">Loading candidates…</p>
+            <div className="grid grid-cols-1 gap-4">
+              <RecruiterSkeletonCandidateCard />
+              <RecruiterSkeletonCandidateCard />
+              <RecruiterSkeletonCandidateCard />
             </div>
           ) : filtered.length === 0 ? (
             <div className="bg-white rounded-3xl border border-[#9c44fe]/10 p-16 text-center">
@@ -662,319 +694,31 @@ const CandidatesView = () => {
           ) : (
             <>
               <div className="space-y-4">
-                {paginated.map((c, i) => {
-                  const isExpanded = expandedCandidate === c._id;
-                  const initials = (c.name || "?")
-                    .split(" ")
-                    .map((w) => w[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2);
-
-                  return (
-                    <div
-                      key={c._id || i}
-                      className="bg-white rounded-2xl border border-[#9c44fe]/10 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-[#9c44fe]/8 hover:border-[#9c44fe]/25"
-                      style={{ animationDelay: `${i * 60}ms` }}
-                    >
-                      <div className="p-5 sm:p-6">
-                        <div className="flex items-start gap-4 sm:gap-5">
-                          {/* Avatar */}
-                          <div
-                            className="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-base shadow-md"
-                            style={{
-                              background: `linear-gradient(135deg, ${ACCENT}, #7c3aed)`,
-                              boxShadow: `0 4px 14px ${ACCENT}30`,
-                            }}
-                          >
-                            {initials}
-                          </div>
-
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="min-w-0 flex-1">
-                                <h3 className="text-lg font-bold text-gray-900 truncate">
-                                  {c.name || "Unknown Candidate"}
-                                </h3>
-                                {c.email && (
-                                  <p className="text-sm text-gray-400 mt-0.5 truncate">
-                                    {c.email}
-                                  </p>
-                                )}
-                                <div className="mt-2 flex flex-wrap items-center gap-2">
-                                  {c.status && (
-                                    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                                      {c.status}
-                                    </span>
-                                  )}
-                                  {c.appliedAt && (
-                                    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-50 text-gray-600 border border-gray-200">
-                                      Applied {new Date(c.appliedAt).toLocaleDateString()}
-                                    </span>
-                                  )}
-                                  {!c.resumeLink && (
-                                    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                      Candidate has not uploaded resume
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Score */}
-                              <div className="shrink-0 flex flex-col items-center">
-                                {typeof c.atsScore === "number" &&
-                                Number.isFinite(c.atsScore) ? (
-                                  <>
-                                    <AtsScoreCircle score={c.atsScore} size={60} />
-                                    <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-1">
-                                      ATS
-                                    </span>
-                                  </>
-                                ) : (
-                                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-50 text-gray-500 border border-gray-200">
-                                    ATS N/A
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Qualifications Preview */}
-                            {c.qualifications && (
-                              <div
-                                className="mt-4 p-4 rounded-xl border"
-                                style={{
-                                  backgroundColor: `${ACCENT}06`,
-                                  borderColor: `${ACCENT}12`,
-                                }}
-                              >
-                                <div className="flex items-center gap-2 mb-2">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="14"
-                                    height="14"
-                                    fill="#111827"
-                                    viewBox="0 0 256 256"
-                                  >
-                                    <path d="M251.76,88.94l-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.74,78.51,216,128,216a130,130,0,0,0,48-8.76V240a8,8,0,0,0,16,0V199.51a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z" />
-                                  </svg>
-                                  <span
-                                    className="text-xs font-bold uppercase tracking-wider"
-                                    style={{ color: "#111827" }}
-                                  >
-                                    Qualifications
-                                  </span>
-                                </div>
-                                <p
-                                  className={`text-sm text-gray-600 leading-relaxed ${!isExpanded ? "line-clamp-2" : ""}`}
-                                >
-                                  {c.qualifications}
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Expanded Details */}
-                            <div
-                              className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                                isExpanded
-                                  ? "max-h-[400px] opacity-100 mt-4"
-                                  : "max-h-0 opacity-0 mt-0"
-                              }`}
-                            >
-                              <div className="space-y-3">
-                                {c.experience && (
-                                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      width="16"
-                                      height="16"
-                                      fill="#6b7280"
-                                      viewBox="0 0 256 256"
-                                      className="mt-0.5 shrink-0"
-                                    >
-                                      <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />
-                                    </svg>
-                                    <div>
-                                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                        Experience
-                                      </span>
-                                      <p className="text-sm text-gray-700 mt-0.5">
-                                        {c.experience}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-                                {c.skills && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {(Array.isArray(c.skills)
-                                      ? c.skills
-                                      : c.skills.split(",")
-                                    ).map((skill, si) => (
-                                      <span
-                                        key={si}
-                                        className="text-xs font-medium px-3 py-1.5 rounded-full border"
-                                        style={{
-                                          color: ACCENT,
-                                          backgroundColor: `${ACCENT}08`,
-                                          borderColor: `${ACCENT}20`,
-                                        }}
-                                      >
-                                        {skill.trim()}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex flex-wrap items-center gap-2 mt-4">
-                              {c.resumeLink && (
-                                <button
-                                  onClick={() => handleViewResume(c)}
-                                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:opacity-90 active:scale-[0.97]"
-                                  style={{
-                                    background: "#111827",
-                                    boxShadow: "0 4px 14px rgba(17, 24, 39, 0.35)",
-                                  }}
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="15"
-                                    height="15"
-                                    fill="currentColor"
-                                    viewBox="0 0 256 256"
-                                  >
-                                    <path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z" />
-                                  </svg>
-                                  View Resume
-                                </button>
-                              )}
-
-                              <button className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-green-600 border border-green-200 bg-white hover:bg-green-50 transition-all duration-300 active:scale-[0.97]">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="15"
-                                  height="15"
-                                  fill="currentColor"
-                                  viewBox="0 0 256 256"
-                                >
-                                  <path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34Z" />
-                                </svg>
-                                Shortlist
-                              </button>
-
-                              <button className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-red-500 border border-red-200 bg-white hover:bg-red-50 transition-all duration-300 active:scale-[0.97]">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="15"
-                                  height="15"
-                                  fill="currentColor"
-                                  viewBox="0 0 256 256"
-                                >
-                                  <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
-                                </svg>
-                                Reject
-                              </button>
-
-                              <button
-                                onClick={() =>
-                                  setExpandedCandidate(
-                                    isExpanded ? null : c._id,
-                                  )
-                                }
-                                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-300 ml-auto ${
-                                  isExpanded
-                                    ? "text-[#9c44fe] bg-[#9c44fe]/5 border-[#9c44fe]/20"
-                                    : "text-gray-400 bg-white border-gray-200 hover:border-gray-300 hover:text-gray-600"
-                                }`}
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="14"
-                                  height="14"
-                                  fill="currentColor"
-                                  viewBox="0 0 256 256"
-                                  className={`transition-transform duration-500 ${isExpanded ? "rotate-180" : ""}`}
-                                >
-                                  <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z" />
-                                </svg>
-                                {isExpanded ? "Less" : "More"}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {paginated.map((c, i) => (
+                  <RecruiterCandidateCard
+                    key={c._id || i}
+                    candidate={c}
+                    index={i}
+                    isExpanded={expandedCandidate === c._id}
+                    onToggleExpand={() =>
+                      setExpandedCandidate(
+                        expandedCandidate === c._id ? null : c._id,
+                      )
+                    }
+                    onViewResume={handleViewResume}
+                    onAction={openConfirmModal}
+                    actionLoadingKey={actionLoadingKey}
+                  />
+                ))}
               </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-1 mt-8">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="p-2.5 rounded-xl text-gray-400 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      fill="currentColor"
-                      viewBox="0 0 256 256"
-                    >
-                      <path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z" />
-                    </svg>
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (p) => (
-                      <button
-                        key={p}
-                        onClick={() => setCurrentPage(p)}
-                        className="w-10 h-10 rounded-xl text-sm font-semibold transition-all duration-300"
-                        style={
-                          currentPage === p
-                            ? {
-                                background: ACCENT,
-                                color: "white",
-                                boxShadow: `0 4px 14px ${ACCENT}40`,
-                              }
-                            : { color: "#9ca3af" }
-                        }
-                      >
-                        {p}
-                      </button>
-                    ),
-                  )}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(p + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="p-2.5 rounded-xl text-gray-400 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      fill="currentColor"
-                      viewBox="0 0 256 256"
-                    >
-                      <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-
-              {filtered.length > 0 && (
-                <p className="text-center text-xs text-gray-400 mt-3">
-                  Showing {(currentPage - 1) * candidatesPerPage + 1}–
-                  {Math.min(currentPage * candidatesPerPage, filtered.length)}{" "}
-                  of {filtered.length} candidates
-                </p>
-              )}
+              <RecruiterPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filtered.length}
+                itemsPerPage={candidatesPerPage}
+                onPageChange={setCurrentPage}
+              />
             </>
           )}
         </div>
@@ -984,7 +728,7 @@ const CandidatesView = () => {
 
   /* ═══════════════ JOBS GRID VIEW ═══════════════ */
   return (
-    <div className="min-h-screen bg-[#faf8ff]">
+    <div className="min-h-screen bg-white">
       <ToastContainer />
 
       {/* ── Header ── */}
@@ -992,12 +736,9 @@ const CandidatesView = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3">
                 Candidates
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
-                Select a job post to view its applicants
-              </p>
             </div>
             <div className="flex items-center gap-3">
               {/* Job count badge */}
@@ -1014,11 +755,45 @@ const CandidatesView = () => {
                 >
                   <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />
                 </svg>
-                <span className="text-sm font-bold" style={{ color: "#111827" }}>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: "#111827" }}
+                >
                   {jobs.length} Job{jobs.length !== 1 ? "s" : ""}
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <RecruiterHistoryStatCard
+              label="Total Jobs"
+              value={totalJobs}
+              icon={WorkIcon}
+              color={HISTORY_CARD_COLORS.accent}
+              delay={0}
+            />
+            <RecruiterHistoryStatCard
+              label="Pending Review"
+              value={pendingJobs}
+              icon={ErrorOutlineIcon}
+              color={HISTORY_CARD_COLORS.amber}
+              delay={0.1}
+            />
+            <RecruiterHistoryStatCard
+              label="Verified Jobs"
+              value={verifiedJobs}
+              icon={CheckCircleOutlineIcon}
+              color={HISTORY_CARD_COLORS.green}
+              delay={0.2}
+            />
+            <RecruiterHistoryStatCard
+              label="Total Openings"
+              value={totalOpenings}
+              icon={PeopleIcon}
+              color={HISTORY_CARD_COLORS.blue}
+              delay={0.3}
+            />
           </div>
 
           {/* Search */}
@@ -1077,12 +852,29 @@ const CandidatesView = () => {
               <RecruiterJobCard
                 key={job._id}
                 job={job}
-                onViewApplicants={handleJobClick}
+                onViewApplicants={handleJobAction}
               />
             ))}
           </div>
         )}
       </div>
+
+      <RecruiterEditJobModal
+        job={editingJob}
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingJob(null);
+        }}
+        onUpdate={handleUpdateJob}
+      />
+
+      <RecruiterDeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onCancel={closeDeleteModal}
+        onConfirm={() => jobToDelete && handleDelete(jobToDelete)}
+        isDeleting={isDeleting}
+      />
 
       <style>{`
         @keyframes fadeInUp {

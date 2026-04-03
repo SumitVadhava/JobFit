@@ -5,9 +5,12 @@ import "react-toastify/dist/ReactToastify.css";
 import {
   BarChart,
   Bar,
+  PieChart,
+  Pie,
   XAxis,
   YAxis,
   Tooltip,
+  Legend,
   ResponsiveContainer,
   CartesianGrid,
   Cell,
@@ -24,13 +27,48 @@ import {
   Building2,
 } from "lucide-react";
 import api from "../../api/api";
+import { RecruiterSkeletonAnalyticsPage } from "../../components/recruiter/RecruiterSkeletons";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-const ACCENT      = "#9c44fe";
+const ACCENT = "#9c44fe";
 const ACCENT_LIGHT = "rgba(156,68,254,0.07)";
 const ACCENT_BORDER = "rgba(156,68,254,0.18)";
+const PIE_COLORS = [
+  "#9c44fe",
+  "#7c3aed",
+  "#c084fc",
+  "#a78bfa",
+  "#ddd6fe",
+  "#e9d5ff",
+];
 
-// ─── StatCard (matches AdminAnalytics / User Analytics style) ─────────────────
+const formatBackendDateTime = (timestamp) => {
+  if (!timestamp || typeof timestamp !== "string") return "Date not available";
+
+  const [datePart, timePartRaw] = timestamp.split("T");
+  if (!datePart || !timePartRaw) return timestamp;
+
+  const [year, month, day] = datePart.split("-");
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const monthName = months[(Number(month) || 1) - 1] || month;
+  const timePart = timePartRaw.replace("Z", "").split(".")[0];
+
+  return `${day} ${monthName} ${year}, ${timePart}`;
+};
+
 const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
@@ -40,7 +78,10 @@ const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
   >
     <div
       className="p-5 rounded-2xl border bg-white flex items-center gap-4 transition-all duration-300"
-      style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+      style={{
+        borderColor: "#F1F5F9",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+      }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = ACCENT;
         e.currentTarget.style.boxShadow = `0 4px 16px ${ACCENT}18`;
@@ -68,7 +109,6 @@ const StatCard = ({ icon: Icon, label, value, delay = 0 }) => (
   </motion.div>
 );
 
-// ─── Company Logo ──────────────────────────────────────────────────────────────
 const CompanyLogo = ({ src, name, size = "w-11 h-11" }) => {
   const [err, setErr] = useState(false);
   const initial = (name || "J").charAt(0).toUpperCase();
@@ -82,21 +122,63 @@ const CompanyLogo = ({ src, name, size = "w-11 h-11" }) => {
       </div>
     );
   return (
-    <div className={`${size} rounded-xl overflow-hidden border-2 border-gray-100 shrink-0`}>
-      <img src={src} alt={name} className="w-full h-full object-cover" onError={() => setErr(true)} />
+    <div
+      className={`${size} rounded-xl overflow-hidden border-2 border-gray-100 shrink-0`}
+    >
+      <img
+        src={src}
+        alt={name}
+        className="w-full h-full object-cover"
+        onError={() => setErr(true)}
+      />
     </div>
   );
 };
 
-// ─── Custom Tooltip for Bar Chart ─────────────────────────────────────────────
+const CandidateAvatar = ({ src, name, size = "w-10 h-10" }) => {
+  const [imgError, setImgError] = useState(false);
+  const initials = (name || "?")
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  if (!src || imgError) {
+    return (
+      <div
+        className={`${size} rounded-xl flex items-center justify-center text-white font-bold text-xs shrink-0`}
+        style={{ background: `linear-gradient(135deg, ${ACCENT}, #7c3aed)` }}
+      >
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={name || "Candidate"}
+      onError={() => setImgError(true)}
+      className={`${size} rounded-xl object-cover border border-gray-200 shrink-0`}
+    />
+  );
+};
+
 const BarTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div
         className="rounded-xl px-4 py-3 text-sm shadow-lg border"
-        style={{ background: "#fff", borderColor: ACCENT_BORDER, minWidth: 140 }}
+        style={{
+          background: "#fff",
+          borderColor: ACCENT_BORDER,
+          minWidth: 140,
+        }}
       >
-        <p className="font-semibold text-gray-500 text-xs mb-1 truncate max-w-[160px]">{label}</p>
+        <p className="font-semibold text-gray-500 text-xs mb-1 truncate max-w-[160px]">
+          {label}
+        </p>
         <p className="font-black text-base" style={{ color: ACCENT }}>
           {payload[0].value} applicants
         </p>
@@ -106,55 +188,68 @@ const BarTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-const RecruiterAnalytics = () => {
-  const [jobs, setJobs]       = useState([]);
+const Recruiter_Analytics_view = () => {
+  const [jobs, setJobs] = useState([]);
   const [allCandidates, setAllCandidates] = useState([]);
-  const [perJobData, setPerJobData] = useState([]); // [{ jobTitle, applicants }]
+  const [perJobData, setPerJobData] = useState([]);
+  const [topPerformingJob, setTopPerformingJob] = useState(null);
+  const [candidateSummary, setCandidateSummary] = useState({
+    totalJobs: 0,
+    totalCandidates: 0,
+  });
   const [loading, setLoading] = useState(true);
 
-  // grab recruiter id from localStorage
-  const user    = JSON.parse(localStorage.getItem("user") || "{}");
-  const userId  = user._id || user.id;
-
   useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
     const fetchAll = async () => {
       try {
         setLoading(true);
+        const dashboardRes = await api.get("/recruiter/dashboard");
+        const dashboardData = dashboardRes?.data?.data || {};
+        const dashboardPerJob = Array.isArray(dashboardData.applicationsPerJob)
+          ? dashboardData.applicationsPerJob
+          : [];
+        const recentApplications = Array.isArray(dashboardData.recentApplications)
+          ? dashboardData.recentApplications
+          : [];
 
-        // 1) all recruiter jobs
-        const jobsRes = await api.get(`/jobs/recruiter/${userId}`).catch(() => null);
-        const recruiterJobs = jobsRes?.data?.jobs || [];
-        setJobs(recruiterJobs);
+        const normalizedRecentApplications = recentApplications.map((app) => ({
+          _id: app._id,
+          status: app.status || "applied",
+          appliedAt: app.appliedAt || app.createdAt || null,
+          candidateName:
+            app.candidateId?.userName || app.userName || app.name || "Unknown Candidate",
+          candidateEmail:
+            app.candidateId?.email || app.email || "-",
+          candidatePicture:
+            app.candidateId?.picture || app.picture || app.avatar || app.profileImage || "",
+          jobId: app.jobId?._id || app.jobId || null,
+          jobTitle: app.jobId?.jobTitle || app.jobTitle || "Untitled Job",
+          atsScore:
+            app.atsScore ?? app.profile?.atsScore ?? null,
+        }));
 
-        // 2) all candidates across recruiter jobs
-        const allCandRes = await api.get(`/jobs/recruiter/${userId}/candidates`).catch(() => null);
-        const candidates = allCandRes?.data?.candidates || allCandRes?.data?.applications || [];
-        setAllCandidates(candidates);
+        const mappedPerJob = dashboardPerJob.map((job) => ({
+          _id: job.jobId || job._id,
+          jobTitle: job.jobTitle || "Untitled Job",
+          applicants: Number(job.applicationCount) || 0,
+        }));
 
-        // 3) per-job applicant count — fetch each job's candidates
-        if (recruiterJobs.length > 0) {
-          const perJob = await Promise.all(
-            recruiterJobs.map(async (job) => {
-              try {
-                const res = await api.get(`/jobs/${job._id}/candidates`);
-                const count =
-                  res?.data?.candidates?.length ||
-                  res?.data?.applications?.length ||
-                  0;
-                return { jobTitle: job.jobTitle, applicants: count, img: job.img, companyName: job.companyName, _id: job._id };
-              } catch {
-                return { jobTitle: job.jobTitle, applicants: 0, img: job.img, companyName: job.companyName, _id: job._id };
+        setJobs(mappedPerJob);
+        setPerJobData(mappedPerJob);
+        setAllCandidates(normalizedRecentApplications);
+        setTopPerformingJob(
+          dashboardData.topPerformingJob
+            ? {
+                _id: dashboardData.topPerformingJob.jobId,
+                jobTitle: dashboardData.topPerformingJob.jobTitle || "Untitled Job",
+                applicants: Number(dashboardData.topPerformingJob.applicationCount) || 0,
               }
-            })
-          );
-          setPerJobData(perJob);
-        }
+            : null,
+        );
+        setCandidateSummary({
+          totalJobs: Number(dashboardData.totalJobsPosted) || 0,
+          totalCandidates: Number(dashboardData.totalApplications) || 0,
+        });
       } catch (err) {
         console.error("Error loading recruiter analytics:", err);
         toast.error("Failed to load analytics data.");
@@ -164,48 +259,86 @@ const RecruiterAnalytics = () => {
     };
 
     fetchAll();
-  }, [userId]);
+  }, []);
 
-  // ─── Derived stats ─────────────────────────────────────────────────────────
-  const totalJobs         = jobs.length;
-  const totalApplications = perJobData.reduce((s, j) => s + j.applicants, 0);
-  const avgPerJob         = totalJobs > 0 ? Math.round(totalApplications / totalJobs) : 0;
+  const totalJobs = candidateSummary.totalJobs || jobs.length;
+  const totalApplications =
+    candidateSummary.totalCandidates ||
+    perJobData.reduce((s, j) => s + j.applicants, 0);
+  const avgPerJob =
+    totalJobs > 0 ? Math.round(totalApplications / totalJobs) : 0;
 
-  const topJob = perJobData.reduce(
-    (best, job) => (job.applicants > (best?.applicants ?? -1) ? job : best),
-    null
+  // True when jobs exist but nobody has applied yet
+  const noApplications = perJobData.length > 0 && totalApplications === 0;
+  const hasApplicationsPerJobData = perJobData.some(
+    (job) => Number(job.applicants) > 0,
   );
 
-  // Recent 5 applications — from allCandidates
+  const greyBarData =
+    perJobData.length > 0
+      ? perJobData.map((job) => ({
+          _id: job._id,
+          jobTitle: job.jobTitle,
+          applicants: 1,
+        }))
+      : [
+          { _id: "placeholder-1", jobTitle: "Job 1", applicants: 1 },
+          { _id: "placeholder-2", jobTitle: "Job 2", applicants: 1 },
+          { _id: "placeholder-3", jobTitle: "Job 3", applicants: 1 },
+          { _id: "placeholder-4", jobTitle: "Job 4", applicants: 1 },
+        ];
+
+  const topJob =
+    !noApplications && topPerformingJob
+      ? topPerformingJob
+      : !noApplications
+        ? perJobData.reduce(
+        (best, job) => (job.applicants > (best?.applicants ?? -1) ? job : best),
+        null,
+      )
+        : null;
+
   const recentApplications = [...allCandidates]
-    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .sort(
+      (a, b) => new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0),
+    )
     .slice(0, 5);
 
-  // ─── Loading ───────────────────────────────────────────────────────────────
+  const pieData = [...perJobData]
+    .sort((a, b) => b.applicants - a.applicants)
+    .slice(0, 6)
+    .map((job) => ({
+      name: job.jobTitle,
+      applicants: job.applicants,
+      _id: job._id,
+      companyName: job.companyName,
+      img: job.img,
+    }));
+
+  // Grey placeholder data shown behind the disabled overlay
+  const greyPieData = perJobData.slice(0, 6).map((job) => ({
+    name: job.jobTitle,
+    applicants: 1,
+  }));
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 border-4 rounded-full animate-spin"
-            style={{ borderColor: "#f3e8ff", borderTopColor: ACCENT }}
-          />
-          <p className="text-base font-medium text-gray-400 animate-pulse">
-            Loading dashboard...
-          </p>
-        </div>
-      </div>
-    );
+    return <RecruiterSkeletonAnalyticsPage />;
   }
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#faf5ff_0%,_#ffffff_48%)]">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnHover theme="light" />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="light"
+      />
 
       <main className="min-w-0">
         <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-8">
-
-          {/* ── Header ─────────────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -217,29 +350,45 @@ const RecruiterAnalytics = () => {
                 Recruiter Dashboard
               </h1>
               <p className="text-sm text-gray-500 mt-1">
-                Recruitment overview — jobs, applications & top performers.
+                Recruitment overview - jobs, applications and top performers.
               </p>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600">
               <CircleDot size={12} className="text-emerald-500" />
-              Live
+              Live updates
             </span>
           </motion.div>
 
-          {/* ── Stat Cards ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            <StatCard icon={Briefcase} label="Total Jobs Posted"         value={totalJobs}         delay={0}    />
-            <StatCard icon={Users}     label="Total Applications"         value={totalApplications} delay={0.08} />
-            <StatCard icon={TrendingUp} label="Avg. Applications / Job"   value={avgPerJob}          delay={0.16} />
+            <StatCard
+              icon={Briefcase}
+              label="Total Jobs Posted"
+              value={totalJobs}
+              delay={0}
+            />
+            <StatCard
+              icon={Users}
+              label="Total Applications"
+              value={totalApplications}
+              delay={0.08}
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="Avg. Applications / Job"
+              value={avgPerJob}
+              delay={0.16}
+            />
           </div>
 
-          {/* ── Applications Per Job — Bar Chart ───────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25 }}
             className="bg-white rounded-2xl border p-5 sm:p-6"
-            style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}
+            style={{
+              borderColor: "#F1F5F9",
+              boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
+            }}
           >
             <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 mb-5">
               <div>
@@ -253,17 +402,66 @@ const RecruiterAnalytics = () => {
               </div>
               <div
                 className="rounded-xl border px-3 py-1.5 text-xs font-semibold"
-                style={{ borderColor: ACCENT_BORDER, color: ACCENT, background: ACCENT_LIGHT }}
+                style={{
+                  borderColor: ACCENT_BORDER,
+                  color: ACCENT,
+                  background: ACCENT_LIGHT,
+                }}
               >
                 {totalJobs} jobs
               </div>
             </div>
 
-            {perJobData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-14 text-gray-400">
-                <Briefcase size={40} className="mb-3 opacity-30" />
-                <p className="text-sm font-medium">No job data yet.</p>
-                <p className="text-xs mt-1">Post a job to see application stats here.</p>
+            {!hasApplicationsPerJobData ? (
+              <div className="relative" style={{ height: 260 }}>
+                <div
+                  className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl"
+                  style={{ background: "rgba(248,250,252,0.72)" }}
+                >
+                  <p className="text-sm font-bold text-slate-400">No Data Found</p>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    No applications received yet
+                  </p>
+                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={greyBarData}
+                    margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
+                    barCategoryGap="35%"
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#E2E8F0"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="jobTitle"
+                      tick={{ fontSize: 11, fill: "#94A3B8" }}
+                      axisLine={false}
+                      tickLine={false}
+                      interval={0}
+                      tickFormatter={(v) =>
+                        v.length > 12 ? `${v.slice(0, 12)}...` : v
+                      }
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11, fill: "#94A3B8" }}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                    />
+                    <Bar
+                      dataKey="applicants"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={52}
+                      isAnimationActive={false}
+                    >
+                      {greyBarData.map((entry, i) => (
+                        <Cell key={entry._id || i} fill="#CBD5E1" />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             ) : (
               <div style={{ height: 260 }}>
@@ -273,14 +471,20 @@ const RecruiterAnalytics = () => {
                     margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
                     barCategoryGap="35%"
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#F1F5F9"
+                      vertical={false}
+                    />
                     <XAxis
                       dataKey="jobTitle"
                       tick={{ fontSize: 11, fill: "#94A3B8" }}
                       axisLine={false}
                       tickLine={false}
                       interval={0}
-                      tickFormatter={(v) => (v.length > 12 ? v.slice(0, 12) + "…" : v)}
+                      tickFormatter={(v) =>
+                        v.length > 12 ? `${v.slice(0, 12)}...` : v
+                      }
                     />
                     <YAxis
                       tick={{ fontSize: 11, fill: "#94A3B8" }}
@@ -288,12 +492,22 @@ const RecruiterAnalytics = () => {
                       tickLine={false}
                       allowDecimals={false}
                     />
-                    <Tooltip content={<BarTooltip />} cursor={{ fill: `${ACCENT}08` }} />
-                    <Bar dataKey="applicants" radius={[6, 6, 0, 0]} maxBarSize={52} animationDuration={1000}>
+                    <Tooltip
+                      content={<BarTooltip />}
+                      cursor={{ fill: `${ACCENT}08` }}
+                    />
+                    <Bar
+                      dataKey="applicants"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={52}
+                      animationDuration={1000}
+                    >
                       {perJobData.map((entry, i) => (
                         <Cell
                           key={entry._id || i}
-                          fill={entry._id === topJob?._id ? ACCENT : `${ACCENT}55`}
+                          fill={
+                            entry._id === topJob?._id ? ACCENT : `${ACCENT}55`
+                          }
                         />
                       ))}
                     </Bar>
@@ -303,40 +517,159 @@ const RecruiterAnalytics = () => {
             )}
           </motion.div>
 
-          {/* ── Top Performing Job ─────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
             className="bg-white rounded-2xl border p-5 sm:p-6"
-            style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}
+            style={{
+              borderColor: "#F1F5F9",
+              boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
+            }}
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-black flex items-center gap-2">
                 <Trophy size={16} style={{ color: ACCENT }} />
                 Top Performing Job
               </h2>
-              <span className="text-xs text-gray-400">Max Applications</span>
+              <span className="text-xs text-gray-400">Application share</span>
             </div>
 
-            {topJob ? (
-              <div
-                className="flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 hover:shadow-md"
-                style={{ borderColor: ACCENT_BORDER, background: ACCENT_LIGHT }}
-              >
-                <CompanyLogo src={topJob.img} name={topJob.companyName} size="w-14 h-14" />
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-black truncate">{topJob.jobTitle}</h3>
-                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                    <Building2 size={11} />
-                    {topJob.companyName}
+            {noApplications ? (
+              /* ── Zero-applications state ── */
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+                {/* Greyed-out disabled pie */}
+                <div className="relative h-[250px] pointer-events-none select-none">
+                  <div
+                    className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl"
+                    style={{ background: "rgba(249,250,251,0.82)" }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="36"
+                      height="36"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="#CBD5E1"
+                      strokeWidth="1.5"
+                      className="mb-2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <p className="text-sm font-bold text-slate-400">No Data Found</p>
+                    <p className="text-xs text-slate-300 mt-0.5">No applications received yet</p>
+                  </div>
+                  {/* Muted grey placeholder chart behind overlay */}
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart style={{ cursor: "not-allowed" }}>
+                      <Pie
+                        data={greyPieData}
+                        dataKey="applicants"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={90}
+                        paddingAngle={2}
+                        isAnimationActive={false}
+                      >
+                        {greyPieData.map((_, index) => (
+                          <Cell key={index} fill="#E2E8F0" />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* No Data card */}
+                <div
+                  className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border"
+                  style={{ borderColor: "#E2E8F0", background: "#F8FAFC" }}
+                >
+                  <Trophy size={32} className="text-slate-300" />
+                  <p className="text-sm font-bold text-slate-400">No Data Found</p>
+                  <p className="text-xs text-slate-300 text-center">
+                    Top Performing job will appear here once candidates apply.
                   </p>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-2xl font-black" style={{ color: ACCENT }}>
-                    {topJob.applicants}
-                  </p>
-                  <p className="text-xs text-gray-400 font-medium">applicants</p>
+              </div>
+            ) : topJob && pieData.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+                <div className="h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        dataKey="applicants"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={90}
+                        paddingAngle={2}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell
+                            key={entry._id || index}
+                            fill={
+                              entry._id === topJob?._id
+                                ? ACCENT
+                                : PIE_COLORS[index % PIE_COLORS.length]
+                            }
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) => [
+                          `${value} applicants`,
+                          "Applications",
+                        ]}
+                      />
+                      <Legend
+                        verticalAlign="bottom"
+                        height={30}
+                        formatter={(value) =>
+                          value.length > 20 ? `${value.slice(0, 20)}...` : value
+                        }
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div
+                  className="flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 hover:shadow-md"
+                  style={{
+                    borderColor: ACCENT_BORDER,
+                    background: ACCENT_LIGHT,
+                  }}
+                >
+                  <CompanyLogo
+                    src={topJob.img}
+                    name={topJob.companyName}
+                    size="w-14 h-14"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold text-black truncate">
+                      {topJob.jobTitle}
+                    </h3>
+                    {!!topJob.companyName && (
+                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                        <Building2 size={11} />
+                        {topJob.companyName}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p
+                      className="text-2xl font-black"
+                      style={{ color: ACCENT }}
+                    >
+                      {topJob.applicants}
+                    </p>
+                    <p className="text-xs text-gray-400 font-medium">
+                      applicants
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -345,51 +678,17 @@ const RecruiterAnalytics = () => {
                 <p className="text-sm font-medium">No top job yet</p>
               </div>
             )}
-
-            {/* All jobs ranked */}
-            {perJobData.length > 1 && (
-              <div className="mt-4 space-y-2">
-                {[...perJobData]
-                  .sort((a, b) => b.applicants - a.applicants)
-                  .slice(0, 5)
-                  .map((job, i) => {
-                    const pct = topJob?.applicants > 0 ? Math.round((job.applicants / topJob.applicants) * 100) : 0;
-                    return (
-                      <div key={job._id || i} className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-gray-300 w-4 shrink-0">{i + 1}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-gray-700 truncate max-w-[65%]">
-                              {job.jobTitle}
-                            </span>
-                            <span className="text-xs font-bold" style={{ color: i === 0 ? ACCENT : "#6b7280" }}>
-                              {job.applicants}
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                            <motion.div
-                              className="h-1.5 rounded-full"
-                              style={{ background: i === 0 ? ACCENT : "#CBD5E1" }}
-                              initial={{ width: 0 }}
-                              animate={{ width: `${pct}%` }}
-                              transition={{ duration: 0.8, delay: 0.4 + i * 0.1 }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
           </motion.div>
 
-          {/* ── Recent Applications ────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.45 }}
             className="bg-white rounded-2xl border p-5 sm:p-6"
-            style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}
+            style={{
+              borderColor: "#F1F5F9",
+              boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
+            }}
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-black flex items-center gap-2">
@@ -400,31 +699,30 @@ const RecruiterAnalytics = () => {
             </div>
 
             {recentApplications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                <Users size={36} className="mb-3 opacity-25" />
-                <p className="text-sm font-medium">No applications yet</p>
-                <p className="text-xs mt-1 text-gray-300">Applications will appear here once candidates apply.</p>
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{ background: "#F1F5F9" }}
+                >
+                  <Users size={28} className="text-slate-300" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-bold text-slate-400">No Data Found</p>
+                  <p className="text-xs text-slate-300 mt-1">
+                    No recent applications to display.
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="space-y-3">
                 {recentApplications.map((app, i) => {
-                  const initials = (app.name || app.userName || "?")
-                    .split(" ")
-                    .map((w) => w[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2);
+                  const candidateName = app.candidateName || "Unknown Candidate";
 
-                  const timeAgo = app.createdAt
-                    ? (() => {
-                        const diff = Date.now() - new Date(app.createdAt).getTime();
-                        const m = Math.floor(diff / 60000);
-                        if (m < 60) return `${m}m ago`;
-                        const h = Math.floor(m / 60);
-                        if (h < 24) return `${h}h ago`;
-                        return `${Math.floor(h / 24)}d ago`;
-                      })()
-                    : "Recently";
+                  const candidateAvatarSrc = app.candidatePicture || "";
+
+                  const applicationTime = app.appliedAt;
+                  const formattedDateTime =
+                    formatBackendDateTime(applicationTime);
 
                   return (
                     <motion.div
@@ -434,26 +732,21 @@ const RecruiterAnalytics = () => {
                       transition={{ duration: 0.3, delay: 0.5 + i * 0.07 }}
                       className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
                     >
-                      {/* Avatar */}
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-xs shrink-0"
-                        style={{ background: `linear-gradient(135deg, ${ACCENT}, #7c3aed)` }}
-                      >
-                        {initials}
-                      </div>
+                      <CandidateAvatar
+                        src={candidateAvatarSrc}
+                        name={candidateName}
+                      />
 
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-black truncate">
-                          {app.name || app.userName || "Unknown Candidate"}
+                          {candidateName}
                         </p>
                         <p className="text-xs text-gray-400 truncate mt-0.5">
-                          {app.email || "—"}
-                          {app.jobTitle && ` · ${app.jobTitle}`}
+                          {app.candidateEmail}
+                          {app.jobTitle && ` - ${app.jobTitle}`}
                         </p>
                       </div>
 
-                      {/* ATS score badge */}
                       {app.atsScore != null && (
                         <span
                           className="hidden sm:inline text-xs font-bold px-2.5 py-1 rounded-full border shrink-0"
@@ -467,53 +760,19 @@ const RecruiterAnalytics = () => {
                         </span>
                       )}
 
-                      {/* Time */}
-                      <span className="text-xs text-gray-300 shrink-0">{timeAgo}</span>
-
-                      <ArrowRight size={15} className="text-gray-300 shrink-0" />
+                      <span className="text-xs text-gray-300 shrink-0">
+                        {formattedDateTime}
+                      </span>
                     </motion.div>
                   );
                 })}
               </div>
             )}
           </motion.div>
-
-          {/* ── Quick Snapshot (4 mini tiles matching admin style) ─────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.55 }}
-            className="bg-white rounded-2xl border p-5"
-            style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-black flex items-center gap-2">
-                <Sparkles size={16} style={{ color: ACCENT }} />
-                Recruitment Snapshot
-              </h3>
-              <span className="text-xs text-gray-400">Overview</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: "Jobs Posted",    value: totalJobs },
-                { label: "Total Applies",  value: totalApplications },
-                { label: "Avg / Job",      value: avgPerJob },
-                { label: "Top Job Apps",   value: topJob?.applicants ?? 0 },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
-                    {item.label}
-                  </p>
-                  <p className="text-xl font-black text-black mt-1">{item.value}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
         </div>
       </main>
     </div>
   );
 };
 
-export default RecruiterAnalytics;
+export default Recruiter_Analytics_view;

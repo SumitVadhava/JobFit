@@ -14,11 +14,12 @@ import {
   GraduationCap,
   ListChecks,
   Send,
-  Loader2,
   ChevronDown,
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
+
+
 
 // ─── Extracted Outside to prevent remount on every render ─────────────────────
 const InputWrapper = ({
@@ -120,6 +121,7 @@ const Recruiter_Post_view = () => {
     img: "",
     openings: "",
   });
+  const [logoFile, setLogoFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [focusedField, setFocusedField] = useState(null);
@@ -155,21 +157,68 @@ const Recruiter_Post_view = () => {
     if (!formData.jobDescription.trim())
       newErrors.jobDescription = "Job Description is required";
     if (!formData.img.trim()) newErrors.img = "Image URL is required";
-    if (!formData.openings) newErrors.openings = "Openings is required";
+    if (!formData.openings) {
+      newErrors.openings = "Openings is required";
+    } else {
+      const openingsValue = Number(formData.openings);
+      if (!Number.isFinite(openingsValue) || openingsValue < 1) {
+        newErrors.openings = "Minimum opening must be 1";
+      }
+    }
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return {
+      isValid: Object.keys(newErrors).length === 0,
+      errors: newErrors,
+    };
   };
 
   const handleSubmit = async () => {
-    if (validate()) {
+    const { isValid, errors: validationErrors } = validate();
+
+    if (isValid) {
       setIsSubmitting(true);
       try {
-        const payload = {
-          ...formData,
-          openings: parseInt(formData.openings, 10),
-        };
-        const response = await api.post("/jobs", payload);
-        console.log("Form Data Response:", response.data);
+        const responsibilities = formData.responsibilities
+          .split("\n")
+          .map((item) => item.replace(/^[-•\s]+/, "").trim())
+          .filter(Boolean);
+        const qualifications = formData.qualifications
+          .split("\n")
+          .map((item) => item.replace(/^[-•\s]+/, "").trim())
+          .filter(Boolean);
+
+        const payload = new FormData();
+        payload.append("jobTitle", formData.jobTitle.trim());
+        payload.append("companyName", formData.companyName.trim());
+        payload.append("location", formData.location.trim());
+        payload.append("openings", String(parseInt(formData.openings, 10)));
+        payload.append("jobDescription", formData.jobDescription.trim());
+        payload.append("department", formData.department.trim());
+        payload.append("experience", formData.experience.trim());
+        payload.append("responsibilities", JSON.stringify(responsibilities.length ? responsibilities : [formData.responsibilities.trim()]));
+        payload.append("qualifications", JSON.stringify(qualifications.length ? qualifications : [formData.qualifications.trim()]));
+        payload.append("workPlaceType", formData.workPlaceType.trim());
+
+        if (logoFile) {
+          payload.append("img", logoFile);
+        } else if (formData.img.trim()) {
+          payload.append("img", formData.img.trim());
+        }
+
+        const response = await api.post('/recruiter/jobs', payload, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          validateStatus: (status) => status >= 200 && status < 500,
+        });
+
+        if (response.status !== 201 || response.data?.error) {
+          throw new Error(
+            response.data?.message || "Unexpected response while posting job."
+          );
+        }
+
+        console.log("Job Post Response:", response.data);
         toast.success("🎉 Job posted successfully!", {
           position: "top-center",
           autoClose: 2500,
@@ -177,7 +226,7 @@ const Recruiter_Post_view = () => {
             background: "#f0e6ff",
             color: "#6b21a8",
             fontWeight: "600",
-          },
+          },  
         });
         setFormData({
           jobTitle: "",
@@ -192,19 +241,28 @@ const Recruiter_Post_view = () => {
           img: "",
           openings: "",
         });
+        setLogoFile(null);
         setErrors({});
       } catch (error) {
         console.error("Error posting job:", error);
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Please try again later.";
         toast.error(
-          "Failed to post job. " +
-          (error.response?.data?.message || "Please try again later."),
+          "Failed to post job. " + errorMessage,
           { position: "top-center", autoClose: 3000 }
         );
       } finally {
         setIsSubmitting(false);
       }
     } else {
-      toast.error("Please fill all required fields.", {
+      const firstErrorMessage =
+        validationErrors.openings ||
+        Object.values(validationErrors)[0] ||
+        "Please fill all required fields.";
+
+      toast.error(firstErrorMessage, {
         position: "top-center",
         autoClose: 3000,
       });
@@ -428,9 +486,9 @@ const Recruiter_Post_view = () => {
                     )}
                   >
                     <option value="">Select Work Place Type</option>
-                    <option value="onsite">On-Site</option>
-                    <option value="remote">Remote</option>
-                    <option value="hybrid">Hybrid</option>
+                    <option value="On-site">On-Site</option>
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
                   </select>
                   <ChevronDown
                     size={16}
@@ -451,6 +509,7 @@ const Recruiter_Post_view = () => {
                   name="openings"
                   type="number"
                   min="1"
+                  step="1"
                   value={formData.openings}
                   onChange={handleChange}
                   onFocus={() => handleFocus("openings")}
@@ -464,26 +523,54 @@ const Recruiter_Post_view = () => {
                 />
               </InputWrapper>
 
-              {/* Image URL */}
+              {/* Image Upload */}
               <InputWrapper
-                label="Company Logo URL"
+                label="Company Logo"
                 icon={Image}
                 error={errors.img}
                 isFocused={focusedField === "img"}
                 isFilled={!!formData.img}
               >
                 <input
-                  name="img"
-                  value={formData.img}
-                  onChange={handleChange}
+                  key={formData.img ? "has-file" : "empty"}
+                  type="file"
+                  accept="image/jpeg, image/png, image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      // Validate file type
+                      const validTypes = ["image/jpeg", "image/png", "image/webp"];
+                      if (!validTypes.includes(file.type)) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          img: "Only JPG, PNG, and WEBP formats are allowed.",
+                        }));
+                        setFormData((prev) => ({ ...prev, img: "" }));
+                        setLogoFile(null);
+                        return;
+                      }
+
+                      setLogoFile(file);
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData((prev) => ({ ...prev, img: reader.result }));
+                        setErrors((prev) => ({ ...prev, img: "" }));
+                      };
+                      reader.readAsDataURL(file);
+                    } else {
+                      setFormData((prev) => ({ ...prev, img: "" }));
+                      setLogoFile(null);
+                    }
+                  }}
                   onFocus={() => handleFocus("img")}
                   onBlur={handleBlur}
-                  placeholder="https://example.com/logo.png"
-                  className={getInputClass(
-                    !!errors.img,
-                    focusedField === "img",
-                    !!formData.img
-                  )}
+                  className={
+                    getInputClass(
+                      !!errors.img,
+                      focusedField === "img",
+                      !!formData.img
+                    ) + " file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                  }
                 />
               </InputWrapper>
             </div>
@@ -628,8 +715,10 @@ const Recruiter_Post_view = () => {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>Publishing...</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-white/90 animate-pulse" />
+                      <span>Publishing...</span>
+                    </span>
                   </>
                 ) : (
                   <>

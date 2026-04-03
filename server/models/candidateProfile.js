@@ -7,14 +7,9 @@ const candidateProfileSchema = new mongoose.Schema({
   },
   userModel: {
     type: String,
-    enum: ["logins", "google_logins"],
-    default: "logins",
+    enum: ["users"],
+    default: "users",
     required: true,
-  },
-  name: {
-    type: String,
-    required: false,
-    default: null,
   },
   email: {
     type: String,
@@ -47,11 +42,9 @@ const candidateProfileSchema = new mongoose.Schema({
     default: 0,
   },
   experience: {
-    type: Number,
-    min: 0,
-    max: 100,
+    type: String,
     required: false,
-    default: 0,
+    default: "0-2 years",
   },
   education: {
     type: [

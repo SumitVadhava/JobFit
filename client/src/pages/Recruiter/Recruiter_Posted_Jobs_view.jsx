@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api/api";
 import { toast } from "react-toastify";
+import { RecruiterSkeletonPostedJobsPage } from "../../components/recruiter/RecruiterSkeletons";
 
 const Recruiter_Posted_Jobs_view = () => {
   const [jobs, setJobs] = useState([]);
@@ -17,8 +18,8 @@ const Recruiter_Posted_Jobs_view = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/jobs");
-      setJobs(response.data.jobs || []);
+      const response = await api.get("/recruiter/jobs");
+      setJobs(response.data?.data || []);
     } catch (error) {
       console.error("Error fetching jobs:", error);
       toast.error("Failed to load posted jobs.");
@@ -29,7 +30,7 @@ const Recruiter_Posted_Jobs_view = () => {
 
   const handleDeleteJob = async (jobId) => {
     try {
-      await api.delete(`/jobs/${jobId}`);
+      await api.delete(`/recruiter/jobs/${jobId}`);
       setJobs((prev) => prev.filter((job) => job._id !== jobId));
       setDeleteConfirm(null);
       toast.success("Job deleted successfully");
@@ -40,7 +41,7 @@ const Recruiter_Posted_Jobs_view = () => {
   };
 
   const getWorkplaceLabel = (type) => {
-    switch (type) {
+    switch (String(type || "").toLowerCase()) {
       case "remote":
         return "Remote";
       case "onsite":
@@ -53,7 +54,7 @@ const Recruiter_Posted_Jobs_view = () => {
   };
 
   const getWorkplaceConfig = (type) => {
-    switch (type) {
+    switch (String(type || "").toLowerCase()) {
       case "remote":
         return {
           bg: "bg-emerald-50",
@@ -132,16 +133,7 @@ const Recruiter_Posted_Jobs_view = () => {
   });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-purple-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-purple-200 rounded-full animate-spin border-t-purple-600"></div>
-          <p className="text-lg font-medium text-gray-600 animate-pulse">
-            Loading your posted jobs...
-          </p>
-        </div>
-      </div>
-    );
+    return <RecruiterSkeletonPostedJobsPage />;
   }
 
   return (
@@ -213,19 +205,25 @@ const Recruiter_Posted_Jobs_view = () => {
             },
             {
               label: "Remote",
-              value: jobs.filter((j) => j.workPlaceType === "remote").length,
+              value: jobs.filter(
+                (j) => String(j.workPlaceType || "").toLowerCase() === "remote",
+              ).length,
               color: "from-emerald-500 to-green-600",
               bg: "bg-emerald-50",
             },
             {
               label: "On-site",
-              value: jobs.filter((j) => j.workPlaceType === "onsite").length,
+              value: jobs.filter(
+                (j) => String(j.workPlaceType || "").toLowerCase() === "onsite",
+              ).length,
               color: "from-blue-500 to-indigo-600",
               bg: "bg-blue-50",
             },
             {
               label: "Hybrid",
-              value: jobs.filter((j) => j.workPlaceType === "hybrid").length,
+              value: jobs.filter(
+                (j) => String(j.workPlaceType || "").toLowerCase() === "hybrid",
+              ).length,
               color: "from-amber-500 to-orange-600",
               bg: "bg-amber-50",
             },

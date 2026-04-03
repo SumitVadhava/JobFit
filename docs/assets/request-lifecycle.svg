@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="740" viewBox="0 0 1400 740" role="img" aria-labelledby="title desc">
+  <title id="title">Request Lifecycle Timeline</title>
+  <desc id="desc">A timeline of frontend, network, API and persistence stages.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#ecfeff"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#0f172a"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="740" fill="url(#bg)"/>
+  <text x="700" y="58" text-anchor="middle" font-size="34" font-family="Segoe UI, Arial" fill="#0f172a" font-weight="700">End-to-End Request Physics</text>
+
+  <line x1="120" y1="360" x2="1280" y2="360" stroke="#0f172a" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g font-family="Segoe UI, Arial" fill="#1e293b" font-size="18">
+    <rect x="140" y="250" width="170" height="84" rx="12" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="225" y="290" text-anchor="middle" font-weight="700">UI Intent</text>
+    <text x="225" y="314" text-anchor="middle" font-size="14">Click or submit</text>
+
+    <rect x="340" y="250" width="170" height="84" rx="12" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="425" y="290" text-anchor="middle" font-weight="700">Client Compute</text>
+    <text x="425" y="314" text-anchor="middle" font-size="14">Validation + state</text>
+
+    <rect x="540" y="250" width="170" height="84" rx="12" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="625" y="290" text-anchor="middle" font-weight="700">Network Out</text>
+    <text x="625" y="314" text-anchor="middle" font-size="14">20-150 ms</text>
+
+    <rect x="740" y="250" width="170" height="84" rx="12" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="825" y="290" text-anchor="middle" font-weight="700">API Pipeline</text>
+    <text x="825" y="314" text-anchor="middle" font-size="14">Auth + control</text>
+
+    <rect x="940" y="250" width="170" height="84" rx="12" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="1025" y="290" text-anchor="middle" font-weight="700">Data/External IO</text>
+    <text x="1025" y="314" text-anchor="middle" font-size="14">Mongo + services</text>
+
+    <rect x="1140" y="250" width="170" height="84" rx="12" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="1225" y="290" text-anchor="middle" font-weight="700">UI Repaint</text>
+    <text x="1225" y="314" text-anchor="middle" font-size="14">Toast + updated view</text>
+  </g>
+
+  <g stroke="#334155" stroke-width="2">
+    <line x1="225" y1="334" x2="225" y2="360"/>
+    <line x1="425" y1="334" x2="425" y2="360"/>
+    <line x1="625" y1="334" x2="625" y2="360"/>
+    <line x1="825" y1="334" x2="825" y2="360"/>
+    <line x1="1025" y1="334" x2="1025" y2="360"/>
+    <line x1="1225" y1="334" x2="1225" y2="360"/>
+  </g>
+
+  <g font-family="Segoe UI, Arial" font-size="16" fill="#334155">
+    <text x="225" y="408" text-anchor="middle">t0</text>
+    <text x="425" y="408" text-anchor="middle">t0 + 10ms</text>
+    <text x="625" y="408" text-anchor="middle">t0 + 120ms</text>
+    <text x="825" y="408" text-anchor="middle">t0 + 180ms</text>
+    <text x="1025" y="408" text-anchor="middle">t0 + 320ms</text>
+    <text x="1225" y="408" text-anchor="middle">t0 + 420ms</text>
+  </g>
+
+  <text x="700" y="520" text-anchor="middle" font-family="Segoe UI, Arial" font-size="22" fill="#0f172a" font-weight="700">
+    Perceived responsiveness improves when early UI feedback starts before IO completion
+  </text>
+</svg>

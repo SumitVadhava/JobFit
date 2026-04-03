@@ -1,362 +1,3 @@
-// import { Divider } from "@mui/material";
-// import React, { useState } from "react";
-// import { toast, ToastContainer } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
-
-// // Define jobs array before the component
-// const initialJobs = [
-//   {
-//     title: "Software Engineer",
-//     company: "Tech Innovators Inc.",
-//     location: "Remote",
-//     industry: "Technology",
-//     experience: "Mid-Level",
-//     salary: "$100,001 - $150,000",
-//     workplace: "Remote",
-//     image:
-//       "https://lh3.googleusercontent.com/aida-public/AB6AXuCjoiB3PjAn-QaEEtnfRZaFVO8DvB9GB3_9hjcl_CSJMNGYoMGFV4JCSLThd50SfW7jt-aes9nDcyH9GoXsWELUQweR2OqW5CzCyfahImof66plIXKzb2UUVlI6gxUSYpHEYTUmNBGoSyX0RO0PnQbDaczy5Tboh1DkdQHDYfGpFeRODqw631iQZY2FLvnu9upFnMEqK26FR_eD-Godek711C9FjoyedrGHIn8hsyIqFfQ2ux_y5PgqQEYyMKeDbzWrqbreVU0U6vA",
-//     bookmarks: 5,
-//   },
-//   {
-//     title: "Data Analyst",
-//     company: "Data Insights Corp.",
-//     location: "New York, NY",
-//     industry: "Data Analysis",
-//     experience: "Entry-Level",
-//     salary: "$75,001 - $100,000",
-//     workplace: "Hybrid",
-//     image:
-//       "https://lh3.googleusercontent.com/aida-public/AB6AXuDdHr2dIHzUrXQKvxa5qoqpRwRUmoTOvODzHq_ZVacljfVYvWonKVZs8kPdOmoVdgjBJcHxDPTV3inXvpHe-er_uG18rrFhPjNgswYo0NHWVooMETM6d1iVBzuAUCzsDve6849-V9dPpzNPJrxDLjpy-C0UbzWjYVybhVcmqHrplm8Kjsem74Cqe73hYfOspEJakf1dcrBuFiQ_4v9gkuKLuYI1kQSVss_f5NPCBhkr3RhWRXVMGHsl4zdI5txyEebrYZglMk5jl18",
-//     bookmarks: 7,
-//   },
-//   {
-//     title: "Product Manager",
-//     company: "Product Visionaries LLC",
-//     location: "San Francisco, CA",
-//     industry: "Product Management",
-//     experience: "Senior-Level",
-//     salary: "$150,000+",
-//     workplace: "On-site",
-//     image:
-//       "https://lh3.googleusercontent.com/aida-public/AB6AXuATGWR7sacwmMrCLEpsWGT8lLi0btg3z8D3J3zNmXhT58fyBpcPjTMzbK7FO44tpAmQftpH7JIYjiO92dLRGqHJ4ZuoYhd4kQwLA5m3n1ozsU37YJLuAyxH8mZUGGIGDupiHQifecugvb1efXXLSK0r4vqxDTvYkxELoN-vdL_24Qk0B9_ZyqdTUeb9NhQ936QgoT5MhGSUogU-7nJL9BnVluII926zzdkZQlthEkbEFwsUJRbRUaCL-Q6PGL0G4OLouAjnXLfb86k",
-//     bookmarks: 3,
-//   },
-//   {
-//     title: "UX/UI Designer",
-//     company: "Design Dynamics Co.",
-//     location: "Los Angeles, CA",
-//     industry: "Design",
-//     experience: "Mid-Level",
-//     salary: "$100,001 - $150,000",
-//     workplace: "Hybrid",
-//     image:
-//       "https://lh3.googleusercontent.com/aida-public/AB6AXuDwvK8Sp1ZrFrW09a7iwLmCyRqT05Apy7Lhg0ix9WfR2B_-cqPGWUAGVdOcbYfcn667Q_Jx48AURukPjtpTjAxiXvWA21PvfK6MlokA1_4TqEtGzPzlfULQbmn6nfH_1Ux7z_lrIwWrrNe81S_vquHEOWphlrmOIOGo_45V295xkn7ryAla-TvEsLo5MBOmWmalrnEc_HqYQ0aBMx7Z1rtH6y7bVfnI_G6YCfSFfaGAfxBtJEbwBEikzbfh8Ql0yRJkznN8GHBHQRY",
-//     bookmarks: 4,
-//   },
-//   {
-//     title: "Marketing Specialist",
-//     company: "Marketing Masters Ltd.",
-//     location: "Chicago, IL",
-//     industry: "Marketing",
-//     experience: "Entry-Level",
-//     salary: "$50,000 - $75,000",
-//     workplace: "On-site",
-//     image:
-//       "https://lh3.googleusercontent.com/aida-public/AB6AXuBdKyLhbRdPv_aFL1E9PygqFEEEvoTtMuFUjLeuEZ38lVOmOlK06Tq6MdgyM5EfaEEk4Nz3jAl0_UzWSVA7y6ZBB6QAivHFmsdTHLldXQwfCsWkvnwk5Pie7EjNViu-dWcGjErkHE5DmqopgC7MWApXUCWLJZrUtr4uOpMK1CJear9anoIYidNMmRYpk8LWl3906VVeBjWGA4Hhl9Yd4KPlG7ZiKJ0mtzKSwk901eBkN_WNlbUvv3ZrFtLJpjFcWy4nt-vvxUrb7M4",
-//     bookmarks: 2,
-//   },
-//   {
-//     title: "Financial Analyst",
-//     company: "Finance Pros Inc.",
-//     location: "Boston, MA",
-//     industry: "Finance",
-//     experience: "Mid-Level",
-//     salary: "$75,001 - $100,000",
-//     workplace: "Hybrid",
-//     image:
-//       "https://lh3.googleusercontent.com/aida-public/AB6AXuCjoiB3PjAn-QaEEtnfRZaFVO8DvB9GB3_9hjcl_CSJMNGYoMGFV4JCSLThd50SfW7jt-aes9nDcyH9GoXsWELUQweR2OqW5CzCyfahImof66plIXKzb2UUVlI6gxUSYpHEYTUmNBGoSyX0RO0PnQbDaczy5Tboh1DkdQHDYfGpFeRODqw631iQZY2FLvnu9upFnMEqK26FR_eD-Godek711C9FjoyedrGHIn8hsyIqFfQ2ux_y5PgqQEYyMKeDbzWrqbreVU0U6vA",
-//     bookmarks: 4,
-//   },
-//   {
-//     title: "Healthcare Administrator",
-//     company: "HealthCare Solutions",
-//     location: "Austin, TX",
-//     industry: "Healthcare",
-//     experience: "Senior-Level",
-//     salary: "$150,000+",
-//     workplace: "On-site",
-//     image:
-//       "https://lh3.googleusercontent.com/aida-public/AB6AXuDdHr2dIHzUrXQKvxa5qoqpRwRUmoTOvODzHq_ZVacljfVYvWonKVZs8kPdOmoVdgjBJcHxDPTV3inXvpHe-er_uG18rrFhPjNgswYo0NHWVooMETM6d1iVBzuAUCzsDve6849-V9dPpzNPJrxDLjpy-C0UbzWjYVybhVcmqHrplm8Kjsem74Cqe73hYfOspEJakf1dcrBuFiQ_4v9gkuKLuYI1kQSVss_f5NPCBhkr3RhWRXVMGHsl4zdI5txyEebrYZglMk5jl18",
-//     bookmarks: 3,
-//   },
-//   {
-//     title: "Full Stack Developer",
-//     company: "CodeCrafters Ltd.",
-//     location: "Remote",
-//     industry: "Technology",
-//     experience: "Mid-Level",
-//     salary: "$100,001 - $150,000",
-//     workplace: "Remote",
-//     image:
-//       "https://lh3.googleusercontent.com/aida-public/AB6AXuATGWR7sacwmMrCLEpsWGT8lLi0btg3z8D3J3zNmXhT58fyBpcPjTMzbK7FO44tpAmQftpH7JIYjiO92dLRGqHJ4ZuoYhd4kQwLA5m3n1ozsU37YJLuAyxH8mZUGGIGDupiHQifecugvb1efXXLSK0r4vqxDTvYkxELoN-vdL_24Qk0B9_ZyqdTUeb9NhQ936QgoT5MhGSUogU-7nJL9BnVluII926zzdkZQlthEkbEFwsUJRbRUaCL-Q6PGL0G4OLouAjnXLfb86k",
-//     bookmarks: 6,
-//   },
-// ];
-
-// const SavedJobs = () => {
-//   const [filters, setFilters] = useState({
-//     Location: [],
-//     Industry: [],
-//     "Experience Level": [],
-//     "Salary Range": [],
-//     Workplace: [],
-//   });
-//   const [isFilterOpen, setIsFilterOpen] = useState(false);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [bookmarkedJobs, setBookmarkedJobs] = useState({});
-//   const [savedJobs, setSavedJobs] = useState(initialJobs); // Now using initialJobs
-//   const jobsPerPage = 5;
-
-//   const handleBookMarkClick = (jobTitle) => {
-//     // Remove the job from savedJobs when unbookmarked
-//     setSavedJobs((prevJobs) => prevJobs.filter((job) => job.title !== jobTitle));
-//     setBookmarkedJobs((prev) => ({
-//       ...prev,
-//       [jobTitle]: !prev[jobTitle],
-//     }));
-
-//     toast.success("Job removed from saved jobs", {
-//       position: "top-center",
-//       autoClose: 2000,
-//       hideProgressBar: false,
-//       closeOnClick: true,
-//       pauseOnHover: true,
-//       draggable: true,
-//     });
-//   };
-
-//   const filterOptions = {
-//     Location: [
-//       "Remote",
-//       "New York, NY",
-//       "San Francisco, CA",
-//       "Los Angeles, CA",
-//       "Chicago, IL",
-//       "Boston, MA",
-//       "Austin, TX",
-//     ],
-//     Industry: [
-//       "Technology",
-//       "Data Analysis",
-//       "Product Management",
-//       "Design",
-//       "Marketing",
-//       "Finance",
-//       "Healthcare",
-//     ],
-//     "Experience Level": ["Entry-Level", "Mid-Level", "Senior-Level"],
-//     "Salary Range": [
-//       "$50,000 - $75,000",
-//       "$75,001 - $100,000",
-//       "$100,001 - $150,000",
-//       "$150,000+",
-//     ],
-//     Workplace: ["Remote", "On-site", "Hybrid"],
-//   };
-
-//   const handleFilterChange = (category, option) => {
-//     setFilters((prev) => {
-//       const updatedCategory = prev[category].includes(option)
-//         ? prev[category].filter((item) => item !== option)
-//         : [...prev[category], option];
-//       return { ...prev, [category]: updatedCategory };
-//     });
-//     setCurrentPage(1);
-//   };
-
-//   const clearFilters = () => {
-//     setFilters({
-//       Location: [],
-//       Industry: [],
-//       "Experience Level": [],
-//       "Salary Range": [],
-//       Workplace: [],
-//     });
-//     setCurrentPage(1);
-//   };
-
-//   const removeFilter = (category, option) => {
-//     setFilters((prev) => ({
-//       ...prev,
-//       [category]: prev[category].filter((item) => item !== option),
-//     }));
-//     setCurrentPage(1);
-//   };
-
-//   const filteredJobs = savedJobs.filter((job) => {
-//     return (
-//       (filters.Location.length === 0 ||
-//         filters.Location.includes(job.location)) &&
-//       (filters.Industry.length === 0 ||
-//         filters.Industry.includes(job.industry)) &&
-//       (filters["Experience Level"].length === 0 ||
-//         filters["Experience Level"].includes(job.experience)) &&
-//       (filters["Salary Range"].length === 0 ||
-//         filters["Salary Range"].includes(job.salary)) &&
-//       (filters.Workplace.length === 0 ||
-//         filters.Workplace.includes(job.workplace))
-//     );
-//   });
-
-//   const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
-//   const paginatedJobs = filteredJobs.slice(
-//     (currentPage - 1) * jobsPerPage,
-//     currentPage * jobsPerPage
-//   );
-
-//   return (
-//     <div className="flex flex-col min-h-screen bg-white font-poppins">
-//       <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
-//         {/* Jobs Section */}
-//         <div className="flex-1">
-//           <div className="bg-white rounded-2xl p-6 shadow-xl">
-//             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-//               Saved Jobs
-//             </h2>
-//             <div className="flex flex-wrap gap-2 mb-6">
-//               {Object.entries(filters).flatMap(([category, options]) =>
-//                 options.map((option) => (
-//                   <div
-//                     key={`${category}-${option}`}
-//                     className="flex items-center bg-gray-200 text-gray-900 text-sm font-medium px-4 py-1.5 rounded-full"
-//                   >
-//                     <span>{option}</span>
-//                     <button
-//                       onClick={() => removeFilter(category, option)}
-//                       className="ml-2 text-gray-600 hover:text-gray-900"
-//                     >
-//                       <svg
-//                         xmlns="http://www.w3.org/2000/svg"
-//                         width="16"
-//                         height="16"
-//                         fill="currentColor"
-//                         viewBox="0 0 256 256"
-//                       >
-//                         <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31l-66.34,66.35a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
-//                       </svg>
-//                     </button>
-//                   </div>
-//                 ))
-//               )}
-//             </div>
-
-//             {paginatedJobs.length === 0 ? (
-//               <div className="text-center py-10">
-//                 <p className="text-gray-600 text-lg font-medium">
-//                   No saved jobs found
-//                 </p>
-//                 <p className="text-gray-400 mt-2">
-//                   Jobs you save will appear here
-//                 </p>
-//               </div>
-//             ) : (
-//               paginatedJobs.map((job, index) => (
-//                 <div key={index} className="mb-6 last:mb-0">
-//                   <div className="flex flex-col sm:flex-row gap-4 rounded-xl p-4 hover:bg-gray-50 transition-colors">
-//                     <div className="flex-1">
-//                       <h3 className="text-xl font-bold text-gray-900">
-//                         {job.title}
-//                       </h3>
-//                       <p className="text-gray-600 text-base font-normal mb-4">
-//                         {job.company} | {job.location}
-//                       </p>
-//                       <button className="flex items-center gap-2 bg-gray-200 text-gray-900 text-sm font-medium py-1.5 px-3 rounded-full hover:bg-gray-300 transition-colors">
-//                         <svg
-//                           xmlns="http://www.w3.org/2000/svg"
-//                           width="18"
-//                           height="18"
-//                           fill="currentColor"
-//                           viewBox="0 0 256 256"
-//                         >
-//                           <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z" />
-//                         </svg>
-//                         Apply
-//                       </button>
-//                     </div>
-//                     <div
-//                       className="w-full sm:w-1/3 h-40 bg-cover bg-center rounded-xl"
-//                       style={{ backgroundImage: `url(${job.image})` }}
-//                     />
-//                   </div>
-//                   <div className="flex flex-wrap gap-4 pb-5 pl-3 mt-2">
-//                     <div className="flex items-center gap-2">
-//                       <svg
-//                         xmlns="http://www.w3.org/2000/svg"
-//                         width="30"
-//                         height="30"
-//                         onClick={() => handleBookMarkClick(job.title)}
-//                         viewBox="0 0 256 256"
-//                         className={`cursor-pointer transition-all duration-200 ${bookmarkedJobs[job.title]
-//                           ? "text-gray-600"
-//                           : "text-purple-600 scale-110 drop-shadow-md"
-//                           }`}
-//                       >
-//                         {bookmarkedJobs[job.title] ? (
-//                           // Filled Bookmark
-//                           <path
-//                             fill="currentColor"
-//                             d="M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Zm0,177.57-51.77-32.35a8,8,0,0,0-8.48,0L72,209.57V48H184Z"
-//                           />
-//                         ) : (
-//                           // Outline Bookmark
-
-//                           <path
-//                             fill="currentColor"
-//                             d="M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Z"
-//                           />
-//                         )}
-//                       </svg>
-//                     </div>
-//                   </div>
-//                   {index < paginatedJobs.length - 1 && (
-//                     <Divider className="mt-2" />
-//                   )}
-//                 </div>
-//               ))
-//             )}
-
-//             {/* Pagination */}
-//             {totalPages > 1 && (
-//               <div className="flex justify-center gap-2 mt-6">
-//                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-//                   (page) => (
-//                     <button
-//                       key={page}
-//                       onClick={() => setCurrentPage(page)}
-//                       className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${currentPage === page
-//                         ? "bg-blue-200 text-gray-900"
-//                         : "bg-gray-200 text-gray-600 hover:bg-blue-100"
-//                         }`}
-//                     >
-//                       {page}
-//                     </button>
-//                   )
-//                 )}
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SavedJobs;
-
-
-
-
-import { Divider } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -432,6 +73,16 @@ const getDepartmentBadge = (department) => {
   return "bg-gray-50 text-gray-700 border-gray-200";
 };
 
+const getStatusConfig = (status) => {
+  switch (status?.toLowerCase()) {
+    case "applied": return { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500", label: "Applied", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg> };
+    case "shortlisted": return { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", dot: "bg-purple-500", label: "Shortlisted", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> };
+    case "hired": return { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500", label: "Hired", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg> };
+    case "rejected": return { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", label: "Rejected", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg> };
+    default: return { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200", dot: "bg-gray-500", label: "Applied", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> };
+  }
+};
+
 const SavedJobs = () => {
   const navigate = useNavigate();
   // --- STATE ---
@@ -448,6 +99,8 @@ const SavedJobs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hoveredJob, setHoveredJob] = useState(null);
   const [expandedJob, setExpandedJob] = useState(null);
+  const [appliedJobs, setAppliedJobs] = useState({});
+  const [applyingJobs, setApplyingJobs] = useState(new Set());
   const jobsPerPage = 3;
 
   useEffect(() => {
@@ -459,17 +112,31 @@ const SavedJobs = () => {
     const fetchJobs = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get(`/user/savedJobs`);
+        const [response, appliedJobsResponse] = await Promise.all([
+          api.get(`/candidate/saved-jobs`),
+          api.get("/candidate/applied-jobs").catch(() => ({ data: { data: [] } }))
+        ]);
 
-        // Data comes in response.data.savedJobs where each entry has jobId inside it
-        const savedJobsList = response.data.savedJobs || [];
+        const apps = appliedJobsResponse.data.data || [];
+        const appliedJobsMap = {};
+        apps.forEach(app => {
+          const jobId = app.jobId?._id || app.jobId || app._id;
+          appliedJobsMap[jobId] = app.status || "applied";
+        });
+        setAppliedJobs(appliedJobsMap);
 
-        // Map jobId to _id so the rest of the component works as expected
-        const mappedJobs = savedJobsList.map(job => ({
-          ...job,
-          _id: job.jobId,
-          bookmarked: true
-        }));
+        // Data comes in response.data.data
+        const savedJobsList = response.data.data || [];
+
+        // If backend populates jobId, job.jobId is the job object.
+        const mappedJobs = savedJobsList.map(job => {
+          const jobData = typeof job.jobId === 'object' && job.jobId !== null ? job.jobId : job;
+          return {
+            ...jobData,
+            _id: jobData._id || jobData.jobId,
+            bookmarked: true
+          };
+        }).filter(item => item._id);
 
         setSavedJobs(mappedJobs);
 
@@ -480,8 +147,14 @@ const SavedJobs = () => {
         setBookmarkedJobs(initialBookmarks);
 
       } catch (error) {
-        console.error("Error fetching jobs:", error);
-        toast.error("Failed to load saved jobs.");
+        if (error.response && error.response.status === 404) {
+          // If 404, it means no saved jobs were found for this user
+          setSavedJobs([]);
+          setBookmarkedJobs({});
+        } else {
+          console.error("Error fetching jobs:", error);
+          toast.error("Failed to load saved jobs.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -489,6 +162,64 @@ const SavedJobs = () => {
 
     fetchJobs();
   }, []); // Empty array ensures this runs only once when the page loads
+
+  const handleApplyJob = async (jobId) => {
+    try {
+      setApplyingJobs(prev => new Set([...prev, jobId]));
+
+      const profileRes = await api.get("/candidate/profile").catch(() => null);
+      const profile = profileRes?.data?.data || profileRes?.data?.profile;
+
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+
+      const isComplete = profile &&
+        (profile.name || profile.userName || user?.userName || user?.name) &&
+        (profile.email || user?.email) &&
+        profile.img &&
+        (profile.resumeLink || profile.resumelink) &&
+        profile.description &&
+        profile.experience &&
+        profile.education && profile.education.length > 0 &&
+        profile.skills && profile.skills.length > 0 &&
+        profile.softSkills && profile.softSkills.length > 0;
+
+      if (!isComplete) {
+        toast.error(
+          "Please fill all details in profile",
+          { position: "top-center", autoClose: 3000 }
+        );
+        setApplyingJobs(prev => {
+          const next = new Set(prev);
+          next.delete(jobId);
+          return next;
+        });
+        setTimeout(() => {
+          navigate("/user/profile");
+        }, 1500);
+        return;
+      }
+
+      await api.post(`/candidate/job/apply`, { jobId });
+
+      setAppliedJobs(prev => ({ ...prev, [jobId]: "applied" }));
+      toast.success("Applied for job successfully!", { position: "top-center", autoClose: 2000 });
+
+    } catch (err) {
+      if (err.response?.status === 409) {
+        toast.info("You have already applied for this job.", { position: "top-center", autoClose: 2000 });
+        setAppliedJobs(prev => ({ ...prev, [jobId]: "applied" }));
+      } else {
+        toast.error("Failed to apply for job. Please try again.", { position: "top-center", autoClose: 2000 });
+      }
+    } finally {
+      setApplyingJobs(prev => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
+    }
+  };
 
   // --- HANDLERS ---
   const handleBookMarkClick = async (jobId) => {
@@ -504,7 +235,7 @@ const SavedJobs = () => {
 
     try {
       // Persist to backend using DELETE /api/jobs/:id/unsave
-      await api.delete(`/jobs/${jobId}/unsave`);
+      await api.patch(`/candidate/saved-jobs/${jobId}`, { saved: false });
 
       toast.success("Job removed from saved jobs", {
         position: "top-center",
@@ -570,15 +301,47 @@ const SavedJobs = () => {
   // --- RENDER LOADING STATE ---
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-14 h-14 border-4 rounded-full animate-spin"
-            style={{ borderColor: "#f3e8ff", borderTopColor: "#9c44fe" }}
-          />
-          <p className="text-base font-medium text-gray-400 animate-pulse">
-            Loading your saved jobs...
-          </p>
+      <div className="flex flex-col min-h-screen bg-gray-50 font-poppins">
+        <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
+          <div className="flex-1">
+            <div className="bg-white rounded-3xl p-6 shadow-xl space-y-6">
+              <div className="w-48 h-8 bg-gray-200 animate-pulse rounded-lg mb-6"></div>
+
+              {/* Filter Skeleton Tags */}
+              <div className="flex gap-2 mb-6">
+                <div className="w-24 h-8 bg-gray-200 animate-pulse rounded-full"></div>
+                <div className="w-32 h-8 bg-gray-200 animate-pulse rounded-full"></div>
+              </div>
+
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="group relative bg-white rounded-3xl border border-gray-100 p-5">
+                  <div className="flex gap-5">
+                    <div className="w-20 h-20 bg-gray-200 animate-pulse rounded-2xl shrink-0"></div>
+                    <div className="flex-1 space-y-3">
+                      <div className="w-3/4 h-6 bg-gray-200 animate-pulse rounded-md"></div>
+                      <div className="w-1/2 h-4 bg-gray-200 animate-pulse rounded-md"></div>
+                      <div className="flex gap-2">
+                        <div className="w-20 h-6 bg-gray-200 animate-pulse rounded-full"></div>
+                        <div className="w-20 h-6 bg-gray-200 animate-pulse rounded-full"></div>
+                        <div className="w-24 h-6 bg-gray-200 animate-pulse rounded-full"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5 space-y-2">
+                    <div className="w-full h-4 bg-gray-200 animate-pulse rounded-md"></div>
+                    <div className="w-5/6 h-4 bg-gray-200 animate-pulse rounded-md"></div>
+                  </div>
+                  <div className="mt-6 flex justify-between items-center pt-5 border-t border-gray-100">
+                    <div className="w-24 h-4 bg-gray-200 animate-pulse rounded-md"></div>
+                    <div className="flex gap-3">
+                      <div className="w-24 h-10 bg-gray-200 animate-pulse rounded-xl"></div>
+                      <div className="w-32 h-10 bg-gray-200 animate-pulse rounded-xl"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -666,13 +429,27 @@ const SavedJobs = () => {
                     >
 
 
-                      <div className="p-7 sm:p-8">
+                      <div className="p-4 sm:p-5">
+                        {/* ── Status row if applied ── */}
+                        {appliedJobs[job._id] && (
+                          <div className="flex items-center justify-between mb-4">
+                            <span
+                              className={`inline-flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full border ${getStatusConfig(appliedJobs[job._id]).bg} ${getStatusConfig(appliedJobs[job._id]).text} ${getStatusConfig(appliedJobs[job._id]).border}`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${getStatusConfig(appliedJobs[job._id]).dot}`}
+                              />
+                              {getStatusConfig(appliedJobs[job._id]).label}
+                            </span>
+                          </div>
+                        )}
+
                         {/* Header: Logo + Info + Bookmark */}
-                        <div className="flex gap-5 sm:gap-6">
-                          {/* Company Logo - BIGGER */}
+                        <div className="flex gap-4 sm:gap-5">
+                          {/* Company Logo - SMALLER */}
                           <div className="shrink-0">
                             <div
-                              className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl overflow-hidden border-2 transition-all duration-500 ${isHovered
+                              className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all duration-500 ${isHovered
                                 ? "border-gray-200 shadow-xl scale-105 rotate-1"
                                 : "border-gray-100 shadow-md"
                                 }`}
@@ -706,7 +483,7 @@ const SavedJobs = () => {
                               <div className="min-w-0 flex-1">
                                 {/* Job Title */}
                                 <h3
-                                  className={`text-xl sm:text-2xl font-bold text-gray-900 truncate transition-colors duration-300 ${isHovered ? "text-blue-700" : ""
+                                  className={`text-lg sm:text-xl font-bold text-gray-900 truncate transition-colors duration-300 ${isHovered ? "text-blue-700" : ""
                                     }`}
                                 >
                                   {job.jobTitle}
@@ -747,16 +524,7 @@ const SavedJobs = () => {
 
                                   {/* Experience Badge */}
                                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full">
-                                    {/* <svg
-                                                          xmlns="http://www.w3.org/2000/svg"
-                                                          width="14"
-                                                          height="14"
-                                                          fill="currentColor"
-                                                          viewBox="0 0 256 256"
-                                                          className="text-gray-400"
-                                                        >
-                                                          <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z" />
-                                                        </svg> */}
+
                                     <Briefcase size={15} />
                                     {job.experience}
                                   </span>
@@ -776,14 +544,10 @@ const SavedJobs = () => {
                               <button
                                 onClick={() => handleBookMarkClick(job._id)}
                                 className={`shrink-0 p-3 rounded-2xl transition-all duration-300 ${isBookmarked
-                                  ? "text-blue-600 bg-blue-50 shadow-md shadow-blue-100 hover:bg-blue-100 scale-110"
-                                  : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"
+                                    ? "text-blue-600 bg-blue-50 shadow-md shadow-blue-100 hover:bg-blue-100 scale-110"
+                                    : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"
                                   }`}
-                                aria-label={
-                                  isBookmarked
-                                    ? "Remove bookmark"
-                                    : "Add bookmark"
-                                }
+                                aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -791,8 +555,7 @@ const SavedJobs = () => {
                                   height="24"
                                   viewBox="0 0 256 256"
                                   fill="currentColor"
-                                  className={`transition-transform duration-300 ${isBookmarked ? "scale-110" : ""
-                                    }`}
+                                  className={`transition-transform duration-300 ${isBookmarked ? "scale-110" : ""}`}
                                 >
                                   {isBookmarked ? (
                                     <path d="M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Z" />
@@ -806,7 +569,7 @@ const SavedJobs = () => {
                         </div>
 
                         {/* Description */}
-                        <div className="mt-5 ml-[100px] sm:ml-[120px]">
+                        <div className="mt-5">
                           <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">
                             {job.jobDescription}
                           </p>
@@ -814,7 +577,7 @@ const SavedJobs = () => {
 
                         {/* Expandable Details */}
                         <div
-                          className={`overflow-hidden transition-all duration-500 ease-in-out ml-[100px] sm:ml-[120px] ${isExpanded
+                          className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded
                             ? "max-h-[600px] opacity-100 mt-6"
                             : "max-h-0 opacity-0 mt-0"
                             }`}
@@ -871,24 +634,46 @@ const SavedJobs = () => {
                         </div>
 
                         {/* Actions Row */}
-                        <div className="flex items-center justify-between mt-6 ml-[100px] sm:ml-[120px]">
+                        <div className="flex items-center justify-between mt-6">
                           <div className="flex items-center gap-3">
                             {/* Apply Button */}
                             <button
-                              onClick={() => navigate(`/user/apply/${job._id}`)}
-                              className="group/btn relative inline-flex items-center gap-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-7 py-3 rounded-2xl transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-gray-900/25 active:scale-[0.97]">
-                              {/* <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    width="17"
-                                                    height="17"
-                                                    fill="currentColor"
-                                                    viewBox="0 0 256 256"
-                                                    className="transition-transform duration-300 mt-1 group-hover/btn:-translate-y-0.5 -rotate-45"
-                                                  >
-                                                    <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,13-9.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14L118.42,148.9l47.24-47.25a8,8,0,0,0-11.32-11.32L107.1,137.58,23.91,98.12l.14,0L215.94,40Z" />
-                                                  </svg> */}
-                              <img src={ButtonLogo} className="w-6" alt="" />
-                              Apply Now
+                              onClick={() => {
+                                if (!appliedJobs[job._id] && !applyingJobs.has(job._id)) {
+                                  handleApplyJob(job._id);
+                                }
+                              }}
+                              disabled={!!appliedJobs[job._id] || applyingJobs.has(job._id)}
+                              className={`group/btn relative inline-flex items-center gap-2.5 text-sm font-semibold px-7 py-3 rounded-2xl transition-all duration-300 shadow-md active:scale-[0.97]
+                              ${!appliedJobs[job._id]
+                                  ? "bg-gray-900 hover:bg-gray-800 text-white hover:shadow-xl hover:shadow-gray-900/25"
+                                  : appliedJobs[job._id] === "rejected"
+                                    ? "bg-red-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                    : appliedJobs[job._id] === "shortlisted"
+                                      ? "bg-purple-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                      : appliedJobs[job._id] === "hired"
+                                        ? "bg-green-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                        : "bg-blue-600 text-white cursor-not-allowed hover:shadow-none shadow-none"
+                                }
+                              ${applyingJobs.has(job._id) ? "opacity-75 cursor-wait" : ""}
+                            `}
+                            >
+                              {applyingJobs.has(job._id) ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                  Applying...
+                                </>
+                              ) : appliedJobs[job._id] ? (
+                                <>
+                                  {getStatusConfig(appliedJobs[job._id]).icon}
+                                  <span className="capitalize">{appliedJobs[job._id]}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <img src={ButtonLogo} className="w-6 group-hover/btn:-translate-y-0.5 transition-transform duration-300" alt="" />
+                                  Apply Now
+                                </>
+                              )}
                             </button>
 
                             {/* View Details Toggle */}

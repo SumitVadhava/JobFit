@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
+  <title id="title">Container and Module Architecture</title>
+  <desc id="desc">Advanced container and module architecture showing client, server, and external integration tiers.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#f3f7ff"/>
+    </linearGradient>
+    <filter id="panelShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#334155" flood-opacity="0.14"/>
+    </filter>
+    <filter id="cardShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#334155" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L0,10 L10,5 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .title { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 35px; font-weight: 600; fill: #0f172a; }
+      .subtitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 17px; font-weight: 450; fill: #475569; }
+      .groupTitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 22px; font-weight: 600; }
+      .groupHint { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 14px; font-weight: 450; fill: #64748b; }
+      .cardTitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 17px; font-weight: 550; }
+      .cardHint { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 13px; font-weight: 450; fill: #64748b; }
+      .flowLabel { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 12px; font-weight: 500; fill: #64748b; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="920" rx="24" fill="url(#bg)"/>
+  <text x="800" y="64" text-anchor="middle" class="title">Container and Module Architecture</text>
+  <text x="800" y="98" text-anchor="middle" class="subtitle">Layered deployment-ready view of client runtime, API services, and integration systems</text>
+
+  <g filter="url(#panelShadow)">
+    <rect x="86" y="132" width="454" height="710" rx="22" fill="#eff6ff" fill-opacity="0.9" stroke="#bfdbfe"/>
+    <rect x="572" y="132" width="568" height="710" rx="22" fill="#ecfeff" fill-opacity="0.9" stroke="#a5f3fc"/>
+    <rect x="1168" y="132" width="356" height="710" rx="22" fill="#fefce8" fill-opacity="0.9" stroke="#fde68a"/>
+  </g>
+
+  <text x="313" y="176" text-anchor="middle" class="groupTitle" fill="#1d4ed8">Client Layer</text>
+  <text x="313" y="198" text-anchor="middle" class="groupHint">Vite + React execution boundary</text>
+
+  <text x="856" y="176" text-anchor="middle" class="groupTitle" fill="#0e7490">Server Layer</text>
+  <text x="856" y="198" text-anchor="middle" class="groupHint">Express modular service architecture</text>
+
+  <text x="1346" y="176" text-anchor="middle" class="groupTitle" fill="#a16207">Data and External</text>
+  <text x="1346" y="198" text-anchor="middle" class="groupHint">Managed stores and third-party APIs</text>
+
+  <g filter="url(#cardShadow)">
+    <rect x="126" y="236" width="372" height="88" rx="14" fill="#ffffff" stroke="#93c5fd"/>
+    <text x="312" y="270" text-anchor="middle" class="cardTitle" fill="#1d4ed8">Route Composition</text>
+    <text x="312" y="292" text-anchor="middle" class="cardHint">Public, protected, and role-guarded pages</text>
+
+    <rect x="126" y="346" width="372" height="88" rx="14" fill="#ffffff" stroke="#93c5fd"/>
+    <text x="312" y="380" text-anchor="middle" class="cardTitle" fill="#1d4ed8">UI Feature Modules</text>
+    <text x="312" y="402" text-anchor="middle" class="cardHint">Candidate, recruiter, and admin dashboards</text>
+
+    <rect x="126" y="456" width="372" height="88" rx="14" fill="#ffffff" stroke="#93c5fd"/>
+    <text x="312" y="490" text-anchor="middle" class="cardTitle" fill="#1d4ed8">Session and Auth Context</text>
+    <text x="312" y="512" text-anchor="middle" class="cardHint">Token state, identity hydration, redirects</text>
+
+    <rect x="126" y="566" width="372" height="88" rx="14" fill="#ffffff" stroke="#93c5fd"/>
+    <text x="312" y="600" text-anchor="middle" class="cardTitle" fill="#1d4ed8">API Client Adapter</text>
+    <text x="312" y="622" text-anchor="middle" class="cardHint">Axios interceptors and endpoint wrappers</text>
+  </g>
+
+  <g filter="url(#cardShadow)">
+    <rect x="620" y="214" width="472" height="82" rx="14" fill="#ffffff" stroke="#67e8f9"/>
+    <text x="856" y="247" text-anchor="middle" class="cardTitle" fill="#0e7490">HTTP Entry and Middleware Stack</text>
+    <text x="856" y="268" text-anchor="middle" class="cardHint">CORS, JSON parser, security, route mounting</text>
+
+    <rect x="620" y="314" width="472" height="82" rx="14" fill="#ffffff" stroke="#67e8f9"/>
+    <text x="856" y="347" text-anchor="middle" class="cardTitle" fill="#0e7490">Authentication and Authorization</text>
+    <text x="856" y="368" text-anchor="middle" class="cardHint">JWT verification and role-level access gates</text>
+
+    <rect x="620" y="414" width="472" height="82" rx="14" fill="#ffffff" stroke="#67e8f9"/>
+    <text x="856" y="447" text-anchor="middle" class="cardTitle" fill="#0e7490">Domain Controllers and Routes</text>
+    <text x="856" y="468" text-anchor="middle" class="cardHint">Jobs, profiles, ATS, dashboards, testimonials</text>
+
+    <rect x="620" y="514" width="472" height="82" rx="14" fill="#ffffff" stroke="#67e8f9"/>
+    <text x="856" y="547" text-anchor="middle" class="cardTitle" fill="#0e7490">Integration Services</text>
+    <text x="856" y="568" text-anchor="middle" class="cardHint">OTP service, Cloudinary, ATS model bridge</text>
+
+    <rect x="620" y="614" width="472" height="82" rx="14" fill="#ffffff" stroke="#67e8f9"/>
+    <text x="856" y="647" text-anchor="middle" class="cardTitle" fill="#0e7490">Persistence Models</text>
+    <text x="856" y="668" text-anchor="middle" class="cardHint">Mongoose schemas and indexed collections</text>
+  </g>
+
+  <g filter="url(#cardShadow)">
+    <rect x="1208" y="234" width="276" height="78" rx="14" fill="#ffffff" stroke="#fcd34d"/>
+    <text x="1346" y="265" text-anchor="middle" class="cardTitle" fill="#a16207">MongoDB Atlas</text>
+    <text x="1346" y="285" text-anchor="middle" class="cardHint">Primary persistent data layer</text>
+
+    <rect x="1208" y="336" width="276" height="78" rx="14" fill="#ffffff" stroke="#fcd34d"/>
+    <text x="1346" y="367" text-anchor="middle" class="cardTitle" fill="#a16207">Cloudinary Media</text>
+    <text x="1346" y="387" text-anchor="middle" class="cardHint">Resume and image object storage</text>
+
+    <rect x="1208" y="438" width="276" height="78" rx="14" fill="#ffffff" stroke="#fcd34d"/>
+    <text x="1346" y="469" text-anchor="middle" class="cardTitle" fill="#a16207">Google Script Mailer</text>
+    <text x="1346" y="489" text-anchor="middle" class="cardHint">Transactional OTP delivery path</text>
+
+    <rect x="1208" y="540" width="276" height="78" rx="14" fill="#ffffff" stroke="#fcd34d"/>
+    <text x="1346" y="571" text-anchor="middle" class="cardTitle" fill="#a16207">ATS Analyzer API</text>
+    <text x="1346" y="591" text-anchor="middle" class="cardHint">Resume-job matching computation</text>
+  </g>
+
+  <g stroke="#64748b" stroke-width="2.4" marker-end="url(#arrow)" fill="none">
+    <line x1="312" y1="324" x2="312" y2="346"/>
+    <line x1="312" y1="434" x2="312" y2="456"/>
+    <line x1="312" y1="544" x2="312" y2="566"/>
+
+    <polyline points="498,610 540,610 540,228 620,228"/>
+
+    <line x1="856" y1="296" x2="856" y2="314"/>
+    <line x1="856" y1="396" x2="856" y2="414"/>
+    <line x1="856" y1="496" x2="856" y2="514"/>
+    <line x1="856" y1="596" x2="856" y2="614"/>
+
+    <polyline points="1092,654 1118,654 1118,274 1208,274"/>
+    <polyline points="1092,554 1140,554 1140,375 1208,375"/>
+    <polyline points="1092,562 1162,562 1162,477 1208,477"/>
+    <polyline points="1092,570 1182,570 1182,579 1208,579"/>
+  </g>
+
+  <text x="430" y="640" class="flowLabel">client requests and JWT</text>
+  <text x="1008" y="684" class="flowLabel">ORM to database</text>
+</svg>
+

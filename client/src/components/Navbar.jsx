@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Bell, Menu, X } from "lucide-react"; // optional icons
 import logo from "../assets/logo.png";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import Avatar from "./Avatar";
+import UserDropdown from "./UserDropdown";
 import { useAuth } from "../contexts/AuthContexts";
 import { FiLogOut } from "react-icons/fi";
 
@@ -13,9 +13,29 @@ const NavShortcutItem = ({
     userRole,
     location,
     onClick,
+    dropdown
 }) => {
     const [hovered, setHovered] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
     const navigate = useNavigate();
+
+    const activeDropdownItem = dropdown?.find(d => location.pathname === d.href);
+    const displayLabel = activeDropdownItem ? activeDropdownItem.label : label;
+    const activeHref = activeDropdownItem ? activeDropdownItem.href : to;
+
+    // The items to show in the dropdown (excluding the currently active one)
+    const visibleDropdownItems = dropdown?.filter(d => d.href !== activeHref);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const handleClick = (e) => {
         if (to.startsWith("#")) {
@@ -53,26 +73,77 @@ const NavShortcutItem = ({
 
     return (
         <li
-            className="w-full md:w-auto"
-            style={{ position: "relative", listStyle: "none" }}
+            className="w-full md:w-auto relative"
+            style={{ listStyle: "none" }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
+            ref={dropdownRef}
         >
-            <NavLink
-                to={to}
-                onClick={handleClick}
-                className={({ isActive }) => {
-                    const isActuallyActive =
-                        userRole !== "default" && (isActive || location.hash === to);
-                    return `flex items-center justify-center px-2 md:px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${isActuallyActive
+            {dropdown ? (
+                <div
+                    className={`flex items-center justify-between md:justify-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${(userRole !== "default" && (location.pathname === activeHref || location.hash === activeHref || dropdown.some(d => location.pathname === d.href)))
                         ? "text-[#9b44fe] bg-gray-100 shadow-sm"
                         : "text-gray-700 hover:text-[#9b44fe] hover:bg-gray-100"
-                        }`;
-                }}
-            >
-                {label}
-            </NavLink>
-            {shortcut && hovered && (
+                        }`}
+                >
+                    <NavLink
+                        to={activeHref}
+                        onClick={handleClick}
+                        className="flex-1 py-2 pl-4 md:pl-4 pr-1 md:pr-1 text-left md:text-center shrink-0 min-w-16"
+                    >
+                        {displayLabel}
+                    </NavLink>
+                    <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsOpen(!isOpen); }}
+                        className="py-2 pr-4 pl-2 focus:outline-none flex items-center justify-center shrink-0 border-l border-transparent hover:bg-gray-200/50 rounded-r-lg"
+                    >
+                        <svg className={`w-4 h-4 transition-transform duration-250 ${isOpen ? "rotate-180 text-[#9b44fe]" : "text-gray-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
+            ) : (
+                <NavLink
+                    to={activeHref}
+                    onClick={handleClick}
+                    className={({ isActive }) => {
+                        const isActuallyActive =
+                            userRole !== "default" && (isActive || location.hash === activeHref);
+                        return `flex items-center justify-center px-4 py-2 text-center rounded-lg font-medium text-lg md:text-xl transition-colors duration-200 ease-in-out w-full ${isActuallyActive
+                            ? "text-[#9b44fe] bg-gray-100 shadow-sm"
+                            : "text-gray-700 hover:text-[#9b44fe] hover:bg-gray-100"
+                            }`;
+                    }}
+                >
+                    {displayLabel}
+                </NavLink>
+            )}
+
+            {dropdown && isOpen && (
+                <div className="md:absolute static top-full left-1/2 md:-translate-x-1/2 w-full md:w-56 bg-white md:rounded-2xl md:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border-l-2 md:border-l-0 md:border border-purple-200 md:border-gray-100 py-2 mt-2 md:mt-1 z-50 animate-in fade-in md:slide-in-from-top-2 ml-4 md:ml-0">
+                    {visibleDropdownItems.map((item, idx) => (
+                        <NavLink
+                            key={idx}
+                            to={item.href}
+                            className={({ isActive }) => `block relative group px-5 py-2.5 text-base font-medium transition-colors ${isActive ? "text-[#9b44fe] bg-purple-50" : "text-gray-600 hover:text-[#9b44fe] hover:bg-purple-50/50"}`}
+                            onClick={(e) => {
+                                if (onClick) onClick(e);
+                                setIsOpen(false);
+                            }}
+                        >
+                            <div className="flex items-center justify-between gap-4">
+                                <span className="whitespace-nowrap">{item.label}</span>
+                                {item.shortcut && (
+                                    <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 group-hover:border-purple-200 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors whitespace-nowrap">
+                                        {item.shortcut}
+                                    </span>
+                                )}
+                            </div>
+                        </NavLink>
+                    ))}
+                </div>
+            )}
+            {shortcut && hovered && !isOpen && (
                 <span
                     style={{
                         position: "absolute",
@@ -132,28 +203,45 @@ const Navbar = ({ userData }) => {
             { label: "Users", href: "/admin/users", shortcut: "Ctrl + U" },
             { label: "Jobs", href: "/admin/jobs", shortcut: "Ctrl + J" },
             { label: "Companies", href: "/admin/companies", shortcut: "Ctrl + C" },
+            { label: "Testimonials", href: "/admin/testimonials", shortcut: "Alt + T" },
         ],
         candidate: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
-            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Ctrl + AS" },
+            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Alt + A" },
             {
                 label: "Best Resumes",
                 href: "/candidate/best-resumes",
                 shortcut: "Ctrl + BR",
             },
-            { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
-            { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+            {
+                label: "Jobs",
+                href: "/candidate/job-search",
+                shortcut: "Ctrl + J",
+                dropdown: [
+                    { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
+                    { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+                    { label: "Applied Jobs", href: "/candidate/applied-jobs", shortcut: "Ctrl + AJ" }
+                ]
+            },
         ],
         user: [
             { label: "Dashboard", href: "/candidate/dashboard", shortcut: "Ctrl + D" },
-            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Ctrl + AS" },
+            { label: "ATS Analyzer", href: "/candidate/ats", shortcut: "Alt + A" },
             {
                 label: "Best Resumes",
                 href: "/candidate/best-resumes",
                 shortcut: "Ctrl + BR",
             },
-            { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
-            { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+            {
+                label: "Jobs",
+                href: "/candidate/job-search",
+                shortcut: "Ctrl + J",
+                dropdown: [
+                    { label: "Jobs", href: "/candidate/job-search", shortcut: "Ctrl + J" },
+                    { label: "Saved Jobs", href: "/candidate/saved-jobs", shortcut: "Ctrl + SJ" },
+                    { label: "Applied Jobs", href: "/candidate/applied-jobs", shortcut: "Ctrl + AJ" }
+                ]
+            },
         ],
         recruiter: [
             {
@@ -194,8 +282,7 @@ const Navbar = ({ userData }) => {
         navigate("/");
     };
 
-    const userRole = isLoggedIn ? userData.role : "default";
-    // const userRole = "admin"
+    const userRole = isLoggedIn ? (user?.role || "default") : "default";
 
     /* ── Global keyboard shortcuts ── */
     const pendingKey = useRef(null); // first key of a 2-key sequence
@@ -203,13 +290,36 @@ const Navbar = ({ userData }) => {
 
     useEffect(() => {
         const onKeyDown = (e) => {
-            // only fire when Ctrl is held, not inside an input/textarea
-            if (!e.ctrlKey) return;
+            // only fire when Ctrl or Alt is held, not inside an input/textarea
+            if (!e.ctrlKey && !e.altKey) return;
             const tag = document.activeElement?.tagName;
             if (tag === "INPUT" || tag === "TEXTAREA") return;
             if (!isLoggedIn) return;
 
             const key = e.key.toLowerCase();
+
+            // Handle Alt + A for ATS Analyzer
+            if (e.altKey && key === "a") {
+                e.preventDefault();
+                if (userRole === "candidate" || userRole === "user") {
+                    navigate("/candidate/ats");
+                }
+                pendingKey.current = null;
+                return;
+            }
+
+            // Handle Alt + T for Admin Testimonials
+            if (e.altKey && key === "t") {
+                e.preventDefault();
+                if (userRole === "admin") {
+                    navigate("/admin/testimonials");
+                }
+                pendingKey.current = null;
+                return;
+            }
+
+            // From here on, enforce Ctrl modifier
+            if (!e.ctrlKey) return;
 
             if (key === "d") {
                 e.preventDefault();
@@ -220,17 +330,12 @@ const Navbar = ({ userData }) => {
                 pendingKey.current = null;
                 return;
             }
-            if (key === "r" && pendingKey.current !== "b") {
-                e.preventDefault();
-                if (userRole === "candidate" || userRole === "user")
-                    navigate("/candidate/resume");
-                pendingKey.current = null;
-                return;
-            }
+
             if (
                 key === "j" &&
                 pendingKey.current !== "s" &&
-                pendingKey.current !== "p"
+                pendingKey.current !== "p" &&
+                pendingKey.current !== "a"
             ) {
                 e.preventDefault();
                 if (userRole === "admin") navigate("/admin/jobs");
@@ -253,10 +358,17 @@ const Navbar = ({ userData }) => {
                 pendingKey.current = null;
                 return;
             }
-            if (key === "a") {
+            if (key === "a" && pendingKey.current !== "s") {
                 e.preventDefault();
-                navigate("/candidate/profile");
-                pendingKey.current = null;
+                pendingKey.current = "a";
+                clearTimeout(seqTimer.current);
+                seqTimer.current = setTimeout(() => {
+                    if (pendingKey.current === "a") {
+                        if (userRole === "recruiter") navigate("/recruiter/profile");
+                        else navigate("/candidate/profile");
+                        pendingKey.current = null;
+                    }
+                }, 400);
                 return;
             }
             if (key === "h" && userRole === "recruiter") {
@@ -317,6 +429,14 @@ const Navbar = ({ userData }) => {
                 e.preventDefault();
                 if (userRole === "candidate" || userRole === "user")
                     navigate("/candidate/saved-jobs");
+                pendingKey.current = null;
+                clearTimeout(seqTimer.current);
+                return;
+            }
+            if (key === "j" && pendingKey.current === "a") {
+                e.preventDefault();
+                if (userRole === "candidate" || userRole === "user")
+                    navigate("/candidate/applied-jobs");
                 pendingKey.current = null;
                 clearTimeout(seqTimer.current);
                 return;
@@ -385,6 +505,7 @@ const Navbar = ({ userData }) => {
                                 shortcut={link.shortcut}
                                 userRole={userRole}
                                 location={location}
+                                dropdown={link.dropdown}
                             />
                         ))}
                     </ul>
@@ -394,13 +515,7 @@ const Navbar = ({ userData }) => {
                                     <Bell />
                                 </div> */}
                             <div>
-                                <Avatar userData={{
-                                    userName: userData.userName,
-                                    email: userData.email,
-                                    sub: userData.sub,
-                                    picture: userData.picture,
-                                    role: userData.role
-                                }} />
+                                <UserDropdown userData={user} />
                             </div>
                         </div>
                         :
@@ -463,6 +578,7 @@ const Navbar = ({ userData }) => {
                                         userRole={userRole}
                                         location={location}
                                         onClick={toggleDrawer}
+                                        dropdown={link.dropdown}
                                     />
                                 ))}
                             </ul>
@@ -471,43 +587,29 @@ const Navbar = ({ userData }) => {
                                     <div
                                         className="flex items-center space-x-3"
                                         onClick={() => {
-                                            navigate("/candidate/profile");
+                                            navigate(userRole === "recruiter" ? "/recruiter/profile" : "/candidate/profile");
                                             toggleDrawer();
                                         }}
                                     >
-                                        {userData?.picture ? (
-                                            <img
-                                                src={userData.picture}
-                                                alt="User Profile"
-                                                className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                                                onError={(e) => {
-                                                    e.target.style.display = "none";
-                                                    e.target.nextSibling.style.display = "flex";
-                                                }}
-                                            />
-                                        ) : (
-                                            <div
-                                                className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700"
-                                                style={{ display: userData?.Picture ? "none" : "flex" }}
-                                            >
-                                                <svg
-                                                    className="w-6 h-6"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth="2"
-                                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                        )}
+                                        {(() => {
+                                            const name = user?.userName || user?.name || "User";
+                                            const pic = user?.picture || user?.img;
+                                            const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6B46C1&color=fff&size=100`;
+                                            
+                                            return (
+                                                <img
+                                                    src={pic || fallback}
+                                                    alt="User Profile"
+                                                    className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = fallback;
+                                                    }}
+                                                />
+                                            );
+                                        })()}
                                         <span className="text-lg font-medium text-gray-800 truncate max-w-[150px]">
-                                            {userData?.userName || "User"}
+                                            {user?.userName || user?.name || "User"}
                                         </span>
                                     </div>
                                     <button
