@@ -53,33 +53,17 @@ const AtsGauge = ({ score }) => {
 };
 
 /* ── Cloudinary Browser Helper ────────────────────────────── */
-const uploadToCloudinary = async (file) => {
-  const CLOUD_NAME = "ds5ohpmvm";
-  // To use this, an 'Unsigned Upload Preset' named ml_default should be added in Cloudinary dashboard
-  const UPLOAD_PRESET = "resume";
-
-  const formData = new FormData();
-  formData.set("file", file);
-  formData.set("upload_preset", UPLOAD_PRESET);
-  formData.set("folder", "candidate_resumes");
-
-  try {
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.error?.message || "Cloudinary upload failed");
-    }
-
-    const data = await res.json();
-    return data.secure_url;
-  } catch (error) {
-    console.error("Cloudinary error:", error);
-    throw error;
-  }
+/** 
+ * No longer uploads directly to Cloudinary from the frontend to avoid preset issues.
+ * Instead, it converts the file to base64 and lets the server handle the signed upload.
+ */
+const getFileBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = (e) => reject(new Error("File conversion failed"));
+    reader.readAsDataURL(file);
+  });
 };
 
 /* ── Inline Icon helper ─────────────────────────────────────── */
@@ -698,9 +682,9 @@ const Candidate_Profile_View = ({ userProp }) => {
     setUploading(true);
 
     try {
-      const cloudinaryUrl = await uploadToCloudinary(file);
+      const base64Resume = await getFileBase64(file);
 
-      const payload = { resumeLink: cloudinaryUrl };
+      const payload = { resumeLink: base64Resume };
       let res;
       if (profileExists) {
         res = await api.put("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
@@ -709,8 +693,10 @@ const Candidate_Profile_View = ({ userProp }) => {
         setProfileExists(true);
       }
 
-      const updatedResumeLink = res.data?.data?.resumeLink || cloudinaryUrl;
-      set("resumeLink", updatedResumeLink);
+      const updatedResumeLink = res.data?.data?.resumeLink;
+      if (updatedResumeLink) {
+        set("resumeLink", updatedResumeLink);
+      }
       setSaved(true);
       toast.success("Resume uploaded successfully!", { position: "top-center" });
       setTimeout(() => setSaved(false), 2500);

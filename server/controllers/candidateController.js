@@ -188,7 +188,10 @@ const updateCandidateProfile = async (req, res) => {
       updateData.img = imageUrl;
       await User.findByIdAndUpdate(userId, { picture: imageUrl });
     }
-    if (resumeLink !== undefined) updateData.resumeLink = resumeLink;
+    if (resumeLink !== undefined) {
+      const cloudinaryUrl = await uploadBase64Image(resumeLink, "candidate_resumes");
+      updateData.resumeLink = cloudinaryUrl;
+    }
     if (description !== undefined) updateData.description = description;
     if (experience !== undefined) updateData.experience = experience;
     if (education !== undefined) updateData.education = education;
