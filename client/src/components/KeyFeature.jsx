@@ -4,20 +4,32 @@ import { Link } from "react-router-dom";
 import Profile from "../assets/profile.gif";
 import JobOffer from "../assets/jobOffer.gif";
 import Data_Extraction from "../assets/Data_extraction.gif";
+import GoogleLogo from "../assets/company-logos/google.svg";
+import MicrosoftLogo from "../assets/company-logos/microsoft.svg";
+import AppleLogo from "../assets/company-logos/apple.svg";
+import MetaLogo from "../assets/company-logos/meta.png";
+import AmazonLogo from "../assets/company-logos/amazon.png";
+import IBMLogo from "../assets/company-logos/ibm.svg";
+import TeslaLogo from "../assets/company-logos/tesla.png";
+import AdobeLogo from "../assets/company-logos/adobe.png";
+import NetflixLogo from "../assets/company-logos/netflix.jpg";
+import NvidiaLogo from "../assets/company-logos/nvidia.png";
+import IntelLogo from "../assets/company-logos/intel.jpg";
+import OracleLogo from "../assets/company-logos/oracle.png";
 
 const companies = [
-  { name: "Google", logo: "/assets/company-logos/google.svg" },
-  { name: "Microsoft", logo: "/assets/company-logos/microsoft.svg" },
-  { name: "Apple", logo: "/assets/company-logos/apple.svg" },
-  { name: "Meta", logo: "/assets/company-logos/meta.png" },
-  { name: "Amazon", logo: "/assets/company-logos/amazon.png" },
-  { name: "IBM", logo: "/assets/company-logos/ibm.svg" },
-  { name: "Tesla", logo: "/assets/company-logos/tesla.png" },
-  { name: "Adobe", logo: "/assets/company-logos/adobe.png" },
-  { name: "Netflix", logo: "/assets/company-logos/netflix.jpg" },
-  { name: "Nvidia", logo: "/assets/company-logos/nvidia.png" },
-  { name: "Intel", logo: "/assets/company-logos/intel.jpg" },
-  { name: "Oracle", logo: "/assets/company-logos/oracle.png" },
+  { name: "Google", logo: GoogleLogo },
+  { name: "Microsoft", logo: MicrosoftLogo },
+  { name: "Apple", logo: AppleLogo },
+  { name: "Meta", logo: MetaLogo },
+  { name: "Amazon", logo: AmazonLogo },
+  { name: "IBM", logo: IBMLogo },
+  { name: "Tesla", logo: TeslaLogo },
+  { name: "Adobe", logo: AdobeLogo },
+  { name: "Netflix", logo: NetflixLogo },
+  { name: "Nvidia", logo: NvidiaLogo },
+  { name: "Intel", logo: IntelLogo },
+  { name: "Oracle", logo: OracleLogo },
 ];
 
 const KeyFeatures = () => {
