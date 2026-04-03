@@ -1,11 +1,14 @@
 import React from "react";
-import Marquee from "react-fast-marquee";
+// import Marquee from "react-fast-marquee";
 import { Link } from "react-router-dom";
 import Profile from "../assets/profile.gif";
 import JobOffer from "../assets/jobOffer.gif";
 import Data_Extraction from "../assets/Data_extraction.gif";
 const KeyFeatures = () => {
-  // Company logos data
+  /*
+  WARNING: This marketing block can be flagged by Safe Browsing heuristics.
+  Reasons: "Trusted by Industry Leaders" claim + third-party brand logos loaded from external hosts.
+  Keep only if you have explicit permission to use these logos/claims.
   const companies = [
     {
       name: "Google",
@@ -56,39 +59,13 @@ const KeyFeatures = () => {
       logo: "https://1000logos.net/wp-content/uploads/2017/04/Oracle-Logo-1.png",
     },
   ];
-
-  // Second set of company logos (different companies)
-  //   const additionalCompanies = [
-  //     {
-  //       name: "Tesla",
-  //       logo: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png",
-  //     },
-  //     {
-  //       name: "Adobe",
-  //       logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKNPRQuLPpKrjO5bdFPgVGRoAbysq635o6ZQ&s",
-  //     },
-  //     {
-  //       name: "Netflix",
-  //       logo: "https://images.ctfassets.net/y2ske730sjqp/5QQ9SVIdc1tmkqrtFnG9U1/de758bba0f65dcc1c6bc1f31f161003d/BrandAssets_Logos_02-NSymbol.jpg?w=940",
-  //     },
-  //     {
-  //       name: "Nvidia",
-  //       logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjPSt8IAZHIwQXUj8owif7VyiELZvOi0w1pA&s",
-  //     },
-  //     {
-  //       name: "Intel",
-  //       logo: "https://cdn.mos.cms.futurecdn.net/MKBZhC5Dz7u76BeTtkgW3a-1200-80.jpg",
-  //     },
-  //     {
-  //       name: "Oracle",
-  //       logo: "https://1000logos.net/wp-content/uploads/2017/04/Oracle-Logo-1.png",
-  //     },
-  //   ];
+  */
 
   return (
     <div className="min-h-screen bg-white max-w-7xl mx-auto py-16">
       <div className="container mx-auto px-4">
-        {/* Trusted Companies Section with Professional Marquee */}
+        {/*
+        WARNING: Disabled to reduce deceptive-page risk in Safe Browsing.
         <section className="py-16 bg-white rounded-2xl shadow-sm border border-gray-100 mb-16">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
@@ -101,16 +78,15 @@ const KeyFeatures = () => {
             </div>
 
             <div className="relative overflow-hidden" id="key-features">
-              {" "}
               <div className="absolute left-0 top-0 z-10 h-full w-32 bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
               <div className="absolute right-0 top-0 z-10 h-full w-32 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
               <Marquee
                 gradient={true}
-                gradientColor={[244, 63, 94]} // Attractive pinkish gradient
+                gradientColor={[244, 63, 94]}
                 gradientWidth={100}
                 speed={50}
                 pauseOnHover={true}
-                style={{ width: "100%", height: "auto" }} // Ensures full width without overflow
+                style={{ width: "100%", height: "auto" }}
               >
                 {companies.map((company) => (
                   <div
@@ -128,9 +104,10 @@ const KeyFeatures = () => {
             </div>
           </div>
         </section>
+        */}
 
         {/* Key Features Section */}
-        <section>
+        <section id="key-features">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Key Features
