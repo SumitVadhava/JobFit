@@ -41,7 +41,19 @@ app.use(
   }),
 );
 
-connectDB();
+// connectDB();
+
+let isConnected = false;
+
+const connectDatabase = async () => {
+  if (!isConnected) {
+    await connectDB();
+    isConnected = true;
+    console.log("MongoDB Connected ✅");
+  }
+};
+
+connectDatabase();
 
 
 app.use(helmet());
