@@ -47,7 +47,7 @@ const KeyFeatures = () => {
               </p>
             </div>
 
-            <div className="relative overflow-hidden" id="key-features">
+            <div className="relative overflow-hidden">
               <div className="absolute left-0 top-0 z-10 h-full w-24 sm:w-32 bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
               <div className="absolute right-0 top-0 z-10 h-full w-24 sm:w-32 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
 
@@ -79,7 +79,7 @@ const KeyFeatures = () => {
         </section>
 
         {/* Key Features Section */}
-        <section id="key-features">
+        <section id="key-features" className="scroll-mt-48">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Key Features
@@ -137,7 +137,6 @@ const KeyFeatures = () => {
             {/* Card 3 */}
             <Link
               to="/features/ats-analytics"
-              id="user-review"
               className="group bg-white p-6 rounded-xl shadow-md border border-transparent hover:border-purple-300 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer block"
             >
               <div className="overflow-hidden rounded-lg mb-4">

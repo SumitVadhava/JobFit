@@ -69,7 +69,7 @@ export default function FAQSection() {
   ];
 
   return (
-    <div className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" id="faq-section">
+    <div className="bg-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-24 scroll-mt-12" id="faq-section">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-bold text-purple-800 mb-8 text-center">
           JobFit – FAQ
@@ -172,7 +172,7 @@ export default function FAQSection() {
           </div>
         </div>
         {/* Ask any doubt to our Chatbot */}
-        <div className="mt-10 text-center">
+        <div className="mt-6 text-center">
           <h3 className="text-xl font-semibold text-purple-800 mb-4">
             Still Have Questions?
           </h3>

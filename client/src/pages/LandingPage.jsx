@@ -43,7 +43,7 @@ const LandingPage = () => {
 
     return (
         <section className="bg-white overflow-hidden">
-            <div id="home">
+            <div>
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
@@ -54,7 +54,7 @@ const LandingPage = () => {
                 </motion.div>
             </div>
             
-            <div id="key-features">
+            <div>
                 <motion.div 
                     initial="hidden"
                     whileInView="visible"
@@ -65,18 +65,18 @@ const LandingPage = () => {
                 </motion.div>
             </div>
 
-            <div id="user-review">
+            <div>
                 <motion.div 
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={sectionVariants}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "0px" }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
                 >
                     <Testimonial />
                 </motion.div>
             </div>
 
-            <div id="faq-section">
+            <div>
                 <motion.div 
                     initial="hidden"
                     whileInView="visible"
@@ -87,7 +87,7 @@ const LandingPage = () => {
                 </motion.div>
             </div>
 
-            <div id="footer">
+            <div id="footer" className="scroll-mt-48">
                 <motion.div 
                     initial="hidden"
                     whileInView="visible"
@@ -99,6 +99,7 @@ const LandingPage = () => {
             </div>
         </section>
     );
+
 
 };
 

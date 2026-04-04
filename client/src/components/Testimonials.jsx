@@ -24,7 +24,7 @@ const TestimonialComponent = () => {
   }, []);
 
   return (
-    <div className="bg-white max-h-screen max-w-7xl mx-auto py-12 px-4">
+    <div className="bg-white max-w-7xl mx-auto py-16 px-4 scroll-mt-48" id="user-review">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl font-bold text-purple-800 mb-8 text-center">
           What Our Users Say
