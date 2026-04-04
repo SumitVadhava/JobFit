@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContexts";
 import api from "../../api/api";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import {
   BriefcaseBusiness,
   Camera,
@@ -19,8 +19,6 @@ import {
   Send,
   Share2,
 } from "lucide-react";
-import "react-toastify/dist/ReactToastify.css";
-
 const ICONS = {
   edit: Pencil,
   save: Send,
@@ -236,7 +234,7 @@ const Recruiter_Profile_view = ({ userProp }) => {
       `}</style>
 
       <div className="min-h-screen bg-slate-50 font-poppins pb-12">
-        <ToastContainer />
+        
 
         {/* ── Main Container ─────────────────────────────────── */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 pb-16">

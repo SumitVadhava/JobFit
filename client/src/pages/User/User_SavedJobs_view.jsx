@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../../api/api"; // Ensure this path is correct
 import ButtonLogo from "../../assets/button_logo.png";
 import { Briefcase } from "lucide-react";
@@ -350,8 +349,7 @@ const SavedJobs = () => {
   // --- MAIN RENDER ---
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 font-poppins">
-      <ToastContainer />
-      <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
+            <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
         <div className="flex-1">
           <div className="bg-white rounded-3xl p-6 shadow-xl">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Saved Jobs</h2>

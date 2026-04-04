@@ -34,8 +34,7 @@ import {
 } from '@mui/icons-material';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from '../../api/api';
 
 /* ─── Google Fonts ─── */
@@ -738,10 +737,7 @@ const JobFitUserTable = () => {
     return (
         <>
             <GlobalStyle />
-            <ToastContainer
-                theme="light"
-                toastStyle={{ background: t.card, border: `1px solid ${t.border}`, fontFamily: "'Inter', sans-serif" }}
-            />
+            
             <div style={{
                 minHeight: '100vh', background: t.bg,
                 fontFamily: "'Inter', sans-serif",

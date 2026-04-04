@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../../api/api";
 import { useAuth } from "../../contexts/AuthContexts";
 import ButtonLogo from "../../assets/button_logo.png";
@@ -209,8 +208,7 @@ const ApplyJob = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white font-['Inter',sans-serif]">
-      <ToastContainer />
-
+      
       {/* ─── Sticky Top Bar ─── */}
       <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../../api/api";
 import WorkIcon from "@mui/icons-material/Work";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
@@ -417,7 +416,7 @@ const CandidatesView = () => {
   if (selectedJob) {
     return (
       <div className="min-h-screen bg-white">
-        <ToastContainer />
+        
 
         {/* ── Confirm Action Modal ── */}
         <RecruiterConfirmActionModal
@@ -729,7 +728,7 @@ const CandidatesView = () => {
   /* ═══════════════ JOBS GRID VIEW ═══════════════ */
   return (
     <div className="min-h-screen bg-white">
-      <ToastContainer />
+      
 
       {/* ── Header ── */}
       <div className="bg-white/90 backdrop-blur-md border-b border-[#9c44fe]/10 sticky top-0 z-30">

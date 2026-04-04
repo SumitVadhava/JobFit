@@ -17,8 +17,7 @@ import {
   FileText,
   BadgeCheck,
 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../../api/api";
 import RecruiterJobCard from "../../components/recruiter/RecruiterJobCard";
 import { RecruiterSkeletonHistoryPage } from "../../components/recruiter/RecruiterSkeletons";
@@ -643,7 +642,7 @@ const Recruiter_History = () => {
         isDeleting={isDeleting}
       />
 
-      <ToastContainer position="top-center" autoClose={3000} />
+      
     </div>
   );
 };

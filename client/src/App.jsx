@@ -21,6 +21,7 @@ import Recruiter_History from './pages/Recruiter/Recruiter_History';
 import { useAuth } from './contexts/AuthContexts'
 import User_Best_Resume_view from './pages/User/User_Best_Resume_view'
 import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css';
 import Recruiter_Posted_Jobs_view from './pages/Recruiter/Recruiter_Posted_Jobs_view'
 import ProtectedRoute from './components/ProtectedRoute'
 import AboutUs from './pages/AboutUs'

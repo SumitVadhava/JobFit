@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../../api/api";
 import {
   Trash2,
@@ -173,7 +172,7 @@ const AdminTestimonials = () => {
   /* ─── Render ─── */
   return (
     <div className="min-h-screen p-4 sm:p-8 bg-[#fdfbff]">
-      <ToastContainer position="top-center" autoClose={3000} />
+      
 
       <div className="max-w-7xl mx-auto space-y-8">
         {/* ─── Header ─── */}

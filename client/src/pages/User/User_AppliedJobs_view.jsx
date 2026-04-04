@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../../api/api";
 import ButtonLogo from "../../assets/button_logo.png";
 import { Briefcase } from "lucide-react";
@@ -331,7 +330,7 @@ const AppliedJobs = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 font-['Inter',sans-serif]">
-        <ToastContainer />
+        
 
         {/* Header Skeleton */}
         <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-30 py-4">
@@ -407,7 +406,7 @@ const AppliedJobs = () => {
   /* ─── Main render ─── */
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 font-['Inter',sans-serif]">
-      <ToastContainer />
+      
 
       {/* ── Header ── */}
       <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-30">

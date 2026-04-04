@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../../api/api";
 import { motion } from "framer-motion";
 
@@ -133,15 +132,7 @@ const AdminAnalytics = () => {
 
   return (
     <div className="min-h-screen p-4 sm:p-8 bg-[radial-gradient(circle_at_top_left,_#fdfbff_0%,_#ffffff_100%)]">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        theme="light"
-      />
+      
 
       <div className="max-w-7xl mx-auto space-y-8">
         {/* ─── Header Section ─── */}

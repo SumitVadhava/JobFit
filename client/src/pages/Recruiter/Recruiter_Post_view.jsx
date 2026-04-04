@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../../api/api";
 import {
   Briefcase,
@@ -277,7 +276,7 @@ const Recruiter_Post_view = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50/50">
-      <ToastContainer />
+      
 
       {/* Decorative Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
