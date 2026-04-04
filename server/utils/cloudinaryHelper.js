@@ -12,7 +12,7 @@ const uploadBase64Image = async (imageStr, folder = "profile_images") => {
   if (!imageStr || typeof imageStr !== "string") return imageStr;
 
   // Check if it's a base64 data URI
-  if (imageStr.startsWith("data:image/")) {
+  if (imageStr.startsWith("data:")) {
     try {
       const uploadResponse = await cloudinary.uploader.upload(imageStr, {
         folder: folder,

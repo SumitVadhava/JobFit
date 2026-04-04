@@ -46,7 +46,7 @@ const Hero = () => {
                         </button>
                         <button 
                             className="border border-purple-600 text-purple-600 px-6 py-2 rounded hover:bg-purple-100" 
-                            onClick={() => window.open('http://www.youtube.com/@JobFit-1.0', '_blank')}
+                            onClick={() => window.open('https://www.youtube.com/@JobFit-1.0', '_blank')}
                         >
                             Watch Video
                         </button>

@@ -53,6 +53,20 @@ const AtsGauge = ({ score }) => {
   );
 };
 
+/* ── Cloudinary Browser Helper ────────────────────────────── */
+/** 
+ * No longer uploads directly to Cloudinary from the frontend to avoid preset issues.
+ * Instead, it converts the file to base64 and lets the server handle the signed upload.
+ */
+const getFileBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = (e) => reject(new Error("File conversion failed"));
+    reader.readAsDataURL(file);
+  });
+};
+
 /* ── Inline Icon helper ─────────────────────────────────────── */
 const Ic = ({ d, size = 16 }) => (
   <svg width={size} height={size} fill="currentColor" viewBox="0 0 256 256" className="shrink-0">
@@ -669,9 +683,9 @@ const Candidate_Profile_View = ({ userProp }) => {
     setUploading(true);
 
     try {
-      const cloudinaryUrl = await uploadToCloudinary(file);
+      const base64Resume = await getFileBase64(file);
 
-      const payload = { resumeLink: cloudinaryUrl };
+      const payload = { resumeLink: base64Resume };
       let res;
       if (profileExists) {
         res = await api.put("/candidate/profile", payload, { headers: { 'Content-Type': 'application/json' } });
@@ -680,8 +694,10 @@ const Candidate_Profile_View = ({ userProp }) => {
         setProfileExists(true);
       }
 
-      const updatedResumeLink = res.data?.data?.resumeLink || cloudinaryUrl;
-      set("resumeLink", updatedResumeLink);
+      const updatedResumeLink = res.data?.data?.resumeLink;
+      if (updatedResumeLink) {
+        set("resumeLink", updatedResumeLink);
+      }
       setSaved(true);
       toast.success("Resume uploaded successfully!", { position: "top-center" });
       setTimeout(() => setSaved(false), 2500);

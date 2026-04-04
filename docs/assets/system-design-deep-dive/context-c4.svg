@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">JobFit Context Diagram</title>
+  <desc id="desc">C4 context diagram for JobFit with actors, system boundary, and external integrations.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f9fbff"/>
+      <stop offset="55%" stop-color="#f3f7ff"/>
+      <stop offset="100%" stop-color="#eef4ff"/>
+    </linearGradient>
+    <radialGradient id="orbA" cx="30%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#bfdbfe" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#bfdbfe" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orbB" cx="70%" cy="85%" r="60%">
+      <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#c4b5fd" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#1e293b" flood-opacity="0.14"/>
+    </filter>
+    <filter id="tinyShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#334155" flood-opacity="0.16"/>
+    </filter>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L0,10 L10,5 z" fill="#475569"/>
+    </marker>
+    <style>
+      .title { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 35px; font-weight: 600; fill: #0f172a; letter-spacing: 0.2px; }
+      .subtitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 17px; font-weight: 450; fill: #475569; }
+      .boundaryTitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 19px; font-weight: 600; fill: #0f172a; }
+      .nodeTitle { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 18px; font-weight: 550; }
+      .nodeBody { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 13px; font-weight: 450; fill: #475569; }
+      .actorText { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 16px; font-weight: 550; fill: #1f2937; }
+      .connLabel { font-family: Manrope, Segoe UI, Arial, sans-serif; font-size: 13px; font-weight: 500; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" rx="24" fill="url(#bg)"/>
+  <ellipse cx="430" cy="170" rx="420" ry="210" fill="url(#orbA)"/>
+  <ellipse cx="1260" cy="760" rx="420" ry="210" fill="url(#orbB)"/>
+
+  <text x="800" y="66" text-anchor="middle" class="title">Context Diagram (C4 Level 1)</text>
+  <text x="800" y="100" text-anchor="middle" class="subtitle">Stakeholders, platform boundary, and external systems used by JobFit</text>
+
+  <rect x="150" y="155" width="1300" height="660" rx="24" fill="#ffffff" fill-opacity="0.82" stroke="#dbe3f1" stroke-width="2" filter="url(#softShadow)"/>
+  <text x="190" y="198" class="boundaryTitle">JobFit Platform Boundary</text>
+
+  <g filter="url(#tinyShadow)">
+    <rect x="205" y="248" width="230" height="76" rx="14" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="320" y="286" text-anchor="middle" class="actorText">Candidate</text>
+    <text x="320" y="306" text-anchor="middle" class="nodeBody">Search and apply jobs</text>
+
+    <rect x="205" y="355" width="230" height="76" rx="14" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="320" y="393" text-anchor="middle" class="actorText">Recruiter</text>
+    <text x="320" y="413" text-anchor="middle" class="nodeBody">Publish jobs and review applicants</text>
+
+    <rect x="205" y="462" width="230" height="76" rx="14" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="320" y="500" text-anchor="middle" class="actorText">Admin</text>
+    <text x="320" y="520" text-anchor="middle" class="nodeBody">Governance and moderation</text>
+  </g>
+
+  <g filter="url(#tinyShadow)">
+    <rect x="530" y="278" width="260" height="112" rx="18" fill="#e9f2ff" stroke="#60a5fa" stroke-width="1.5"/>
+    <text x="660" y="325" text-anchor="middle" class="nodeTitle" fill="#1d4ed8">Frontend</text>
+    <text x="660" y="346" text-anchor="middle" class="nodeBody">React, Router, Auth Context</text>
+
+    <rect x="860" y="278" width="270" height="112" rx="18" fill="#e9fbf2" stroke="#4ade80" stroke-width="1.5"/>
+    <text x="995" y="325" text-anchor="middle" class="nodeTitle" fill="#166534">Backend API</text>
+    <text x="995" y="346" text-anchor="middle" class="nodeBody">Express, JWT, Role Middleware</text>
+
+    <rect x="860" y="432" width="240" height="95" rx="16" fill="#f2efff" stroke="#a78bfa" stroke-width="1.4"/>
+    <text x="980" y="472" text-anchor="middle" class="nodeTitle" fill="#6d28d9">MongoDB Atlas</text>
+    <text x="980" y="492" text-anchor="middle" class="nodeBody">Operational data store</text>
+  </g>
+
+  <g filter="url(#tinyShadow)">
+    <rect x="1158" y="214" width="238" height="82" rx="14" fill="#fff7ed" stroke="#fdba74"/>
+    <text x="1277" y="248" text-anchor="middle" class="nodeTitle" fill="#c2410c">Cloudinary</text>
+    <text x="1277" y="268" text-anchor="middle" class="nodeBody">Media and resume assets</text>
+
+    <rect x="1158" y="322" width="238" height="82" rx="14" fill="#fef9c3" stroke="#fcd34d"/>
+    <text x="1277" y="356" text-anchor="middle" class="nodeTitle" fill="#a16207">Google OAuth</text>
+    <text x="1277" y="376" text-anchor="middle" class="nodeBody">Social sign-in identity</text>
+
+    <rect x="1158" y="430" width="238" height="82" rx="14" fill="#fee2e2" stroke="#fca5a5"/>
+    <text x="1277" y="464" text-anchor="middle" class="nodeTitle" fill="#b91c1c">OTP Email Bridge</text>
+    <text x="1277" y="484" text-anchor="middle" class="nodeBody">Out-of-band code delivery</text>
+
+    <rect x="1158" y="538" width="238" height="82" rx="14" fill="#ecfccb" stroke="#bef264"/>
+    <text x="1277" y="572" text-anchor="middle" class="nodeTitle" fill="#4d7c0f">ATS Analyzer API</text>
+    <text x="1277" y="592" text-anchor="middle" class="nodeBody">Resume match scoring</text>
+  </g>
+
+  <g stroke="#64748b" stroke-width="2.4" marker-end="url(#arrow)">
+    <line x1="435" y1="286" x2="530" y2="320"/>
+    <line x1="435" y1="393" x2="530" y2="334"/>
+    <line x1="435" y1="500" x2="530" y2="348"/>
+    <line x1="790" y1="334" x2="860" y2="334"/>
+
+    <line x1="995" y1="390" x2="980" y2="432"/>
+    <line x1="1130" y1="320" x2="1158" y2="255"/>
+    <line x1="1130" y1="338" x2="1158" y2="363"/>
+    <line x1="1130" y1="352" x2="1158" y2="471"/>
+    <line x1="1130" y1="366" x2="1158" y2="579"/>
+  </g>
+
+  <text x="480" y="273" class="connLabel">Web interactions</text>
+  <text x="812" y="324" class="connLabel">REST APIs</text>
+  <text x="1008" y="420" class="connLabel">Persistence</text>
+</svg>
+

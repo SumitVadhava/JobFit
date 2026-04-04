@@ -19,8 +19,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-const RECRUITER_JOBS_POST_API =
-  "https://jobfit-s5v7.onrender.com/api/recruiter/jobs";
+
 
 // ─── Extracted Outside to prevent remount on every render ─────────────────────
 const InputWrapper = ({
@@ -206,7 +205,7 @@ const Recruiter_Post_view = () => {
           payload.append("img", formData.img.trim());
         }
 
-        const response = await api.post(RECRUITER_JOBS_POST_API, payload, {
+        const response = await api.post('/recruiter/jobs', payload, {
           headers: {
             "Content-Type": "multipart/form-data",
           },

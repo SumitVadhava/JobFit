@@ -1,7 +1,13 @@
 import axios from "axios";
 
+const rawApiUrl = (import.meta.env.VITE_API_URL || "").trim();
+const normalizedApiUrl =
+  window.location.protocol === "https:" && rawApiUrl.startsWith("http://")
+    ? rawApiUrl.replace("http://", "https://")
+    : rawApiUrl;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: normalizedApiUrl,
   // baseURL: "http://localhost:5000/api",
   headers: {
     "Content-Type": "application/json",
@@ -19,7 +25,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor to handle global errors
@@ -34,7 +40,7 @@ api.interceptors.response.use(
       window.location.href = "/login";
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
