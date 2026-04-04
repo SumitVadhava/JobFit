@@ -6,6 +6,7 @@ import api from "../../api/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Skeleton from "../../components/Skeleton";
+import RateUs from "../../components/RateUs";
 import { 
   Camera, 
   Check, 
@@ -1192,6 +1193,10 @@ const Candidate_Profile_View = ({ userProp }) => {
                 </ul>
               </div>
 
+              {/* Rate Us Component */}
+              <div className="anim-up d600">
+                <RateUs />
+              </div>
 
             </div>
           </div>

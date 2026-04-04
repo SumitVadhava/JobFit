@@ -10,8 +10,8 @@ const TestimonialComponent = () => {
     const fetchTestimonials = async () => {
       try {
         const response = await api.get("/testimonials");
-        if (response.data && response.data.testimonials) {
-          setReviews(response.data.testimonials);
+        if (response.data && response.data.data) {
+          setReviews(response.data.data);
         }
       } catch (error) {
         console.error("Error fetching testimonials:", error);
@@ -41,7 +41,29 @@ const TestimonialComponent = () => {
             style={{ width: "100%", height: "auto" }}
           >
             {loading ? (
-              <p className="text-center w-full py-4 text-gray-500">Loading testimonials...</p>
+              [...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 mx-8 px-6 py-4 bg-white rounded-xl shadow-md border border-gray-100 w-96 h-56 flex flex-col justify-between animate-pulse"
+                >
+                  <div>
+                    <div className="flex gap-1 mb-3">
+                      {[...Array(5)].map((_, j) => (
+                        <div key={j} className="w-5 h-5 bg-gray-200 rounded-full"></div>
+                      ))}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-gray-200 rounded w-full"></div>
+                      <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                      <div className="h-3 bg-gray-200 rounded w-4/6"></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    <div className="h-3 bg-gray-200 rounded w-20"></div>
+                  </div>
+                </div>
+              ))
             ) : reviews.length > 0 ? (
               reviews.map((review, index) => (
                 <div

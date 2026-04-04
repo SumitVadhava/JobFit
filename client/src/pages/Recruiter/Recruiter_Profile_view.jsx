@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContexts";
 import api from "../../api/api";
 import { RecruiterSkeletonProfilePage } from "../../components/recruiter/RecruiterSkeletons";
+import RateUs from "../../components/RateUs";
 import {
   BadgeInfo,
   BriefcaseBusiness,
@@ -736,9 +737,15 @@ const Recruiter_Profile_view = ({ userProp }) => {
                   </p>
                 </div>
               </div>
+              
+              {/* Rate Us Component */}
+              <div className="animate-[fadeUp_0.45s_ease_both] [animation-delay:600ms]">
+                <RateUs />
+              </div>
             </div>
           </div>
         </div>
+
 
         {gallery && (
           <div
