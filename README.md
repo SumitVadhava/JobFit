@@ -628,7 +628,7 @@ Built by ❤️ **Code Conquerors**
 
 |                    |                                                                                          |
 | ------------------ | ---------------------------------------------------------------------------------------- |
-| **👥 Authors**     | Sumit Vadhava, Harshil Solanki, Viraj Odedra, Jasmin Chauhan, Manav Kotecha, Meet Parmar |
+| **👥 Authors**     | Sumit Vadhava, Meet Parmar, Harshil Solanki, Viraj Odedra, Jasmin Chauhan, Manav Kotecha |
 | **🐙 GitHub**      | [@SumitVadhava](https://github.com/SumitVadhava)                                         |
 | **💼 LinkedIn**    | [JobFit Organization](https://www.linkedin.com/in/jobfit-organization-5344663b3)         |
 | **📸 Instagram**   | [@jobfit_official](https://www.instagram.com/jobfit_official/)                           |
